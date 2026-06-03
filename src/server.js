@@ -36,7 +36,7 @@ app.get('/health', (req, res) => {
 
 // Root — serve landing page
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  res.sendFile(path.join(__dirname, '../website/index.html'));
 });
 
 // 404 handler
