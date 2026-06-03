@@ -1,0 +1,138 @@
+[
+  {
+    "qdrantId": "med-001",
+    "name": "Ibuprofen",
+    "description": "A non-steroidal anti-inflammatory drug (NSAID) used to relieve pain, reduce inflammation, and lower fever. Commonly prescribed for headaches, muscle pain, arthritis, menstrual cramps, and mild to moderate acute pain.",
+    "category": "physical",
+    "tags": ["pain relief", "anti-inflammatory", "fever", "headache", "muscle pain", "arthritis", "NSAID"],
+    "source": "WHO Essential Medicines List"
+  },
+  {
+    "qdrantId": "med-002",
+    "name": "Magnesium Glycinate",
+    "description": "A highly bioavailable form of magnesium used to relieve muscle cramps, tension headaches, improve sleep quality, and reduce anxiety. Particularly useful for people with magnesium deficiency causing physical symptoms like restless legs and nighttime cramping.",
+    "category": "physical",
+    "tags": ["muscle cramps", "tension headache", "magnesium", "sleep", "mineral supplement", "restless legs"],
+    "source": "National Institutes of Health (NIH)"
+  },
+  {
+    "qdrantId": "med-003",
+    "name": "Turmeric (Curcumin)",
+    "description": "A natural anti-inflammatory compound derived from turmeric root. Curcumin has demonstrated effectiveness in reducing joint pain, inflammation, and stiffness, especially in osteoarthritis and rheumatoid arthritis. Best absorbed when combined with black pepper (piperine).",
+    "category": "physical",
+    "tags": ["joint pain", "anti-inflammatory", "arthritis", "natural remedy", "curcumin", "herbal"],
+    "source": "Arthritis Foundation"
+  },
+  {
+    "qdrantId": "med-004",
+    "name": "Topical Diclofenac Gel",
+    "description": "A topical NSAID applied directly to the skin over painful joints or muscles. Provides localised pain relief with fewer gastrointestinal side effects than oral NSAIDs. Used for osteoarthritis, muscle strains, and tendon injuries.",
+    "category": "physical",
+    "tags": ["topical pain relief", "joint pain", "muscle strain", "NSAID", "osteoarthritis", "tendon"],
+    "source": "British Pain Society"
+  },
+  {
+    "qdrantId": "med-005",
+    "name": "Omega-3 Fish Oil",
+    "description": "Rich in EPA and DHA fatty acids, omega-3 supplements reduce systemic inflammation, support joint health, lower triglycerides, and have documented benefits for reducing chronic pain and morning stiffness in inflammatory conditions.",
+    "category": "physical",
+    "tags": ["inflammation", "joint health", "omega-3", "EPA", "DHA", "chronic pain", "fish oil"],
+    "source": "Mayo Clinic"
+  },
+  {
+    "qdrantId": "med-006",
+    "name": "Ashwagandha (KSM-66)",
+    "description": "An adaptogenic herb clinically shown to reduce cortisol levels, lower stress and anxiety, improve sleep quality, and reduce symptoms of depression. KSM-66 is a standardised root extract with strong clinical evidence for mental wellness support.",
+    "category": "mental",
+    "tags": ["stress", "anxiety", "adaptogen", "cortisol", "sleep", "depression", "ashwagandha", "herbal"],
+    "source": "Journal of the International Society of Sports Nutrition"
+  },
+  {
+    "qdrantId": "med-007",
+    "name": "St. John's Wort (Hypericum perforatum)",
+    "description": "A herbal supplement with clinical evidence for treating mild to moderate depression. Works by inhibiting serotonin, dopamine, and norepinephrine reuptake. Not suitable for severe depression or concurrent antidepressant use. Consult a doctor before use.",
+    "category": "mental",
+    "tags": ["depression", "mood", "serotonin", "herbal antidepressant", "mild depression", "emotional wellness"],
+    "source": "Cochrane Review"
+  },
+  {
+    "qdrantId": "med-008",
+    "name": "L-Theanine",
+    "description": "An amino acid naturally found in green tea that promotes relaxation without sedation. Shown to reduce stress and anxiety, improve focus and attention, and enhance sleep quality when combined with magnesium or melatonin. Safe for daily use.",
+    "category": "mental",
+    "tags": ["anxiety", "relaxation", "focus", "sleep", "stress relief", "L-theanine", "amino acid"],
+    "source": "Asia Pacific Journal of Clinical Nutrition"
+  },
+  {
+    "qdrantId": "med-009",
+    "name": "Melatonin",
+    "description": "A hormone that regulates the sleep-wake cycle. Used for insomnia, jet lag, and circadian rhythm disorders. Low doses (0.5–3 mg) taken 30 minutes before bed are most effective. Helps reset sleep patterns without the dependency associated with sleeping pills.",
+    "category": "mental",
+    "tags": ["insomnia", "sleep", "circadian rhythm", "jet lag", "melatonin", "sleep disorder"],
+    "source": "Sleep Foundation"
+  },
+  {
+    "qdrantId": "med-010",
+    "name": "5-HTP (5-Hydroxytryptophan)",
+    "description": "A precursor to serotonin that crosses the blood-brain barrier. Used to improve mood, reduce anxiety, aid sleep, and manage mild depression. May help reduce appetite and manage emotional eating. Should not be combined with antidepressants.",
+    "category": "mental",
+    "tags": ["serotonin", "mood", "depression", "anxiety", "sleep", "appetite", "5-HTP"],
+    "source": "Journal of Psychiatric Research"
+  },
+  {
+    "qdrantId": "med-011",
+    "name": "Berberine",
+    "description": "A natural alkaloid with potent glucose-lowering effects comparable to metformin. Used for type 2 diabetes management, metabolic syndrome, high cholesterol, and PCOS. Also shows anti-inflammatory and gut microbiome-modulating properties.",
+    "category": "chronic",
+    "tags": ["diabetes", "blood sugar", "cholesterol", "metabolic syndrome", "PCOS", "insulin resistance", "berberine"],
+    "source": "Journal of Ethnopharmacology"
+  },
+  {
+    "qdrantId": "med-012",
+    "name": "Coenzyme Q10 (CoQ10)",
+    "description": "A powerful antioxidant naturally produced by the body that declines with age and statin use. Supports mitochondrial energy production, reduces oxidative stress, improves heart health, lowers blood pressure, and alleviates fatigue in chronic conditions.",
+    "category": "chronic",
+    "tags": ["energy", "heart health", "antioxidant", "hypertension", "fatigue", "CoQ10", "statin side effects"],
+    "source": "American Journal of Clinical Nutrition"
+  },
+  {
+    "qdrantId": "med-013",
+    "name": "Metformin",
+    "description": "The first-line oral medication for type 2 diabetes. Reduces liver glucose production, improves insulin sensitivity, and lowers blood sugar. Also shown to have anti-ageing properties and reduce cardiovascular risk. Requires a prescription.",
+    "category": "chronic",
+    "tags": ["type 2 diabetes", "blood sugar", "insulin resistance", "prescription", "cardiovascular", "anti-ageing"],
+    "source": "American Diabetes Association"
+  },
+  {
+    "qdrantId": "med-014",
+    "name": "Vitamin D3 + K2",
+    "description": "Combined supplementation of vitamin D3 and K2 supports bone density, immune function, cardiovascular health, and mood regulation. Vitamin K2 ensures calcium is directed to bones rather than arteries. Especially important for people with limited sun exposure.",
+    "category": "chronic",
+    "tags": ["bone health", "immune system", "vitamin D deficiency", "calcium", "cardiovascular", "osteoporosis"],
+    "source": "Osteoporosis International"
+  },
+  {
+    "qdrantId": "med-015",
+    "name": "Psyllium Husk",
+    "description": "A soluble fibre supplement that lowers LDL cholesterol, improves blood sugar control, promotes healthy bowel movements, and supports weight management by increasing satiety. Used for IBS, constipation, type 2 diabetes, and high cholesterol.",
+    "category": "chronic",
+    "tags": ["cholesterol", "blood sugar", "IBS", "constipation", "fibre", "weight management", "gut health"],
+    "source": "European Journal of Clinical Nutrition"
+  },
+  {
+    "qdrantId": "med-016",
+    "name": "Lisinopril",
+    "description": "An ACE inhibitor used to treat high blood pressure (hypertension) and heart failure. Reduces cardiovascular risk, protects kidneys in diabetic patients, and lowers mortality after heart attacks. Available by prescription only.",
+    "category": "chronic",
+    "tags": ["hypertension", "blood pressure", "heart failure", "ACE inhibitor", "prescription", "kidney protection"],
+    "source": "WHO Essential Medicines List"
+  },
+  {
+    "qdrantId": "med-017",
+    "name": "Probiotics (Lactobacillus & Bifidobacterium blend)",
+    "description": "A multi-strain probiotic supplement that restores gut microbiome balance, reduces symptoms of IBS, bloating, and diarrhoea. Also shown to improve mood (gut-brain axis), reduce inflammation, and support immune function in people with chronic lifestyle conditions.",
+    "category": "chronic",
+    "tags": ["gut health", "IBS", "bloating", "immune system", "microbiome", "lactobacillus", "probiotic"],
+    "source": "World Gastroenterology Organisation"
+  }
+]
