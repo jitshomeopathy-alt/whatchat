@@ -26,12 +26,12 @@ You will receive a user profile and optionally a photo. Your role is to:
 1. Provide a comprehensive wellness assessment based on the available information.
 2. Identify potential physical, mental, and lifestyle health concerns.
 3. Suggest which category of support the user might most benefit from:
-   - Category X: Physical / Pain management
-   - Category Y: Mental / Emotional wellness
-   - Category Z: Chronic / Lifestyle conditions
+   - Category health: Physical / Pain management
+   - Category mental: Mental / Emotional wellness
+   - Category sex: Sexual health & wellness
 4. Be empathetic, non-alarmist, and professional.
 5. Keep your response under 500 words.
-6. End with a line: "Recommended category: X", "Recommended category: Y", or "Recommended category: Z"`;
+6. End with a line: "Recommended category: health", "Recommended category: mental", or "Recommended category: sex"`;
 
   const userContent = [];
 
@@ -80,9 +80,9 @@ async function recoverSynthesis(category, answers, questions) {
   const client = getClient();
 
   const categoryLabels = {
-    X: 'Physical / Pain Management',
-    Y: 'Mental / Emotional Wellness',
-    Z: 'Chronic / Lifestyle Conditions',
+    health: 'Physical / Pain Management',
+    mental: 'Mental / Emotional Wellness',
+    sex: 'Sexual Health & Wellness',
   };
 
   const categoryLabel = categoryLabels[category] || category;
@@ -121,10 +121,10 @@ Do NOT diagnose medical conditions. Always recommend consulting a healthcare pro
  * @returns {Promise<'X'|'Y'|'Z'>} - Best matching category
  */
 async function detectCategory(analysisText) {
-  // First try to parse the "Recommended category: X/Y/Z" line
-  const match = analysisText.match(/Recommended category:\s*([XYZ])/i);
+  // First try to parse the "Recommended category: health/mental/sex" line
+  const match = analysisText.match(/Recommended category:\s*(health|mental|sex)/i);
   if (match) {
-    return match[1].toUpperCase();
+    return match[1].toLowerCase();
   }
 
   // Fallback: ask GPT to classify
@@ -136,22 +136,22 @@ async function detectCategory(analysisText) {
       {
         role: 'system',
         content:
-          'You classify health analysis text into one of three categories. Reply with ONLY a single letter: X (physical/pain), Y (mental/emotional), or Z (chronic/lifestyle).',
+          'You classify health analysis text into one of three categories. Reply with ONLY one word: health (physical/pain), mental (mental/emotional), or sex (sexual health).',
       },
       {
         role: 'user',
         content: `Classify this health analysis:\n\n${analysisText}`,
       },
     ],
-    max_tokens: 5,
+    max_tokens: 10,
     temperature: 0,
   });
 
-  const letter = response.choices[0].message.content.trim().toUpperCase();
-  if (['X', 'Y', 'Z'].includes(letter)) return letter;
+  const word = response.choices[0].message.content.trim().toLowerCase();
+  if (['health', 'mental', 'sex'].includes(word)) return word;
 
   // Default fallback
-  return 'X';
+  return 'health';
 }
 
 /**
