@@ -48,12 +48,15 @@ async function initCollection() {
 
 /**
  * Embed a medicine document and upsert it into Qdrant.
- * @param {Object} medicine - { qdrantId, name, description, category, tags, source }
+ * @param {Object} medicine - { qdrantId, name, description, category, tags, keynotes, source }
  */
 async function upsertMedicine(medicine) {
   const client = getClient();
 
-  const textToEmbed = `${medicine.name}. ${medicine.description}. Tags: ${medicine.tags.join(', ')}.`;
+  const keynoteText = keynotesToText(medicine.keynotes);
+  const textToEmbed =
+    `${medicine.name}. ${medicine.description}. Tags: ${(medicine.tags || []).join(', ')}.` +
+    (keynoteText ? ` ${keynoteText}` : '');
   const vector = await embedText(textToEmbed);
 
   await client.upsert(COLLECTION_NAME, {
@@ -66,7 +69,8 @@ async function upsertMedicine(medicine) {
           name: medicine.name,
           description: medicine.description,
           category: medicine.category,
-          tags: medicine.tags,
+          tags: medicine.tags || [],
+          keynotes: medicine.keynotes || null,
           source: medicine.source || '',
         },
       },
@@ -114,6 +118,35 @@ async function deleteMedicine(qdrantId) {
   });
 
   console.log(`[Qdrant] Deleted medicine id: ${qdrantId}`);
+}
+
+/**
+ * Flatten a keynotes object into a readable sentence so its vocabulary
+ * (mental state, modalities, fears, sleep, food, triggers, etc.) is embedded
+ * and matched against the recovery question/answer summary.
+ * @param {Object|null} keynotes
+ * @returns {string}
+ */
+function keynotesToText(keynotes) {
+  if (!keynotes || typeof keynotes !== 'object') return '';
+
+  const labels = {
+    state: 'Dominant state',
+    worse_from: 'Worse from',
+    better_from: 'Better from',
+    behavior: 'Behaviour under stress',
+    fears: 'Fears',
+    sleep: 'Sleep',
+    food: 'Food desires/aversions',
+    triggers: 'Triggers',
+    constitution: 'Constitution when well',
+    red_flags: 'Danger signs',
+  };
+
+  return Object.entries(keynotes)
+    .filter(([, v]) => v && String(v).trim().length > 0)
+    .map(([k, v]) => `${labels[k] || k}: ${v}.`)
+    .join(' ');
 }
 
 module.exports = { initCollection, upsertMedicine, searchMedicines, deleteMedicine };

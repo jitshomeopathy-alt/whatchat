@@ -26,6 +26,13 @@ const medicineSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    keynotes: {
+      // Structured repertory keynotes mirroring the recovery questions:
+      // state, worse_from, better_from, behavior, fears, sleep, food,
+      // triggers, constitution, red_flags. Used to match question answers.
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
     source: {
       type: String,
       default: '',

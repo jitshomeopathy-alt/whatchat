@@ -64,6 +64,7 @@ router.post('/medicines/seed', adminAuth, async (req, res) => {
           description: med.description,
           category: med.category,
           tags: med.tags || [],
+          keynotes: med.keynotes || null,
           source: med.source || '',
         };
 
@@ -127,11 +128,11 @@ router.get('/medicines', adminAuth, async (req, res) => {
 /**
  * POST /admin/medicines
  * Add a single medicine.
- * Body: { name, description, category, tags, source }
+ * Body: { name, description, category, tags, keynotes, source }
  */
 router.post('/medicines', adminAuth, async (req, res) => {
   try {
-    const { name, description, category, tags, source } = req.body;
+    const { name, description, category, tags, keynotes, source } = req.body;
 
     if (!name || !description || !category) {
       return res.status(400).json({ error: 'name, description, and category are required' });
@@ -150,6 +151,7 @@ router.post('/medicines', adminAuth, async (req, res) => {
       description: description.trim(),
       category,
       tags: Array.isArray(tags) ? tags : [],
+      keynotes: keynotes || null,
       source: source || '',
     };
 
@@ -168,12 +170,12 @@ router.post('/medicines', adminAuth, async (req, res) => {
 /**
  * PUT /admin/medicines/:id
  * Update a medicine by MongoDB _id.
- * Body: partial { name, description, category, tags, source }
+ * Body: partial { name, description, category, tags, keynotes, source }
  */
 router.put('/medicines/:id', adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, category, tags, source } = req.body;
+    const { name, description, category, tags, keynotes, source } = req.body;
 
     const medicine = await Medicine.findById(id);
     if (!medicine) {
@@ -192,6 +194,7 @@ router.put('/medicines/:id', adminAuth, async (req, res) => {
     if (description) medicine.description = description.trim();
     if (category) medicine.category = category;
     if (tags) medicine.tags = Array.isArray(tags) ? tags : [];
+    if (keynotes !== undefined) medicine.keynotes = keynotes || null;
     if (source !== undefined) medicine.source = source;
     medicine.updatedAt = new Date();
 
@@ -204,6 +207,7 @@ router.put('/medicines/:id', adminAuth, async (req, res) => {
       description: medicine.description,
       category: medicine.category,
       tags: medicine.tags,
+      keynotes: medicine.keynotes,
       source: medicine.source,
     });
 

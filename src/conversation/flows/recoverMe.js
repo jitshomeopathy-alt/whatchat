@@ -39,7 +39,7 @@ async function handle(whatsappId, message, session) {
       `🌿 *Recovery Mode*\n\nI'll ask you some targeted questions and then suggest personalised remedies.\n\n` +
       `Please choose your recovery category by replying with *addiction*, *mental*, or *sex*:\n\n` +
       `*addiction* — De-addiction / Substance Recovery (9 questions)\n` +
-      `*mental* — Mental / Emotional Wellness (7 questions)\n` +
+      `*mental* — Mental / Emotional Wellness (10 questions)\n` +
       `*sex* — Sexual Health & Wellness (8 questions)`;
 
     if (suggestedCat) {

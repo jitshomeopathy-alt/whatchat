@@ -2,7 +2,7 @@
  * Fixed question sets for each recovery category.
  *
  * Category addiction – De-addiction / Substance Recovery (9 questions)
- * Category mental   – Mental / Emotional Wellness (7 questions)
+ * Category mental   – Mental / Emotional Wellness (10 questions)
  * Category sex      – Sexual Health & Wellness (8 questions)
  */
 
@@ -20,13 +20,16 @@ const questions = {
   ],
 
   mental: [
-    'How would you describe your overall mood over the past two weeks? (e.g., anxious, low, irritable, numb)',
-    'How is your sleep? Do you have trouble falling asleep, staying asleep, or do you sleep too much?',
-    'On a scale of 1–10, how stressed do you feel on a typical day?',
-    'Have you lost interest in activities you used to enjoy? If so, for how long?',
-    'Do you experience panic attacks, intrusive thoughts, or persistent worry? Please describe briefly.',
-    'How is your appetite — has it increased, decreased, or stayed the same recently?',
-    'Do you have a support system (friends, family, therapist) you can talk to about how you feel?',
+    'What is the dominant mental state right now?\nChoose the closest: fearful, anxious, sad, irritable, angry, suspicious, jealous, guilty, restless, detached, obsessive, numb, hopeless.',
+    'What makes it worse?\nChoose all that apply: criticism, insult, family conflict, loneliness, crowds, exam/work pressure, night-time, morning, being alone, being busy, noise, hunger, heat, cold, menses, bad news, grief, suppression.',
+    'What makes it better?\nChoose the strongest relief: company, consolation, being left alone, talking, crying, sleep, walking, motion, prayer, music, food, warmth, open air, cold air, pressure, massage.',
+    'How does the person behave under stress?\nSilent and closed, overtalkative, clingy, demanding, aggressive, weeping, avoidant, perfectionistic, indecisive, controlling, cowardly, suspicious, argumentative, impulsive.',
+    'What is the strongest inner fear or thought loop?\nFear of death, fear of failure, fear of illness, fear of being abandoned, fear of dark, fear of poverty, fear of criticism, fear of responsibility, fear of losing control, guilt, self-blame, revenge thoughts, jealous thoughts.',
+    'How is sleep affected?\nNo sleep, broken sleep, waking at fixed hours, fear at night, nightmares, excessive sleep, cannot fall asleep because thoughts race, wakes unrefreshed, sleeps better after crying, sleep worse after worry.',
+    'What are the food desires or aversions?\nCraves sweets, salt, spicy food, tea, coffee, milk, fried food, cold drinks, eggs; or aversion to food, nausea from smell, loss of appetite, empty stomach aggravation, overeating when stressed.',
+    'What is the exact trigger or origin story?\nAfter grief, breakup, marriage stress, childbirth, school failure, business loss, insult, betrayal, fright, prolonged overwork, suppression of anger, humiliation, chronic family pressure, substance use.',
+    'What is the person like as a human being when well?\nMild, soft, proud, dominating, meticulous, religious, sensitive, anxious, fastidious, rigid, affectionate, indifferent, ambitious, cowardly, sympathetic, introverted, extroverted.',
+    'Any danger signs present right now?\nSuicidal thoughts, self-harm, hallucinations, extreme agitation, violence, not sleeping for days, confusion, mania, refusal to eat/drink, intoxication, severe panic, disconnection from reality.',
   ],
 
   sex: [

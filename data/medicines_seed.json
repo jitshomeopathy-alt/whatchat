@@ -4,7 +4,15 @@
     "name": "Ibuprofen",
     "description": "A non-steroidal anti-inflammatory drug (NSAID) used to relieve pain, reduce inflammation, and lower fever. Commonly prescribed for headaches, muscle pain, arthritis, menstrual cramps, and mild to moderate acute pain.",
     "category": "physical",
-    "tags": ["pain relief", "anti-inflammatory", "fever", "headache", "muscle pain", "arthritis", "NSAID"],
+    "tags": [
+      "pain relief",
+      "anti-inflammatory",
+      "fever",
+      "headache",
+      "muscle pain",
+      "arthritis",
+      "NSAID"
+    ],
     "source": "WHO Essential Medicines List"
   },
   {
@@ -12,7 +20,14 @@
     "name": "Magnesium Glycinate",
     "description": "A highly bioavailable form of magnesium used to relieve muscle cramps, tension headaches, improve sleep quality, and reduce anxiety. Particularly useful for people with magnesium deficiency causing physical symptoms like restless legs and nighttime cramping.",
     "category": "physical",
-    "tags": ["muscle cramps", "tension headache", "magnesium", "sleep", "mineral supplement", "restless legs"],
+    "tags": [
+      "muscle cramps",
+      "tension headache",
+      "magnesium",
+      "sleep",
+      "mineral supplement",
+      "restless legs"
+    ],
     "source": "National Institutes of Health (NIH)"
   },
   {
@@ -20,7 +35,14 @@
     "name": "Turmeric (Curcumin)",
     "description": "A natural anti-inflammatory compound derived from turmeric root. Curcumin has demonstrated effectiveness in reducing joint pain, inflammation, and stiffness, especially in osteoarthritis and rheumatoid arthritis. Best absorbed when combined with black pepper (piperine).",
     "category": "physical",
-    "tags": ["joint pain", "anti-inflammatory", "arthritis", "natural remedy", "curcumin", "herbal"],
+    "tags": [
+      "joint pain",
+      "anti-inflammatory",
+      "arthritis",
+      "natural remedy",
+      "curcumin",
+      "herbal"
+    ],
     "source": "Arthritis Foundation"
   },
   {
@@ -28,7 +50,14 @@
     "name": "Topical Diclofenac Gel",
     "description": "A topical NSAID applied directly to the skin over painful joints or muscles. Provides localised pain relief with fewer gastrointestinal side effects than oral NSAIDs. Used for osteoarthritis, muscle strains, and tendon injuries.",
     "category": "physical",
-    "tags": ["topical pain relief", "joint pain", "muscle strain", "NSAID", "osteoarthritis", "tendon"],
+    "tags": [
+      "topical pain relief",
+      "joint pain",
+      "muscle strain",
+      "NSAID",
+      "osteoarthritis",
+      "tendon"
+    ],
     "source": "British Pain Society"
   },
   {
@@ -36,55 +65,382 @@
     "name": "Omega-3 Fish Oil",
     "description": "Rich in EPA and DHA fatty acids, omega-3 supplements reduce systemic inflammation, support joint health, lower triglycerides, and have documented benefits for reducing chronic pain and morning stiffness in inflammatory conditions.",
     "category": "physical",
-    "tags": ["inflammation", "joint health", "omega-3", "EPA", "DHA", "chronic pain", "fish oil"],
+    "tags": [
+      "inflammation",
+      "joint health",
+      "omega-3",
+      "EPA",
+      "DHA",
+      "chronic pain",
+      "fish oil"
+    ],
     "source": "Mayo Clinic"
   },
   {
     "qdrantId": "med-006",
-    "name": "Ashwagandha (KSM-66)",
-    "description": "An adaptogenic herb clinically shown to reduce cortisol levels, lower stress and anxiety, improve sleep quality, and reduce symptoms of depression. KSM-66 is a standardised root extract with strong clinical evidence for mental wellness support.",
+    "name": "Aconitum napellus",
+    "description": "Acute remedy for sudden, intense fear and panic that comes on after a fright or shock. Marked restlessness, palpitations, and a conviction that death is near. Symptoms appear violently and are worse around night-time.",
     "category": "mental",
-    "tags": ["stress", "anxiety", "adaptogen", "cortisol", "sleep", "depression", "ashwagandha", "herbal"],
-    "source": "Journal of the International Society of Sports Nutrition"
+    "tags": [
+      "panic",
+      "fear of death",
+      "sudden fright",
+      "restless",
+      "anxiety attack",
+      "shock"
+    ],
+    "keynotes": {
+      "state": "fearful, anxious, restless",
+      "worse_from": "night-time, bad news, being alone, fright",
+      "better_from": "open air, company",
+      "behavior": "impulsive, demanding, restless",
+      "fears": "fear of death, fear of losing control",
+      "sleep": "no sleep, fear at night, nightmares",
+      "food": "craves cold drinks",
+      "triggers": "fright, sudden bad news, shock",
+      "constitution": "anxious, sensitive",
+      "red_flags": "severe panic, extreme agitation"
+    },
+    "source": "Boericke Materia Medica"
   },
   {
     "qdrantId": "med-007",
-    "name": "St. John's Wort (Hypericum perforatum)",
-    "description": "A herbal supplement with clinical evidence for treating mild to moderate depression. Works by inhibiting serotonin, dopamine, and norepinephrine reuptake. Not suitable for severe depression or concurrent antidepressant use. Consult a doctor before use.",
+    "name": "Arsenicum album",
+    "description": "For intense anxiety about health and death with restlessness, exhaustion, and a need for order. The person is fastidious, fears being alone, and feels better with company, warmth, and reassurance. Anxiety is typically worse after midnight.",
     "category": "mental",
-    "tags": ["depression", "mood", "serotonin", "herbal antidepressant", "mild depression", "emotional wellness"],
-    "source": "Cochrane Review"
+    "tags": [
+      "anxiety",
+      "fear of illness",
+      "restless",
+      "fastidious",
+      "fear of death",
+      "insecurity"
+    ],
+    "keynotes": {
+      "state": "anxious, fearful, restless",
+      "worse_from": "night-time, being alone, cold",
+      "better_from": "company, warmth, consolation",
+      "behavior": "perfectionistic, controlling, demanding, clingy",
+      "fears": "fear of illness, fear of death, fear of losing control",
+      "sleep": "broken sleep, waking at fixed hours, fear at night",
+      "food": "craves warm drinks, aversion to food, nausea from smell",
+      "triggers": "prolonged overwork, fright, chronic worry",
+      "constitution": "fastidious, meticulous, anxious, rigid",
+      "red_flags": "severe panic, refusal to eat/drink"
+    },
+    "source": "Boericke Materia Medica"
   },
   {
     "qdrantId": "med-008",
-    "name": "L-Theanine",
-    "description": "An amino acid naturally found in green tea that promotes relaxation without sedation. Shown to reduce stress and anxiety, improve focus and attention, and enhance sleep quality when combined with magnesium or melatonin. Safe for daily use.",
+    "name": "Ignatia amara",
+    "description": "The leading remedy for acute grief, loss, and disappointed love. Marked by sighing, sobbing, a lump in the throat, and contradictory, changeable moods. The person tends to suppress emotion and hold grief silently.",
     "category": "mental",
-    "tags": ["anxiety", "relaxation", "focus", "sleep", "stress relief", "L-theanine", "amino acid"],
-    "source": "Asia Pacific Journal of Clinical Nutrition"
+    "tags": [
+      "grief",
+      "heartbreak",
+      "loss",
+      "sighing",
+      "mood swings",
+      "suppressed emotion"
+    ],
+    "keynotes": {
+      "state": "sad, hopeless, irritable",
+      "worse_from": "grief, criticism, suppression, morning",
+      "better_from": "being left alone, crying, walking",
+      "behavior": "silent and closed, weeping, indecisive",
+      "fears": "self-blame, guilt, fear of being abandoned",
+      "sleep": "cannot fall asleep because thoughts race, sleep worse after worry, sleeps better after crying",
+      "food": "aversion to food, loss of appetite",
+      "triggers": "after grief, breakup, betrayal, humiliation",
+      "constitution": "sensitive, soft, affectionate",
+      "red_flags": "severe panic, refusal to eat/drink"
+    },
+    "source": "Boericke Materia Medica"
   },
   {
     "qdrantId": "med-009",
-    "name": "Melatonin",
-    "description": "A hormone that regulates the sleep-wake cycle. Used for insomnia, jet lag, and circadian rhythm disorders. Low doses (0.5–3 mg) taken 30 minutes before bed are most effective. Helps reset sleep patterns without the dependency associated with sleeping pills.",
+    "name": "Natrum muriaticum",
+    "description": "For long-held, silent grief and disappointment. The person closes off, dwells on past hurts, weeps when alone, and strongly dislikes consolation, which makes them worse. Often reserved, responsible, and craving salt.",
     "category": "mental",
-    "tags": ["insomnia", "sleep", "circadian rhythm", "jet lag", "melatonin", "sleep disorder"],
-    "source": "Sleep Foundation"
+    "tags": [
+      "silent grief",
+      "introvert",
+      "aversion to consolation",
+      "old hurts",
+      "reserved",
+      "salt craving"
+    ],
+    "keynotes": {
+      "state": "sad, detached, irritable",
+      "worse_from": "consolation, morning, grief, criticism",
+      "better_from": "being left alone, open air, crying",
+      "behavior": "silent and closed, avoidant, weeping",
+      "fears": "fear of being abandoned, fear of criticism, self-blame",
+      "sleep": "broken sleep, sleep worse after worry, sleeps better after crying",
+      "food": "craves salt, aversion to food",
+      "triggers": "after grief, breakup, betrayal, humiliation, chronic family pressure",
+      "constitution": "introverted, sensitive, proud, responsible",
+      "red_flags": "suicidal thoughts, disconnection from reality"
+    },
+    "source": "Boericke Materia Medica"
   },
   {
     "qdrantId": "med-010",
-    "name": "5-HTP (5-Hydroxytryptophan)",
-    "description": "A precursor to serotonin that crosses the blood-brain barrier. Used to improve mood, reduce anxiety, aid sleep, and manage mild depression. May help reduce appetite and manage emotional eating. Should not be combined with antidepressants.",
+    "name": "Pulsatilla nigricans",
+    "description": "For the mild, tearful, affectionate person who weeps easily and craves comfort and reassurance. Moods are changeable, the person feels worse alone and in warm stuffy rooms, and is markedly better in open air and with consolation.",
     "category": "mental",
-    "tags": ["serotonin", "mood", "depression", "anxiety", "sleep", "appetite", "5-HTP"],
-    "source": "Journal of Psychiatric Research"
+    "tags": [
+      "weepy",
+      "clingy",
+      "needs reassurance",
+      "changeable mood",
+      "gentle",
+      "better open air"
+    ],
+    "keynotes": {
+      "state": "sad, anxious, fearful",
+      "worse_from": "loneliness, being alone, heat, night-time",
+      "better_from": "consolation, company, open air, motion",
+      "behavior": "clingy, weeping, indecisive",
+      "fears": "fear of being abandoned, fear of dark",
+      "sleep": "cannot fall asleep, fear at night, sleeps better after crying",
+      "food": "aversion to fried food, craves sweets",
+      "triggers": "after grief, breakup, family pressure",
+      "constitution": "mild, soft, affectionate, sympathetic",
+      "red_flags": "severe panic"
+    },
+    "source": "Boericke Materia Medica"
+  },
+  {
+    "qdrantId": "med-011-m",
+    "name": "Staphysagria",
+    "description": "For the effects of suppressed anger, humiliation, and indignation. The person swallows insults, holds resentment, and may later erupt or fall ill from the stored emotion. Sensitive to criticism and disrespect.",
+    "category": "mental",
+    "tags": [
+      "suppressed anger",
+      "humiliation",
+      "indignation",
+      "resentment",
+      "insult",
+      "sensitive"
+    ],
+    "keynotes": {
+      "state": "angry, irritable, guilty",
+      "worse_from": "insult, criticism, suppression, humiliation",
+      "better_from": "being left alone, warmth",
+      "behavior": "silent and closed, weeping, then impulsive",
+      "fears": "revenge thoughts, self-blame, fear of criticism",
+      "sleep": "sleep worse after worry, broken sleep",
+      "food": "overeating when stressed, craves sweets",
+      "triggers": "insult, betrayal, humiliation, suppression of anger",
+      "constitution": "sensitive, proud, soft",
+      "red_flags": "extreme agitation, violence"
+    },
+    "source": "Boericke Materia Medica"
+  },
+  {
+    "qdrantId": "med-012-m",
+    "name": "Lycopodium clavatum",
+    "description": "For anticipatory anxiety and lack of self-confidence hidden behind a domineering exterior. Fears failure and responsibility, dreads new tasks yet performs once started. Often cowardly at home but authoritative outside; craves sweets and warm food.",
+    "category": "mental",
+    "tags": [
+      "anticipatory anxiety",
+      "fear of failure",
+      "low confidence",
+      "domineering",
+      "performance anxiety",
+      "sweets craving"
+    ],
+    "keynotes": {
+      "state": "anxious, irritable, restless",
+      "worse_from": "exam/work pressure, criticism, morning",
+      "better_from": "warmth, motion, food",
+      "behavior": "controlling, cowardly, argumentative, indecisive",
+      "fears": "fear of failure, fear of responsibility, fear of criticism",
+      "sleep": "cannot fall asleep because thoughts race, wakes unrefreshed",
+      "food": "craves sweets, warm food, empty stomach aggravation",
+      "triggers": "school failure, business loss, prolonged overwork",
+      "constitution": "ambitious, proud, dominating, cowardly",
+      "red_flags": "severe panic"
+    },
+    "source": "Boericke Materia Medica"
+  },
+  {
+    "qdrantId": "med-013-m",
+    "name": "Aurum metallicum",
+    "description": "For deep depression and hopelessness following failure or loss of self-worth, often with thoughts of death or suicide. The person is serious, responsible, and feels they have failed in duty. Worse at night, better with music.",
+    "category": "mental",
+    "tags": [
+      "depression",
+      "hopelessness",
+      "suicidal thoughts",
+      "self-reproach",
+      "after failure",
+      "serious"
+    ],
+    "keynotes": {
+      "state": "hopeless, sad, guilty",
+      "worse_from": "night-time, criticism, bad news, grief",
+      "better_from": "music, open air, walking",
+      "behavior": "silent and closed, avoidant, perfectionistic",
+      "fears": "self-blame, fear of failure, guilt",
+      "sleep": "no sleep, broken sleep, sleep worse after worry",
+      "food": "loss of appetite, aversion to food",
+      "triggers": "business loss, school failure, humiliation, prolonged overwork",
+      "constitution": "ambitious, religious, rigid, meticulous",
+      "red_flags": "suicidal thoughts, self-harm"
+    },
+    "source": "Boericke Materia Medica"
+  },
+  {
+    "qdrantId": "med-014-m",
+    "name": "Nux vomica",
+    "description": "For the driven, irritable, impatient person worn out by overwork, ambition, and stimulants. Easily angered, fault-finding, and oversensitive to noise and contradiction. Often linked to substance use, coffee, and sedentary stress.",
+    "category": "mental",
+    "tags": [
+      "irritable",
+      "angry",
+      "overwork",
+      "ambitious",
+      "substance use",
+      "impatient"
+    ],
+    "keynotes": {
+      "state": "irritable, angry, restless",
+      "worse_from": "noise, morning, criticism, exam/work pressure",
+      "better_from": "sleep, warmth, being left alone",
+      "behavior": "aggressive, demanding, argumentative, controlling",
+      "fears": "fear of failure, revenge thoughts",
+      "sleep": "wakes at fixed hours, wakes unrefreshed, broken sleep",
+      "food": "craves spicy food, coffee, fried food; overeating when stressed",
+      "triggers": "prolonged overwork, suppression of anger, substance use",
+      "constitution": "ambitious, dominating, rigid",
+      "red_flags": "extreme agitation, violence, intoxication"
+    },
+    "source": "Boericke Materia Medica"
+  },
+  {
+    "qdrantId": "med-015-m",
+    "name": "Gelsemium sempervirens",
+    "description": "For anticipatory fear and anxiety with trembling, weakness, and a desire to be left alone. Dread before exams, performances, or ordeals, with a wish to flee. Cowardly, drowsy, and dull rather than agitated.",
+    "category": "mental",
+    "tags": [
+      "anticipatory anxiety",
+      "stage fright",
+      "trembling",
+      "dread",
+      "cowardly",
+      "weakness"
+    ],
+    "keynotes": {
+      "state": "fearful, anxious, numb",
+      "worse_from": "exam/work pressure, bad news, crowds",
+      "better_from": "being left alone, motion, open air",
+      "behavior": "avoidant, cowardly, indecisive",
+      "fears": "fear of failure, fear of losing control, fear of responsibility",
+      "sleep": "cannot fall asleep because thoughts race, wakes unrefreshed",
+      "food": "loss of appetite",
+      "triggers": "fright, school failure, bad news",
+      "constitution": "cowardly, sensitive, introverted",
+      "red_flags": "severe panic"
+    },
+    "source": "Boericke Materia Medica"
+  },
+  {
+    "qdrantId": "med-016-m",
+    "name": "Phosphorus",
+    "description": "For the open, affectionate, impressionable person full of fears who craves company and reassurance. Fears being alone, the dark, and illness; startles easily and is highly sympathetic. Desires cold drinks and refreshing foods.",
+    "category": "mental",
+    "tags": [
+      "fearful",
+      "needs company",
+      "fear of dark",
+      "sympathetic",
+      "impressionable",
+      "cold drinks craving"
+    ],
+    "keynotes": {
+      "state": "fearful, anxious, sad",
+      "worse_from": "being alone, night-time, bad news, crowds",
+      "better_from": "company, consolation, sleep, massage",
+      "behavior": "clingy, overtalkative, demanding",
+      "fears": "fear of dark, fear of being abandoned, fear of illness",
+      "sleep": "fear at night, nightmares, broken sleep",
+      "food": "craves cold drinks, salt, ice cream",
+      "triggers": "fright, bad news, grief",
+      "constitution": "sensitive, affectionate, sympathetic, extroverted",
+      "red_flags": "hallucinations, disconnection from reality"
+    },
+    "source": "Boericke Materia Medica"
+  },
+  {
+    "qdrantId": "med-017-m",
+    "name": "Sepia officinalis",
+    "description": "For emotional indifference and exhaustion, often after childbirth or prolonged family demands. The person feels detached even from loved ones, irritable, and wants to be alone; markedly better from vigorous motion and dancing.",
+    "category": "mental",
+    "tags": [
+      "indifference",
+      "detachment",
+      "irritable",
+      "after childbirth",
+      "burnout",
+      "better motion"
+    ],
+    "keynotes": {
+      "state": "detached, irritable, numb",
+      "worse_from": "family conflict, morning, menses, consolation",
+      "better_from": "walking, motion, being left alone",
+      "behavior": "avoidant, demanding, silent and closed",
+      "fears": "fear of responsibility, self-blame",
+      "sleep": "wakes unrefreshed, broken sleep",
+      "food": "aversion to food, craves sour, empty stomach aggravation",
+      "triggers": "childbirth, marriage stress, chronic family pressure, prolonged overwork",
+      "constitution": "indifferent, introverted, rigid",
+      "red_flags": "disconnection from reality"
+    },
+    "source": "Boericke Materia Medica"
+  },
+  {
+    "qdrantId": "med-018-m",
+    "name": "Stramonium",
+    "description": "For intense terror, especially fear of the dark and of being alone, with violent or frantic behaviour. May have hallucinations, nightmares, and a desire for light and company. For acute fright with extreme agitation.",
+    "category": "mental",
+    "tags": [
+      "terror",
+      "fear of dark",
+      "violence",
+      "hallucinations",
+      "nightmares",
+      "frantic"
+    ],
+    "keynotes": {
+      "state": "fearful, restless, angry",
+      "worse_from": "night-time, being alone, loneliness",
+      "better_from": "company, music, warmth",
+      "behavior": "aggressive, impulsive, controlling",
+      "fears": "fear of dark, fear of death, fear of losing control",
+      "sleep": "no sleep, fear at night, nightmares",
+      "food": "aversion to water",
+      "triggers": "fright, betrayal, humiliation",
+      "constitution": "sensitive, anxious",
+      "red_flags": "hallucinations, violence, extreme agitation, disconnection from reality"
+    },
+    "source": "Boericke Materia Medica"
   },
   {
     "qdrantId": "med-011",
     "name": "Berberine",
     "description": "A natural alkaloid with potent glucose-lowering effects comparable to metformin. Used for type 2 diabetes management, metabolic syndrome, high cholesterol, and PCOS. Also shows anti-inflammatory and gut microbiome-modulating properties.",
     "category": "chronic",
-    "tags": ["diabetes", "blood sugar", "cholesterol", "metabolic syndrome", "PCOS", "insulin resistance", "berberine"],
+    "tags": [
+      "diabetes",
+      "blood sugar",
+      "cholesterol",
+      "metabolic syndrome",
+      "PCOS",
+      "insulin resistance",
+      "berberine"
+    ],
     "source": "Journal of Ethnopharmacology"
   },
   {
@@ -92,7 +448,15 @@
     "name": "Coenzyme Q10 (CoQ10)",
     "description": "A powerful antioxidant naturally produced by the body that declines with age and statin use. Supports mitochondrial energy production, reduces oxidative stress, improves heart health, lowers blood pressure, and alleviates fatigue in chronic conditions.",
     "category": "chronic",
-    "tags": ["energy", "heart health", "antioxidant", "hypertension", "fatigue", "CoQ10", "statin side effects"],
+    "tags": [
+      "energy",
+      "heart health",
+      "antioxidant",
+      "hypertension",
+      "fatigue",
+      "CoQ10",
+      "statin side effects"
+    ],
     "source": "American Journal of Clinical Nutrition"
   },
   {
@@ -100,7 +464,14 @@
     "name": "Metformin",
     "description": "The first-line oral medication for type 2 diabetes. Reduces liver glucose production, improves insulin sensitivity, and lowers blood sugar. Also shown to have anti-ageing properties and reduce cardiovascular risk. Requires a prescription.",
     "category": "chronic",
-    "tags": ["type 2 diabetes", "blood sugar", "insulin resistance", "prescription", "cardiovascular", "anti-ageing"],
+    "tags": [
+      "type 2 diabetes",
+      "blood sugar",
+      "insulin resistance",
+      "prescription",
+      "cardiovascular",
+      "anti-ageing"
+    ],
     "source": "American Diabetes Association"
   },
   {
@@ -108,7 +479,14 @@
     "name": "Vitamin D3 + K2",
     "description": "Combined supplementation of vitamin D3 and K2 supports bone density, immune function, cardiovascular health, and mood regulation. Vitamin K2 ensures calcium is directed to bones rather than arteries. Especially important for people with limited sun exposure.",
     "category": "chronic",
-    "tags": ["bone health", "immune system", "vitamin D deficiency", "calcium", "cardiovascular", "osteoporosis"],
+    "tags": [
+      "bone health",
+      "immune system",
+      "vitamin D deficiency",
+      "calcium",
+      "cardiovascular",
+      "osteoporosis"
+    ],
     "source": "Osteoporosis International"
   },
   {
@@ -116,7 +494,15 @@
     "name": "Psyllium Husk",
     "description": "A soluble fibre supplement that lowers LDL cholesterol, improves blood sugar control, promotes healthy bowel movements, and supports weight management by increasing satiety. Used for IBS, constipation, type 2 diabetes, and high cholesterol.",
     "category": "chronic",
-    "tags": ["cholesterol", "blood sugar", "IBS", "constipation", "fibre", "weight management", "gut health"],
+    "tags": [
+      "cholesterol",
+      "blood sugar",
+      "IBS",
+      "constipation",
+      "fibre",
+      "weight management",
+      "gut health"
+    ],
     "source": "European Journal of Clinical Nutrition"
   },
   {
@@ -124,7 +510,14 @@
     "name": "Lisinopril",
     "description": "An ACE inhibitor used to treat high blood pressure (hypertension) and heart failure. Reduces cardiovascular risk, protects kidneys in diabetic patients, and lowers mortality after heart attacks. Available by prescription only.",
     "category": "chronic",
-    "tags": ["hypertension", "blood pressure", "heart failure", "ACE inhibitor", "prescription", "kidney protection"],
+    "tags": [
+      "hypertension",
+      "blood pressure",
+      "heart failure",
+      "ACE inhibitor",
+      "prescription",
+      "kidney protection"
+    ],
     "source": "WHO Essential Medicines List"
   },
   {
@@ -132,7 +525,15 @@
     "name": "Probiotics (Lactobacillus & Bifidobacterium blend)",
     "description": "A multi-strain probiotic supplement that restores gut microbiome balance, reduces symptoms of IBS, bloating, and diarrhoea. Also shown to improve mood (gut-brain axis), reduce inflammation, and support immune function in people with chronic lifestyle conditions.",
     "category": "chronic",
-    "tags": ["gut health", "IBS", "bloating", "immune system", "microbiome", "lactobacillus", "probiotic"],
+    "tags": [
+      "gut health",
+      "IBS",
+      "bloating",
+      "immune system",
+      "microbiome",
+      "lactobacillus",
+      "probiotic"
+    ],
     "source": "World Gastroenterology Organisation"
   }
 ]
