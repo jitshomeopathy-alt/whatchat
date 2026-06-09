@@ -1,8 +1,7 @@
 const { sendText } = require('../services/whatsapp');
 const { loadSession, saveSession, resetSession } = require('./stateManager');
 const registrationFlow = require('./flows/registration');
-const analyseMeFlow = require('./flows/analyseMe');
-const recoverMeFlow = require('./flows/recoverMe');
+const consultFlow = require('./flows/consult');
 const User = require('../models/User');
 
 /**
@@ -54,7 +53,12 @@ async function dispatch(whatsappId, message) {
     'REGISTERING_GENDER',
     'REGISTERING_EMAIL',
     'REGISTERING_IMAGE',
+    'REGISTERING_DOB',
+    'REGISTERING_RAASHI',
+    'REGISTERING_ADDRESS',
   ];
+
+  const consultStates = ['ASTRO_SATISFACTION', 'CATEGORY_SELECT', 'CONSULT_Q', 'CONSULT_ACTION'];
 
   if (registrationStates.includes(state)) {
     // Allow "register" / "hi" / "hello" / "start" to kick off registration
@@ -74,49 +78,22 @@ async function dispatch(whatsappId, message) {
     return;
   }
 
-  // ── Post-registration: check for trigger keywords ─────────────────────────
+  // ── Post-registration: (re)start the astrology → consult flow ─────────────
 
-  if (state === 'REGISTERED' || state === 'ANALYSE_DONE' || state === 'RECOVER_DONE') {
-    if (lowerText.includes('analyse me') || lowerText === 'analyze me') {
-      await saveSession(whatsappId, { state: 'ANALYSE_PENDING' });
-      await analyseMeFlow.handle(whatsappId, message, { ...session.toObject(), state: 'ANALYSE_PENDING' });
+  if (state === 'REGISTERED') {
+    const user = await User.findOne({ whatsappId });
+    if (!user) {
+      await registrationFlow.handle(whatsappId, message, { ...session.toObject(), state: 'IDLE' });
       return;
     }
-
-    if (lowerText.includes('recover me')) {
-      await recoverMeFlow.handle(whatsappId, message, session);
-      return;
-    }
-
-    // Unknown input from a registered user
-    await sendText(
-      whatsappId,
-      `I didn't quite understand that. Here's what you can do:\n\n` +
-        `• *"analyse me"* — Health assessment\n` +
-        `• *"recover me"* — Recovery questionnaire\n` +
-        `• *"help"* — Full help menu`
-    );
+    await consultFlow.startAstrology(whatsappId, user);
     return;
   }
 
-  // ── Analyse flow ───────────────────────────────────────────────────────────
+  // ── Ongoing astrology → consult flow ──────────────────────────────────────
 
-  if (state === 'ANALYSE_PENDING') {
-    await analyseMeFlow.handle(whatsappId, message, session);
-    return;
-  }
-
-  // ── Recover flow ──────────────────────────────────────────────────────────
-
-  if (state === 'RECOVER_CATEGORY_SELECT' || state === 'RECOVER_Q') {
-    // Allow escape to "analyse me" mid-recovery
-    if (lowerText.includes('analyse me') || lowerText === 'analyze me') {
-      await saveSession(whatsappId, { state: 'ANALYSE_PENDING' });
-      await analyseMeFlow.handle(whatsappId, message, { ...session.toObject(), state: 'ANALYSE_PENDING' });
-      return;
-    }
-
-    await recoverMeFlow.handle(whatsappId, message, session);
+  if (consultStates.includes(state)) {
+    await consultFlow.handle(whatsappId, message, session);
     return;
   }
 
@@ -138,9 +115,8 @@ async function sendHelpMessage(whatsappId, state, session) {
     msg += `It looks like you haven't registered yet.\n\n`;
     msg += `• Type *"hi"* or *"register"* to create your profile\n`;
   } else {
-    msg += `Hello, *${user.name}*! Here's what I can do:\n\n`;
-    msg += `• *"analyse me"* — Get a personalised health analysis using AI\n`;
-    msg += `• *"recover me"* — Answer a health questionnaire and get recovery recommendations\n`;
+    msg += `Hello, *${user.name}*! Here's how it works:\n\n`;
+    msg += `• Type *"hi"* — I'll give you an astrological reading, then a few questions, then your personalised result\n`;
     msg += `• *"help"* — Show this menu\n`;
     msg += `• *"cancel"* — Cancel the current operation\n`;
     msg += `\nCurrent status: *${formatState(state)}*`;
@@ -160,12 +136,14 @@ function formatState(state) {
     REGISTERING_GENDER: 'Registering (gender)',
     REGISTERING_EMAIL: 'Registering (email)',
     REGISTERING_IMAGE: 'Registering (photo)',
+    REGISTERING_DOB: 'Registering (date of birth)',
+    REGISTERING_RAASHI: 'Registering (raashi)',
+    REGISTERING_ADDRESS: 'Registering (address)',
     REGISTERED: 'Registered',
-    ANALYSE_PENDING: 'Analysing...',
-    ANALYSE_DONE: 'Analysis complete',
-    RECOVER_CATEGORY_SELECT: 'Recovery (selecting category)',
-    RECOVER_Q: 'Recovery (questionnaire)',
-    RECOVER_DONE: 'Recovery complete',
+    ASTRO_SATISFACTION: 'Astrology (rating)',
+    CATEGORY_SELECT: 'Selecting category',
+    CONSULT_Q: 'Questionnaire',
+    CONSULT_ACTION: 'Choosing next step',
   };
   return labels[state] || state;
 }

@@ -1,6 +1,7 @@
 const { sendText, downloadMedia } = require('../../services/whatsapp');
 const { uploadFromUrl } = require('../../services/imagekit');
 const { saveSession } = require('../stateManager');
+const consultFlow = require('./consult');
 const User = require('../../models/User');
 
 /**
@@ -140,9 +141,70 @@ async function handle(whatsappId, message, session) {
       return;
     }
 
-    // Save the user to MongoDB
+    // Defer the save — we still need dob, raashi, address for the astrology reading.
+    const updatedBuffer = { ...buffer, imageUrl };
+    await saveSession(whatsappId, {
+      state: 'REGISTERING_DOB',
+      registrationBuffer: updatedBuffer,
+    });
+    await sendText(
+      whatsappId,
+      `Almost there! 🔮 A few details for your astrological reading.\n\nWhat is your *date of birth*? (e.g., 21 May 1990 or 1990-05-21)`
+    );
+    return;
+  }
+
+  // ── REGISTERING_DOB ──────────────────────────────────────────────────────────
+  if (state === 'REGISTERING_DOB') {
+    const dob = extractText(message)?.trim();
+    if (!dob || dob.length < 4) {
+      await sendText(whatsappId, 'Please enter a valid date of birth (e.g., 21 May 1990 or 1990-05-21).');
+      return;
+    }
+
+    const buffer = { ...(session.registrationBuffer || {}), dob };
+    await saveSession(whatsappId, {
+      state: 'REGISTERING_RAASHI',
+      registrationBuffer: buffer,
+    });
+    await sendText(
+      whatsappId,
+      `Got it. What is your *raashi* (moon sign / zodiac)?\n\nIf you're not sure, just type *"don't know"* and I'll work from your date of birth.`
+    );
+    return;
+  }
+
+  // ── REGISTERING_RAASHI ───────────────────────────────────────────────────────
+  if (state === 'REGISTERING_RAASHI') {
+    const raashi = extractText(message)?.trim();
+    if (!raashi || raashi.length < 2) {
+      await sendText(whatsappId, 'Please enter your raashi, or type *"don\'t know"*.');
+      return;
+    }
+
+    const buffer = { ...(session.registrationBuffer || {}), raashi };
+    await saveSession(whatsappId, {
+      state: 'REGISTERING_ADDRESS',
+      registrationBuffer: buffer,
+    });
+    await sendText(whatsappId, `Thanks! Finally, what is your *address* (city is enough)?`);
+    return;
+  }
+
+  // ── REGISTERING_ADDRESS (final step → save + start astrology) ─────────────────
+  if (state === 'REGISTERING_ADDRESS') {
+    const address = extractText(message)?.trim();
+    if (!address || address.length < 2) {
+      await sendText(whatsappId, 'Please enter your address or city.');
+      return;
+    }
+
+    const buffer = { ...(session.registrationBuffer || {}), address };
+
+    // Save the complete user profile to MongoDB
+    let user;
     try {
-      await User.findOneAndUpdate(
+      user = await User.findOneAndUpdate(
         { whatsappId },
         {
           whatsappId,
@@ -150,7 +212,10 @@ async function handle(whatsappId, message, session) {
           age: buffer.age,
           gender: buffer.gender,
           email: buffer.email,
-          imageUrl,
+          imageUrl: buffer.imageUrl || null,
+          dob: buffer.dob,
+          raashi: buffer.raashi,
+          address: buffer.address,
           createdAt: new Date(),
         },
         { upsert: true, new: true }
@@ -166,14 +231,10 @@ async function handle(whatsappId, message, session) {
       registrationBuffer: {},
     });
 
-    const photoMsg = imageUrl ? ' and your photo has been saved' : '';
-    await sendText(
-      whatsappId,
-      `🎉 You're all set, *${buffer.name}*!\n\nYour profile is complete${photoMsg}.\n\nHere's what I can do for you:\n\n` +
-        `• Type *"analyse me"* — I'll assess your health profile\n` +
-        `• Type *"recover me"* — I'll guide you through a recovery questionnaire\n` +
-        `• Type *"help"* — see all available commands`
-    );
+    await sendText(whatsappId, `🎉 You're all set, *${buffer.name}*! Your profile is complete.`);
+
+    // Automatically generate the astrological reading (next step in the flow).
+    await consultFlow.startAstrology(whatsappId, user);
     return;
   }
 }

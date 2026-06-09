@@ -55,17 +55,21 @@ router.post('/', async (req, res) => {
             continue;
           }
 
+          // Normalize interactive (button/list) taps into a uniform shape the
+          // flows can read: message.interactive = { id, title }.
+          const normalized = normalizeMessage(message);
+
           // Filter out delivery status updates and other non-message events
-          const supportedTypes = ['text', 'image', 'audio', 'video', 'document'];
-          if (!supportedTypes.includes(message.type)) {
-            console.log(`[Webhook] Ignoring message type: ${message.type}`);
+          const supportedTypes = ['text', 'image', 'audio', 'video', 'document', 'interactive'];
+          if (!supportedTypes.includes(normalized.type)) {
+            console.log(`[Webhook] Ignoring message type: ${normalized.type}`);
             continue;
           }
 
-          console.log(`[Webhook] Incoming ${message.type} from ${whatsappId}`);
+          console.log(`[Webhook] Incoming ${normalized.type} from ${whatsappId}`);
 
           // Dispatch asynchronously (res already sent)
-          dispatch(whatsappId, message).catch((err) => {
+          dispatch(whatsappId, normalized).catch((err) => {
             console.error(`[Webhook] Dispatch error for ${whatsappId}:`, err.message);
           });
         }
@@ -75,5 +79,35 @@ router.post('/', async (req, res) => {
     console.error('[Webhook] POST handler error:', err.message);
   }
 });
+
+/**
+ * Normalize an incoming WhatsApp message. For interactive button/list replies,
+ * expose the selected option as `message.interactive = { id, title }` and also
+ * mirror the title into `message.text.body` so existing text-based handlers
+ * keep working.
+ * @param {Object} message - Raw message object from Meta
+ * @returns {Object} normalized message
+ */
+function normalizeMessage(message) {
+  if (message.type !== 'interactive') return message;
+
+  const interactive = message.interactive || {};
+  const reply =
+    interactive.type === 'button_reply'
+      ? interactive.button_reply
+      : interactive.type === 'list_reply'
+      ? interactive.list_reply
+      : null;
+
+  if (!reply) return message;
+
+  return {
+    ...message,
+    type: 'interactive',
+    interactive: { id: reply.id, title: reply.title || '' },
+    // Back-compat: many handlers read message.text.body
+    text: { body: reply.title || reply.id || '' },
+  };
+}
 
 module.exports = router;

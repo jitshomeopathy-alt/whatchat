@@ -70,6 +70,48 @@ Please provide a thorough wellness assessment and recommend which support catego
 }
 
 /**
+ * Generate a basic astrological reading from the user's birth details.
+ *
+ * ⚠️ PLACEHOLDER PROMPT — the real astrology prompt will be provided later.
+ * Swap out `systemPrompt` / `userMessage` below without touching the call site.
+ *
+ * @param {Object} details - { name, dob, raashi, address, age, gender }
+ * @returns {Promise<string>} - Astrology reading text
+ */
+async function astrologyReading(details) {
+  const client = getClient();
+
+  // ── PLACEHOLDER PROMPT (replace later) ──────────────────────────────────────
+  const systemPrompt = `You are an astrology and wellness guide. Given a person's
+basic birth details, produce a short, warm, general astrological reading focused
+on temperament, current emotional tendencies, and well-being. Keep it under 200
+words. Do NOT make medical claims. [PLACEHOLDER PROMPT — to be replaced.]`;
+
+  const userMessage = `Birth details:
+Name: ${details.name || ''}
+Date of birth: ${details.dob || ''}
+Raashi (moon sign): ${details.raashi || ''}
+Address: ${details.address || ''}
+Age: ${details.age ?? ''}
+Gender: ${details.gender || ''}
+
+Please give a brief astrological reading.`;
+  // ────────────────────────────────────────────────────────────────────────────
+
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ],
+    max_tokens: 500,
+    temperature: 0.7,
+  });
+
+  return response.choices[0].message.content.trim();
+}
+
+/**
  * Synthesise a recovery recommendation from Q&A answers.
  * @param {string} category - 'X', 'Y', or 'Z'
  * @param {string[]} answers - Array of answers matching the question set
@@ -171,4 +213,4 @@ async function embedText(text) {
   return response.data[0].embedding;
 }
 
-module.exports = { analyseUser, recoverSynthesis, detectCategory, embedText };
+module.exports = { analyseUser, astrologyReading, recoverSynthesis, detectCategory, embedText };

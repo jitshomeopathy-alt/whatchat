@@ -35,6 +35,19 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // ── Astrology / basic details ───────────────────────────────────────────
+    dob: {
+      type: String, // stored as the user typed it, e.g. "1990-05-21" or "21 May 1990"
+      default: null,
+    },
+    raashi: {
+      type: String, // moon sign / zodiac (raashi)
+      default: null,
+    },
+    address: {
+      type: String,
+      default: null,
+    },
     createdAt: {
       type: Date,
       default: Date.now,
