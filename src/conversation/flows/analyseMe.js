@@ -51,7 +51,7 @@ async function handle(whatsappId, message, session) {
   }
 
   // Detect recommended category
-  let recommendedCategory = 'health';
+  let recommendedCategory = 'addiction';
   try {
     recommendedCategory = await detectCategory(analysisText);
   } catch (err) {
@@ -91,7 +91,7 @@ async function handle(whatsappId, message, session) {
 
 function categoryLabel(cat) {
   const labels = {
-    health: 'Health — Physical / Pain Management',
+    addiction: 'Addiction — De-addiction / Substance Recovery',
     mental: 'Mental — Emotional Wellness',
     sex: 'Sex — Sexual Health & Wellness',
   };

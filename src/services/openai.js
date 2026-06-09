@@ -26,12 +26,12 @@ You will receive a user profile and optionally a photo. Your role is to:
 1. Provide a comprehensive wellness assessment based on the available information.
 2. Identify potential physical, mental, and lifestyle health concerns.
 3. Suggest which category of support the user might most benefit from:
-   - Category health: Physical / Pain management
+   - Category addiction: De-addiction / Substance recovery
    - Category mental: Mental / Emotional wellness
    - Category sex: Sexual health & wellness
 4. Be empathetic, non-alarmist, and professional.
 5. Keep your response under 500 words.
-6. End with a line: "Recommended category: health", "Recommended category: mental", or "Recommended category: sex"`;
+6. End with a line: "Recommended category: addiction", "Recommended category: mental", or "Recommended category: sex"`;
 
   const userContent = [];
 
@@ -80,7 +80,7 @@ async function recoverSynthesis(category, answers, questions) {
   const client = getClient();
 
   const categoryLabels = {
-    health: 'Physical / Pain Management',
+    addiction: 'De-addiction / Substance Recovery',
     mental: 'Mental / Emotional Wellness',
     sex: 'Sexual Health & Wellness',
   };
@@ -122,7 +122,7 @@ Do NOT diagnose medical conditions. Always recommend consulting a healthcare pro
  */
 async function detectCategory(analysisText) {
   // First try to parse the "Recommended category: health/mental/sex" line
-  const match = analysisText.match(/Recommended category:\s*(health|mental|sex)/i);
+  const match = analysisText.match(/Recommended category:\s*(addiction|mental|sex)/i);
   if (match) {
     return match[1].toLowerCase();
   }
@@ -136,7 +136,7 @@ async function detectCategory(analysisText) {
       {
         role: 'system',
         content:
-          'You classify health analysis text into one of three categories. Reply with ONLY one word: health (physical/pain), mental (mental/emotional), or sex (sexual health).',
+          'You classify health analysis text into one of three categories. Reply with ONLY one word: addiction (substance/de-addiction), mental (mental/emotional), or sex (sexual health).',
       },
       {
         role: 'user',
@@ -148,10 +148,10 @@ async function detectCategory(analysisText) {
   });
 
   const word = response.choices[0].message.content.trim().toLowerCase();
-  if (['health', 'mental', 'sex'].includes(word)) return word;
+  if (['addiction', 'mental', 'sex'].includes(word)) return word;
 
   // Default fallback
-  return 'health';
+  return 'addiction';
 }
 
 /**

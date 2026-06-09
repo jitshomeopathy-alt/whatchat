@@ -29,7 +29,7 @@ const sessionSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['health', 'mental', 'sex', null],
+      enum: ['addiction', 'mental', 'sex', null],
       default: null,
     },
     registrationBuffer: {

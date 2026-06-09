@@ -7,7 +7,7 @@ const User = require('../../models/User');
 const AnalysisHistory = require('../../models/AnalysisHistory');
 
 const categoryLabels = {
-  health: 'Health — Physical / Pain Management',
+  addiction: 'Addiction — De-addiction / Substance Recovery',
   mental: 'Mental — Emotional Wellness',
   sex: 'Sex — Sexual Health & Wellness',
 };
@@ -37,10 +37,10 @@ async function handle(whatsappId, message, session) {
 
     let prompt =
       `🌿 *Recovery Mode*\n\nI'll ask you some targeted questions and then suggest personalised remedies.\n\n` +
-      `Please choose your recovery category by replying with *health*, *mental*, or *sex*:\n\n` +
-      `*health* — Physical / Pain Management (5 questions)\n` +
+      `Please choose your recovery category by replying with *addiction*, *mental*, or *sex*:\n\n` +
+      `*addiction* — De-addiction / Substance Recovery (9 questions)\n` +
       `*mental* — Mental / Emotional Wellness (7 questions)\n` +
-      `*sex* — Sexual Health & Wellness (5 questions)`;
+      `*sex* — Sexual Health & Wellness (8 questions)`;
 
     if (suggestedCat) {
       prompt += `\n\n💡 Based on your health analysis, I recommend *${suggestedCat}*.`;
@@ -59,8 +59,8 @@ async function handle(whatsappId, message, session) {
   // ── Category selection ────────────────────────────────────────────────────────
   if (session.state === 'RECOVER_CATEGORY_SELECT') {
     const normalised = extractText(message)?.trim().toLowerCase();
-    if (!['health', 'mental', 'sex'].includes(normalised)) {
-      await sendText(whatsappId, 'Please reply with *health*, *mental*, or *sex* to select your recovery category.');
+    if (!['addiction', 'mental', 'sex'].includes(normalised)) {
+      await sendText(whatsappId, 'Please reply with *addiction*, *mental*, or *sex* to select your recovery category.');
       return;
     }
 
