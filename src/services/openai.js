@@ -213,4 +213,73 @@ async function embedText(text) {
   return response.data[0].embedding;
 }
 
-module.exports = { analyseUser, astrologyReading, recoverSynthesis, detectCategory, embedText };
+// ⚠️ PLACEHOLDER SYSTEM PROMPT — replace with the real prompt when provided.
+const REVIEW_SYSTEM_PROMPT = `You are a compassionate homeopathic health advisor.
+You receive a user's category and their answers to a fixed questionnaire.
+Based ONLY on those answers, write a short, warm result the user will read on
+WhatsApp. Include:
+1. A one-paragraph review of what their answers indicate ("Based on your answers...").
+2. The suggested remedies/medicines with a one-line reason each.
+3. A reminder that this is informational and not a substitute for a doctor.
+Keep it under 250 words. Do not diagnose serious conditions.
+[PLACEHOLDER PROMPT — to be replaced.]`;
+
+const reviewCategoryLabels = {
+  addiction: 'De-addiction / Substance Recovery',
+  mental: 'Mental / Emotional Wellness',
+  sex: 'Sexual Health & Wellness',
+};
+
+/**
+ * Review the user's questionnaire answers and produce the final result text
+ * shown to the user ("we reviewed your illness based on your answers and
+ * created your medicines...").
+ *
+ * The question/answer pairs are sent directly to the model and the model's
+ * answer is shown to the user.
+ *
+ * ⚠️ PLACEHOLDER PROMPT — the real system prompt will be provided later.
+ *
+ * @param {Object} params
+ * @param {string} params.category   - 'addiction' | 'mental' | 'sex'
+ * @param {string[]} params.questions - Questions asked, in order
+ * @param {string[]} params.answers   - User's answers, aligned with questions
+ * @param {Object} [params.user]     - { name, age, gender, raashi, ... } (optional context)
+ * @param {string} [params.astrologyResult] - Earlier astrology reading (optional context)
+ * @returns {Promise<string>} - Result text to show the user
+ */
+async function reviewAndPrescribe({ category, questions, answers, user, astrologyResult }) {
+  const client = getClient();
+
+  const label = reviewCategoryLabels[category] || category;
+
+  const qaPairs = questions
+    .map((q, i) => `Q${i + 1}: ${q}\nA${i + 1}: ${answers[i] || '(no answer)'}`)
+    .join('\n\n');
+
+  const userBlocks = [];
+  if (user || astrologyResult) {
+    const ctx = [];
+    if (user?.name) ctx.push(`Name: ${user.name}`);
+    if (user?.age != null) ctx.push(`Age: ${user.age}`);
+    if (user?.gender) ctx.push(`Gender: ${user.gender}`);
+    if (user?.raashi) ctx.push(`Raashi: ${user.raashi}`);
+    if (astrologyResult) ctx.push(`Astrology reading: ${astrologyResult}`);
+    if (ctx.length) userBlocks.push(`Context:\n${ctx.join('\n')}`);
+  }
+  userBlocks.push(`Category: ${label}\n\nQuestionnaire responses:\n\n${qaPairs}`);
+
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'system', content: REVIEW_SYSTEM_PROMPT },
+      { role: 'user', content: userBlocks.join('\n\n') },
+    ],
+    max_tokens: 1500,
+    temperature: 0.5,
+  });
+
+  return response.choices[0].message.content.trim();
+}
+
+module.exports = { analyseUser, astrologyReading, recoverSynthesis, detectCategory, embedText, reviewAndPrescribe };

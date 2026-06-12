@@ -1,410 +1,486 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WhatChat — AI Health Assistant on WhatsApp</title>
-  <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WhatChat — AI Health Assistant on WhatsApp</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    :root {
-      --green:       #25D366;
-      --green-dark:  #128C7E;
-      --green-light: #DCF8C6;
-      --white:       #FFFFFF;
-      --gray-light:  #F5F5F5;
-      --gray:        #888888;
-      --text:        #1A1A1A;
-      --text-light:  #555555;
-      --shadow:      0 4px 24px rgba(0,0,0,0.10);
-      --radius:      16px;
-    }
+      :root {
+        --green: #25d366;
+        --green-dark: #128c7e;
+        --green-light: #dcf8c6;
+        --white: #ffffff;
+        --gray-light: #f5f5f5;
+        --gray: #888888;
+        --text: #1a1a1a;
+        --text-light: #555555;
+        --shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+        --radius: 16px;
+      }
 
-    html, body {
-      height: 100%;
-    }
+      html,
+      body {
+        height: 100%;
+      }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-                   'Helvetica Neue', Arial, sans-serif;
-      background: var(--gray-light);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: var(--gray-light);
+        color: var(--text);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
 
-    /* ── HERO ─────────────────────────────────────────────────────────────── */
-    .hero {
-      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
-      color: var(--white);
-      padding: 64px 24px 80px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    }
-
-    .logo-ring {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 96px;
-      height: 96px;
-      background: rgba(255,255,255,0.15);
-      border-radius: 50%;
-      border: 3px solid rgba(255,255,255,0.35);
-      margin-bottom: 24px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .logo-ring svg {
-      width: 52px;
-      height: 52px;
-      fill: var(--white);
-    }
-
-    .hero h1 {
-      font-size: clamp(2rem, 5vw, 3rem);
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      margin-bottom: 12px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .hero h1 span {
-      color: var(--green-light);
-    }
-
-    .hero p {
-      font-size: clamp(1rem, 2.5vw, 1.2rem);
-      opacity: 0.92;
-      max-width: 560px;
-      margin: 0 auto 36px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .cta-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--white);
-      color: var(--green-dark);
-      font-size: 1.05rem;
-      font-weight: 700;
-      padding: 16px 36px;
-      border-radius: 50px;
-      text-decoration: none;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
-      position: relative;
-      z-index: 1;
-    }
-
-    .cta-btn:hover, .cta-btn:focus {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 28px rgba(0,0,0,0.22);
-      outline: none;
-    }
-
-    .cta-btn:active {
-      transform: translateY(0);
-    }
-
-    .cta-btn svg {
-      width: 22px;
-      height: 22px;
-      fill: var(--green);
-    }
-
-    /* ── FEATURES ─────────────────────────────────────────────────────────── */
-    .features {
-      max-width: 960px;
-      margin: -36px auto 0;
-      padding: 0 24px 60px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 20px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .card {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 28px 24px;
-      box-shadow: var(--shadow);
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-    }
-
-    .card-icon {
-      font-size: 2rem;
-      margin-bottom: 14px;
-      line-height: 1;
-    }
-
-    .card h3 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-      color: var(--text);
-    }
-
-    .card p {
-      font-size: 0.92rem;
-      color: var(--text-light);
-    }
-
-    /* ── HOW IT WORKS ──────────────────────────────────────────────────────── */
-    .section {
-      max-width: 800px;
-      margin: 0 auto 60px;
-      padding: 0 24px;
-      text-align: center;
-    }
-
-    .section h2 {
-      font-size: clamp(1.5rem, 3.5vw, 2rem);
-      font-weight: 800;
-      margin-bottom: 12px;
-    }
-
-    .section > p {
-      color: var(--text-light);
-      margin-bottom: 36px;
-    }
-
-    .steps {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      text-align: left;
-    }
-
-    .step {
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 20px 22px;
-      box-shadow: var(--shadow);
-    }
-
-    .step-num {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 40px;
-      height: 40px;
-      background: var(--green);
-      color: var(--white);
-      font-weight: 800;
-      font-size: 1rem;
-      border-radius: 50%;
-    }
-
-    .step-text h4 {
-      font-size: 0.98rem;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .step-text p {
-      font-size: 0.88rem;
-      color: var(--text-light);
-    }
-
-    /* ── BOTTOM CTA ────────────────────────────────────────────────────────── */
-    .bottom-cta {
-      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
-      color: var(--white);
-      text-align: center;
-      padding: 60px 24px;
-    }
-
-    .bottom-cta h2 {
-      font-size: clamp(1.4rem, 3.5vw, 2rem);
-      font-weight: 800;
-      margin-bottom: 12px;
-    }
-
-    .bottom-cta p {
-      opacity: 0.9;
-      margin-bottom: 28px;
-      max-width: 480px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    /* ── FOOTER ────────────────────────────────────────────────────────────── */
-    footer {
-      background: #111;
-      color: #aaa;
-      text-align: center;
-      padding: 22px 24px;
-      font-size: 0.83rem;
-      margin-top: auto;
-    }
-
-    footer a {
-      color: var(--green);
-      text-decoration: none;
-    }
-
-    /* ── DISCLAIMER ────────────────────────────────────────────────────────── */
-    .disclaimer {
-      max-width: 680px;
-      margin: 0 auto 40px;
-      padding: 0 24px;
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--gray);
-      border-top: 1px solid #e0e0e0;
-      padding-top: 24px;
-    }
-
-    @media (max-width: 480px) {
+      /* ── HERO ─────────────────────────────────────────────────────────────── */
       .hero {
-        padding: 48px 16px 72px;
+        background: linear-gradient(
+          135deg,
+          var(--green-dark) 0%,
+          var(--green) 100%
+        );
+        color: var(--white);
+        padding: 64px 24px 80px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
       }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      }
+
+      .logo-ring {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 96px;
+        height: 96px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        border: 3px solid rgba(255, 255, 255, 0.35);
+        margin-bottom: 24px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .logo-ring svg {
+        width: 52px;
+        height: 52px;
+        fill: var(--white);
+      }
+
+      .hero h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin-bottom: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero h1 span {
+        color: var(--green-light);
+      }
+
+      .hero p {
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+        opacity: 0.92;
+        max-width: 560px;
+        margin: 0 auto 36px;
+        position: relative;
+        z-index: 1;
+      }
+
       .cta-btn {
-        font-size: 0.95rem;
-        padding: 14px 28px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--white);
+        color: var(--green-dark);
+        font-size: 1.05rem;
+        font-weight: 700;
+        padding: 16px 36px;
+        border-radius: 50px;
+        text-decoration: none;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+        transition:
+          transform 0.18s ease,
+          box-shadow 0.18s ease;
+        position: relative;
+        z-index: 1;
       }
-    }
-  </style>
-</head>
-<body>
 
-  <!-- HERO ──────────────────────────────────────────────────────────────────── -->
-  <section class="hero">
-    <div class="logo-ring">
-      <!-- WhatsApp-style icon (simplified) -->
-      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z"/>
-      </svg>
-    </div>
-    <h1>What<span>Chat</span></h1>
-    <p>Your personal AI health assistant — available 24/7 on WhatsApp. Get health insights, wellness analysis, and personalised recovery recommendations instantly.</p>
-    <a class="cta-btn" href="https://wa.me/PHONE_NUMBER_HERE" target="_blank" rel="noopener">
-      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z"/>
-      </svg>
-      Start Chat on WhatsApp
-    </a>
-  </section>
+      .cta-btn:hover,
+      .cta-btn:focus {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+        outline: none;
+      }
 
-  <!-- FEATURE CARDS ──────────────────────────────────────────────────────────── -->
-  <div class="features">
-    <div class="card">
-      <div class="card-icon">🔍</div>
-      <h3>AI Health Analysis</h3>
-      <p>Send "analyse me" and get a comprehensive AI-powered wellness assessment based on your profile and photo.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">🌿</div>
-      <h3>Personalised Recovery Plans</h3>
-      <p>Answer targeted questions in your chosen category and receive tailored recovery recommendations and remedy suggestions.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">💊</div>
-      <h3>Smart Medicine Matching</h3>
-      <p>Semantically matched supplement and medicine recommendations from a curated database, ranked by relevance to your symptoms.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">🔒</div>
-      <h3>Secure &amp; Private</h3>
-      <p>Your data is stored securely. Photos are uploaded to a private CDN and your health information never leaves your conversation.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">📱</div>
-      <h3>No App Required</h3>
-      <p>Everything happens inside WhatsApp — no downloads, no sign-ups on a website. Just open a chat and start talking.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">⚡</div>
-      <h3>Available 24/7</h3>
-      <p>The AI never sleeps. Get health guidance any time of day, whether it's 2 AM or a public holiday.</p>
-    </div>
-  </div>
+      .cta-btn:active {
+        transform: translateY(0);
+      }
 
-  <!-- HOW IT WORKS ────────────────────────────────────────────────────────────── -->
-  <section class="section">
-    <h2>How It Works</h2>
-    <p>Getting started takes less than 2 minutes</p>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-text">
-          <h4>Open WhatsApp &amp; Start a Chat</h4>
-          <p>Tap the "Start Chat" button above or scan the QR code to open a conversation with WhatChat.</p>
+      .cta-btn svg {
+        width: 22px;
+        height: 22px;
+        fill: var(--green);
+      }
+
+      /* ── FEATURES ─────────────────────────────────────────────────────────── */
+      .features {
+        max-width: 960px;
+        margin: 30px auto 0;
+        padding: 0 24px 60px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .card {
+        background: var(--white);
+        border-radius: var(--radius);
+        padding: 28px 24px;
+        box-shadow: var(--shadow);
+        transition:
+          transform 0.18s ease,
+          box-shadow 0.18s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+
+      .card-icon {
+        font-size: 2rem;
+        margin-bottom: 14px;
+        line-height: 1;
+      }
+
+      .card h3 {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--text);
+      }
+
+      .card p {
+        font-size: 0.92rem;
+        color: var(--text-light);
+      }
+
+      /* ── HOW IT WORKS ──────────────────────────────────────────────────────── */
+      .section {
+        max-width: 800px;
+        margin: 0 auto 60px;
+        padding: 0 24px;
+        text-align: center;
+      }
+
+      .section h2 {
+        font-size: clamp(1.5rem, 3.5vw, 2rem);
+        font-weight: 800;
+        margin-bottom: 12px;
+      }
+
+      .section > p {
+        color: var(--text-light);
+        margin-bottom: 36px;
+      }
+
+      .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        text-align: left;
+      }
+
+      .step {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        background: var(--white);
+        border-radius: var(--radius);
+        padding: 20px 22px;
+        box-shadow: var(--shadow);
+      }
+
+      .step-num {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        background: var(--green);
+        color: var(--white);
+        font-weight: 800;
+        font-size: 1rem;
+        border-radius: 50%;
+      }
+
+      .step-text h4 {
+        font-size: 0.98rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .step-text p {
+        font-size: 0.88rem;
+        color: var(--text-light);
+      }
+
+      /* ── BOTTOM CTA ────────────────────────────────────────────────────────── */
+      .bottom-cta {
+        background: linear-gradient(
+          135deg,
+          var(--green-dark) 0%,
+          var(--green) 100%
+        );
+        color: var(--white);
+        text-align: center;
+        padding: 60px 24px;
+      }
+
+      .bottom-cta h2 {
+        font-size: clamp(1.4rem, 3.5vw, 2rem);
+        font-weight: 800;
+        margin-bottom: 12px;
+      }
+
+      .bottom-cta p {
+        opacity: 0.9;
+        margin-bottom: 28px;
+        max-width: 480px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /* ── FOOTER ────────────────────────────────────────────────────────────── */
+      footer {
+        background: #111;
+        color: #aaa;
+        text-align: center;
+        padding: 22px 24px;
+        font-size: 0.83rem;
+        margin-top: auto;
+      }
+
+      footer a {
+        color: var(--green);
+        text-decoration: none;
+      }
+
+      /* ── DISCLAIMER ────────────────────────────────────────────────────────── */
+      .disclaimer {
+        max-width: 680px;
+        margin: 0 auto 40px;
+        padding: 0 24px;
+        text-align: center;
+        font-size: 0.8rem;
+        color: var(--gray);
+        border-top: 1px solid #e0e0e0;
+        padding-top: 24px;
+      }
+
+      @media (max-width: 480px) {
+        .hero {
+          padding: 48px 16px 72px;
+        }
+        .cta-btn {
+          font-size: 0.95rem;
+          padding: 14px 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HERO ──────────────────────────────────────────────────────────────────── -->
+    <section class="hero">
+      <div class="logo-ring">
+        <!-- WhatsApp-style icon (simplified) -->
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z"
+          />
+        </svg>
+      </div>
+      <h1>What<span>Chat</span></h1>
+      <p>
+        Your personal AI health assistant — available 24/7 on WhatsApp. Get
+        health insights, wellness analysis, and personalised recovery
+        recommendations instantly.
+      </p>
+      <a
+        class="cta-btn"
+        href="https://wa.me/PHONE_NUMBER_HERE"
+        target="_blank"
+        rel="noopener"
+      >
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z"
+          />
+        </svg>
+        Start Chat on WhatsApp
+      </a>
+    </section>
+
+    <!-- FEATURE CARDS ──────────────────────────────────────────────────────────── -->
+    <div class="features">
+      <div class="card">
+        <div class="card-icon">🔍</div>
+        <h3>AI Health Analysis</h3>
+        <p>
+          Send "analyse me" and get a comprehensive AI-powered wellness
+          assessment based on your profile and photo.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌿</div>
+        <h3>Personalised Recovery Plans</h3>
+        <p>
+          Answer targeted questions in your chosen category and receive tailored
+          recovery recommendations and remedy suggestions.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-icon">💊</div>
+        <h3>Smart Medicine Matching</h3>
+        <p>
+          Semantically matched supplement and medicine recommendations from a
+          curated database, ranked by relevance to your symptoms.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔒</div>
+        <h3>Secure &amp; Private</h3>
+        <p>
+          Your data is stored securely. Photos are uploaded to a private CDN and
+          your health information never leaves your conversation.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📱</div>
+        <h3>No App Required</h3>
+        <p>
+          Everything happens inside WhatsApp — no downloads, no sign-ups on a
+          website. Just open a chat and start talking.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3>Available 24/7</h3>
+        <p>
+          The AI never sleeps. Get health guidance any time of day, whether it's
+          2 AM or a public holiday.
+        </p>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS ────────────────────────────────────────────────────────────── -->
+    <section class="section">
+      <h2>How It Works</h2>
+      <p>Getting started takes less than 2 minutes</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <h4>Open WhatsApp &amp; Start a Chat</h4>
+            <p>
+              Tap the "Start Chat" button above or scan the QR code to open a
+              conversation with WhatChat.
+            </p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <h4>Register Your Profile</h4>
+            <p>
+              The bot will guide you through a quick registration — name, age,
+              gender, email, and an optional profile photo for visual analysis.
+            </p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <h4>Get Your Health Analysis</h4>
+            <p>
+              Type <strong>"analyse me"</strong> and receive a personalised
+              wellness assessment powered by GPT-4o vision AI.
+            </p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">
+            <h4>Follow Your Recovery Plan</h4>
+            <p>
+              Type <strong>"recover me"</strong>, choose your wellness category,
+              answer a short questionnaire, and receive actionable
+              recommendations including matched remedies.
+            </p>
+          </div>
         </div>
       </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-text">
-          <h4>Register Your Profile</h4>
-          <p>The bot will guide you through a quick registration — name, age, gender, email, and an optional profile photo for visual analysis.</p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-text">
-          <h4>Get Your Health Analysis</h4>
-          <p>Type <strong>"analyse me"</strong> and receive a personalised wellness assessment powered by GPT-4o vision AI.</p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-text">
-          <h4>Follow Your Recovery Plan</h4>
-          <p>Type <strong>"recover me"</strong>, choose your wellness category, answer a short questionnaire, and receive actionable recommendations including matched remedies.</p>
-        </div>
-      </div>
+    </section>
+
+    <!-- BOTTOM CTA ──────────────────────────────────────────────────────────────── -->
+    <section class="bottom-cta">
+      <h2>Ready to start your wellness journey?</h2>
+      <p>
+        Join thousands of users getting AI-powered health guidance directly on
+        WhatsApp.
+      </p>
+      <a
+        class="cta-btn"
+        href="https://wa.me/8818809542"
+        target="_blank"
+        rel="noopener"
+      >
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z"
+          />
+        </svg>
+        Chat with WhatChat Now
+      </a>
+    </section>
+
+    <!-- DISCLAIMER ────────────────────────────────────────────────────────────── -->
+    <div class="disclaimer">
+      <p>
+        ⚠️ WhatChat is an AI-powered wellness information tool and is not a
+        substitute for professional medical advice, diagnosis, or treatment.
+        Always consult a qualified healthcare professional for medical concerns.
+      </p>
     </div>
-  </section>
 
-  <!-- BOTTOM CTA ──────────────────────────────────────────────────────────────── -->
-  <section class="bottom-cta">
-    <h2>Ready to start your wellness journey?</h2>
-    <p>Join thousands of users getting AI-powered health guidance directly on WhatsApp.</p>
-    <a class="cta-btn" href="https://wa.me/PHONE_NUMBER_HERE" target="_blank" rel="noopener">
-      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z"/>
-      </svg>
-      Chat with WhatChat Now
-    </a>
-  </section>
-
-  <!-- DISCLAIMER ────────────────────────────────────────────────────────────── -->
-  <div class="disclaimer">
-    <p>⚠️ WhatChat is an AI-powered wellness information tool and is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional for medical concerns.</p>
-  </div>
-
-  <!-- FOOTER ──────────────────────────────────────────────────────────────────── -->
-  <footer>
-    <p>&copy; 2025 WhatChat. Built with Node.js, OpenAI GPT-4o, and WhatsApp Cloud API.</p>
-  </footer>
-
-</body>
+    <!-- FOOTER ──────────────────────────────────────────────────────────────────── -->
+    <footer>
+      <p>
+        &copy; 2025 WhatChat. Built with Node.js, OpenAI GPT-4o, and WhatsApp
+        Cloud API.
+      </p>
+    </footer>
+  </body>
 </html>

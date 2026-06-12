@@ -1,6 +1,5 @@
 const { sendText, sendButtons, sendList } = require('../../services/whatsapp');
-const { astrologyReading } = require('../../services/openai');
-const { reviewAndPrescribe } = require('../../services/claude');
+const { astrologyReading, reviewAndPrescribe } = require('../../services/openai');
 const { saveSession, resetSession } = require('../stateManager');
 const questions = require('../questions');
 const User = require('../../models/User');
@@ -205,7 +204,7 @@ async function handleQuestion(whatsappId, message, session) {
     return;
   }
 
-  // All answered → review with Claude.
+  // All answered → review with OpenAI.
   await saveSession(whatsappId, { recoverAnswers: updatedAnswers, currentQuestion: nextQ });
   await finishConsult(whatsappId, session, category, updatedAnswers);
 }
@@ -256,7 +255,7 @@ async function finishConsult(whatsappId, session, category, answers) {
       astrologyResult: session.astrologyResult,
     });
   } catch (err) {
-    console.error('[Consult] Claude review error:', err.message);
+    console.error('[Consult] review error:', err.message);
     await sendText(
       whatsappId,
       'Sorry, the review service is temporarily unavailable. Please type *"hi"* to start again shortly.'
