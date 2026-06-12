@@ -10,19 +10,64 @@ const { initCollection } = require('./services/qdrant');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const WEBSITE_DIR = path.join(__dirname, '../website');
 
 // ── Middleware ──────────────────────────────────────────────────────────────────
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve static files from /public
+// Serve static files from /public (assets, if any)
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve website assets (shared stylesheet, images, .html files)
+app.use(express.static(WEBSITE_DIR));
+
+// ── Database (lazy, serverless-safe) ────────────────────────────────────────────
+// On serverless platforms (Vercel) the module is required on every cold start.
+// We must NOT connect at import time or call process.exit — that crashes the
+// function and returns a 500 before any route runs. Instead connect on demand
+// and cache the promise so warm invocations reuse the same connection.
+
+let dbPromise = null;
+
+function connectDB() {
+  if (mongoose.connection.readyState === 1) return Promise.resolve();
+  if (!dbPromise) {
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/whatchat';
+    dbPromise = mongoose
+      .connect(mongoUri, {
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+      })
+      .then((conn) => {
+        console.log('[MongoDB] Connected');
+        return conn;
+      })
+      .catch((err) => {
+        dbPromise = null; // allow a later request to retry
+        console.error('[MongoDB] Connection failed:', err.message);
+        throw err;
+      });
+  }
+  return dbPromise;
+}
+
+// Gate DB-backed routes behind a live connection. Static pages never hit this,
+// so the website keeps loading even if the database is down.
+async function requireDB(req, res, next) {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(503).json({ error: 'Service temporarily unavailable' });
+  }
+}
 
 // ── Routes ──────────────────────────────────────────────────────────────────────
 
-app.use('/webhook', webhookRouter);
-app.use('/admin', adminRouter);
+app.use('/webhook', requireDB, webhookRouter);
+app.use('/admin', requireDB, adminRouter);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -34,10 +79,20 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Root — serve landing page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../website/index.html'));
-});
+// ── Website pages ─────────────────────────────────────────────────────────────
+const pages = {
+  '/': 'index.html',
+  '/about': 'about.html',
+  '/contact': 'contact.html',
+  '/privacy': 'privacy.html',
+  '/terms': 'terms.html',
+};
+
+for (const [route, file] of Object.entries(pages)) {
+  app.get(route, (req, res) => res.sendFile(path.join(WEBSITE_DIR, file)));
+  // Also allow the .html form so direct links keep working.
+  if (route !== '/') app.get(`${route}.html`, (req, res) => res.sendFile(path.join(WEBSITE_DIR, file)));
+}
 
 // 404 handler
 app.use((req, res) => {
@@ -50,38 +105,30 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// ── Database connections & startup ─────────────────────────────────────────────
+// ── Startup ─────────────────────────────────────────────────────────────────────
+// Only listen / bootstrap when run directly (local dev or a normal Node host).
+// On Vercel the platform imports `app` and invokes it per-request, so we must
+// not call app.listen there.
 
-async function start() {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/whatchat';
-
-  try {
-    await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-    });
-    console.log('[MongoDB] Connected to', mongoUri);
-  } catch (err) {
-    console.error('[MongoDB] Connection failed:', err.message);
-    process.exit(1);
-  }
-
-  // Initialise Qdrant collection
-  try {
-    await initCollection();
-    console.log('[Qdrant] Collection ready');
-  } catch (err) {
-    console.warn('[Qdrant] Collection init warning (continuing):', err.message);
-  }
-
+if (require.main === module) {
+  // Start listening immediately so the website serves even before (or without)
+  // a database connection. DB/Qdrant are warmed up in the background.
   app.listen(PORT, () => {
     console.log(`[Server] WhatChat running on port ${PORT}`);
     console.log(`[Server] Webhook: POST /webhook`);
     console.log(`[Server] Admin:   /admin/medicines`);
     console.log(`[Server] Health:  /health`);
   });
-}
 
-start();
+  connectDB().catch((err) =>
+    console.error('[MongoDB] Initial connection failed:', err.message)
+  );
+
+  initCollection()
+    .then(() => console.log('[Qdrant] Collection ready'))
+    .catch((err) =>
+      console.warn('[Qdrant] Collection init warning (continuing):', err.message)
+    );
+}
 
 module.exports = app;
