@@ -148,7 +148,7 @@
         margin: 30px auto 0;
         padding: 0 24px 60px;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
         gap: 20px;
         position: relative;
         z-index: 2;
@@ -307,6 +307,14 @@
         .cta-btn {
           font-size: 0.95rem;
           padding: 14px 28px;
+        }
+        .features {
+          padding: 0 16px 48px;
+        }
+        .section,
+        .bottom-cta {
+          padding-left: 16px;
+          padding-right: 16px;
         }
       }
     </style>

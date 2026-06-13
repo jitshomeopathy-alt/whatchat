@@ -266,9 +266,19 @@ for business account goto:-
 - https://business.facebook.com/latest/whatsapp_manager/
 - for managing whatsapp messaging templates
 
-for whatsapp token
+for whatsapp permanent token
+
 1. Go to Business Settings → https://business.facebook.com/settings/system-users (pick your business 1246940270692085)
-  2. Add a System User → give it Admin/Employee role
-  3. Add Assets → assign your WhatsApp app (1016636434351401) with full control
-  4. Click Generate new token → select the app → check the permissions whatsapp_business_messaging and whatsapp_business_management
-  5. Set expiry to Never → copy the token (shown only once)
+2. Add a System User → give it Admin/Employee role
+3. Add Assets → assign your WhatsApp app (1016636434351401) with full control
+4. Click Generate new token → select the app → check the permissions whatsapp_business_messaging and whatsapp_business_management
+5. Set expiry to Never → copy the token (shown only once)
+
+for webhooks:-
+
+- add domain/webhook (webhook file should already created in backend with route)
+- verify token is custom made string by dev
+
+publish app:-
+
+- after all these setting/conigs you have to publish the app
