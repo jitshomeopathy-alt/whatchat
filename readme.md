@@ -278,6 +278,7 @@ for webhooks:-
 
 - add domain/webhook (webhook file should already created in backend with route)
 - verify token is custom made string by dev
+- ensure you on the messsage toggle for subscribe (important)
 
 publish app:-
 
