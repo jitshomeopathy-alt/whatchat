@@ -25,14 +25,17 @@ router.get('/', (req, res) => {
  * Inbound messages from Meta Cloud API.
  */
 router.post('/', async (req, res) => {
-  // Acknowledge receipt immediately (Meta expects 200 within 20s)
-  res.sendStatus(200);
-
+  // NOTE: We must fully process the message BEFORE responding. On serverless
+  // platforms (Vercel) the function is frozen/terminated as soon as the HTTP
+  // response is sent, so any fire-and-forget async work after res.send() never
+  // runs and the user never gets a reply. A greeting/registration step is well
+  // within Meta's ~20s acknowledgement window. We always answer 200 (even on
+  // error) so Meta does not retry-storm us.
   try {
     const body = req.body;
 
     if (body.object !== 'whatsapp_business_account') {
-      return;
+      return res.sendStatus(200);
     }
 
     const entries = body.entry || [];
@@ -45,7 +48,6 @@ router.post('/', async (req, res) => {
 
         const value = change.value || {};
         const messages = value.messages || [];
-        const contacts = value.contacts || [];
 
         for (const message of messages) {
           const whatsappId = message.from; // Sender's WhatsApp number
@@ -68,16 +70,23 @@ router.post('/', async (req, res) => {
 
           console.log(`[Webhook] Incoming ${normalized.type} from ${whatsappId}`);
 
-          // Dispatch asynchronously (res already sent)
-          dispatch(whatsappId, normalized).catch((err) => {
+          // Process fully BEFORE responding so serverless does not freeze the
+          // function mid-reply. Swallow per-message errors so one bad message
+          // does not abort the rest of the batch.
+          try {
+            await dispatch(whatsappId, normalized);
+          } catch (err) {
             console.error(`[Webhook] Dispatch error for ${whatsappId}:`, err.message);
-          });
+          }
         }
       }
     }
   } catch (err) {
     console.error('[Webhook] POST handler error:', err.message);
   }
+
+  // Always acknowledge so Meta does not retry-storm us.
+  return res.sendStatus(200);
 });
 
 /**
