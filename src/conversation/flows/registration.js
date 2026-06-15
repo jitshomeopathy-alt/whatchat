@@ -1,4 +1,4 @@
-const { sendText, downloadMedia } = require('../../services/whatsapp');
+const { sendText, sendButtons, downloadMedia } = require('../../services/whatsapp');
 const { uploadFromUrl } = require('../../services/imagekit');
 const { saveSession } = require('../stateManager');
 const consultFlow = require('./consult');
@@ -58,20 +58,33 @@ async function handle(whatsappId, message, session) {
       state: 'REGISTERING_GENDER',
       registrationBuffer: buffer,
     });
-    await sendText(
+    await sendButtons(
       whatsappId,
-      `Got it — *${age} years old*.\n\nWhat is your gender?\nPlease reply with one of:\n• male\n• female\n• other`
+      `Got it — *${age} years old*.\n\nWhat is your gender?`,
+      [
+        { id: 'male', title: 'Male' },
+        { id: 'female', title: 'Female' },
+        { id: 'other', title: 'Other' },
+      ]
     );
     return;
   }
 
   // ── REGISTERING_GENDER ───────────────────────────────────────────────────────
   if (state === 'REGISTERING_GENDER') {
-    const text = extractText(message)?.toLowerCase().trim();
+    const text = (message.interactive?.id || extractText(message))?.toLowerCase().trim();
     const allowed = ['male', 'female', 'other'];
 
     if (!allowed.includes(text)) {
-      await sendText(whatsappId, 'Please reply with *male*, *female*, or *other*.');
+      await sendButtons(
+        whatsappId,
+        'Please choose your gender:',
+        [
+          { id: 'male', title: 'Male' },
+          { id: 'female', title: 'Female' },
+          { id: 'other', title: 'Other' },
+        ]
+      );
       return;
     }
 
