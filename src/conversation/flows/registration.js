@@ -1,6 +1,7 @@
 const { sendText, sendButtons, downloadMedia } = require('../../services/whatsapp');
 const { uploadFromUrl } = require('../../services/imagekit');
 const { saveSession } = require('../stateManager');
+const { formatDob, isValidDob } = require('../../utils/date');
 const consultFlow = require('./consult');
 const User = require('../../models/User');
 
@@ -13,15 +14,51 @@ const User = require('../../models/User');
 async function handle(whatsappId, message, session) {
   const state = session.state;
 
-  // ── IDLE: kick off registration ─────────────────────────────────────────────
+  // ── IDLE: kick off registration — ask language first ─────────────────────────
   if (state === 'IDLE') {
     await saveSession(whatsappId, {
-      state: 'REGISTERING_NAME',
+      state: 'REGISTERING_LANGUAGE',
       registrationBuffer: {},
+    });
+    await sendButtons(
+      whatsappId,
+      `👋 Welcome to WhatChat!\n\nPlease choose your language.\nकृपया अपनी भाषा चुनें।`,
+      [
+        { id: 'lang:en', title: 'English' },
+        { id: 'lang:hi', title: 'हिंदी' },
+      ]
+    );
+    return;
+  }
+
+  // ── REGISTERING_LANGUAGE ─────────────────────────────────────────────────────
+  if (state === 'REGISTERING_LANGUAGE') {
+    const raw = (message.interactive?.id || extractText(message) || '').toLowerCase().trim();
+    let language = null;
+    if (raw === 'lang:en' || raw === 'english' || raw === 'en') language = 'en';
+    else if (raw === 'lang:hi' || raw === 'hindi' || raw === 'हिंदी' || raw === 'hi') language = 'hi';
+
+    if (!language) {
+      await sendButtons(
+        whatsappId,
+        'Please choose your language. / कृपया अपनी भाषा चुनें।',
+        [
+          { id: 'lang:en', title: 'English' },
+          { id: 'lang:hi', title: 'हिंदी' },
+        ]
+      );
+      return;
+    }
+
+    const buffer = { ...(session.registrationBuffer || {}), language };
+    await saveSession(whatsappId, {
+      state: 'REGISTERING_NAME',
+      language,
+      registrationBuffer: buffer,
     });
     await sendText(
       whatsappId,
-      `👋 Welcome to WhatChat Health Assistant!\n\nI'm here to help you with personalised health insights and recovery recommendations.\n\nLet's get you registered first. What is your *full name*?`
+      `Let's get you registered first. What is your *full name*?`
     );
     return;
   }
@@ -114,7 +151,7 @@ async function handle(whatsappId, message, session) {
     });
     await sendText(
       whatsappId,
-      `Great! Almost done. 📸\n\nPlease send a *photo of yourself* so I can provide a more personalised health analysis.\n\n_(You can skip this by typing "skip")_`
+      `Great! Almost done. ✋📸\n\nPlease send a clear *photo of your palm* (open hand, fingers spread) so I can read it for a more personalised profile.\n\n_(You can skip this by typing "skip")_`
     );
     return;
   }
@@ -139,7 +176,7 @@ async function handle(whatsappId, message, session) {
 
         await sendText(whatsappId, '⏳ Uploading your photo, please wait...');
         const mediaBuffer = await downloadMedia(mediaId);
-        const filename = `user_${whatsappId}_profile.jpg`;
+        const filename = `user_${whatsappId}_palm.jpg`;
         imageUrl = await uploadFromUrl(null, filename, mediaBuffer);
       } catch (err) {
         console.error('[Registration] Image upload error:', err.message);
@@ -154,7 +191,7 @@ async function handle(whatsappId, message, session) {
       return;
     }
 
-    // Defer the save — we still need dob, raashi, address for the astrology reading.
+    // Defer the save — we still need dob and city for the profile reading.
     const updatedBuffer = { ...buffer, imageUrl };
     await saveSession(whatsappId, {
       state: 'REGISTERING_DOB',
@@ -162,45 +199,26 @@ async function handle(whatsappId, message, session) {
     });
     await sendText(
       whatsappId,
-      `Almost there! 🔮 A few details for your astrological reading.\n\nWhat is your *date of birth*? (e.g., 21 May 1990 or 1990-05-21)`
+      `Almost there! 🔮 A couple of details for your profile.\n\nWhat is your *date of birth*? Please use *dd-mm-yyyy* (e.g., 21-05-1990).`
     );
     return;
   }
 
   // ── REGISTERING_DOB ──────────────────────────────────────────────────────────
   if (state === 'REGISTERING_DOB') {
-    const dob = extractText(message)?.trim();
-    if (!dob || dob.length < 4) {
-      await sendText(whatsappId, 'Please enter a valid date of birth (e.g., 21 May 1990 or 1990-05-21).');
+    const dobInput = extractText(message)?.trim();
+    if (!isValidDob(dobInput)) {
+      await sendText(whatsappId, 'Please enter a valid date of birth in *dd-mm-yyyy* format (e.g., 21-05-1990).');
       return;
     }
 
+    const dob = formatDob(dobInput); // normalized to dd-mm-yyyy
     const buffer = { ...(session.registrationBuffer || {}), dob };
-    await saveSession(whatsappId, {
-      state: 'REGISTERING_RAASHI',
-      registrationBuffer: buffer,
-    });
-    await sendText(
-      whatsappId,
-      `Got it. What is your *raashi* (moon sign / zodiac)?\n\nIf you're not sure, just type *"don't know"* and I'll work from your date of birth.`
-    );
-    return;
-  }
-
-  // ── REGISTERING_RAASHI ───────────────────────────────────────────────────────
-  if (state === 'REGISTERING_RAASHI') {
-    const raashi = extractText(message)?.trim();
-    if (!raashi || raashi.length < 2) {
-      await sendText(whatsappId, 'Please enter your raashi, or type *"don\'t know"*.');
-      return;
-    }
-
-    const buffer = { ...(session.registrationBuffer || {}), raashi };
     await saveSession(whatsappId, {
       state: 'REGISTERING_ADDRESS',
       registrationBuffer: buffer,
     });
-    await sendText(whatsappId, `Thanks! Finally, what is your *address* (city is enough)?`);
+    await sendText(whatsappId, `Got it — *${dob}*. Finally, what is your *city*?`);
     return;
   }
 
@@ -226,8 +244,8 @@ async function handle(whatsappId, message, session) {
           gender: buffer.gender,
           email: buffer.email,
           imageUrl: buffer.imageUrl || null,
+          language: buffer.language || 'en',
           dob: buffer.dob,
-          raashi: buffer.raashi,
           address: buffer.address,
           createdAt: new Date(),
         },

@@ -13,6 +13,7 @@ const sessionSchema = new mongoose.Schema(
       required: true,
       enum: [
         'IDLE',
+        'REGISTERING_LANGUAGE',
         'REGISTERING_NAME',
         'REGISTERING_AGE',
         'REGISTERING_GENDER',
@@ -40,6 +41,12 @@ const sessionSchema = new mongoose.Schema(
       type: String,
       enum: ['addiction', 'mental', 'sex', null],
       default: null,
+    },
+    // Preferred language for the current flow: 'en' | 'hi'
+    language: {
+      type: String,
+      enum: ['en', 'hi'],
+      default: 'en',
     },
     registrationBuffer: {
       type: mongoose.Schema.Types.Mixed,

@@ -48,13 +48,13 @@ async function dispatch(whatsappId, message) {
 
   const registrationStates = [
     'IDLE',
+    'REGISTERING_LANGUAGE',
     'REGISTERING_NAME',
     'REGISTERING_AGE',
     'REGISTERING_GENDER',
     'REGISTERING_EMAIL',
     'REGISTERING_IMAGE',
     'REGISTERING_DOB',
-    'REGISTERING_RAASHI',
     'REGISTERING_ADDRESS',
   ];
 
@@ -131,14 +131,14 @@ async function sendHelpMessage(whatsappId, state, session) {
 function formatState(state) {
   const labels = {
     IDLE: 'Not registered',
+    REGISTERING_LANGUAGE: 'Registering (language)',
     REGISTERING_NAME: 'Registering (name)',
     REGISTERING_AGE: 'Registering (age)',
     REGISTERING_GENDER: 'Registering (gender)',
     REGISTERING_EMAIL: 'Registering (email)',
-    REGISTERING_IMAGE: 'Registering (photo)',
+    REGISTERING_IMAGE: 'Registering (palm photo)',
     REGISTERING_DOB: 'Registering (date of birth)',
-    REGISTERING_RAASHI: 'Registering (raashi)',
-    REGISTERING_ADDRESS: 'Registering (address)',
+    REGISTERING_ADDRESS: 'Registering (city)',
     REGISTERED: 'Registered',
     ASTRO_SATISFACTION: 'Astrology (rating)',
     CATEGORY_SELECT: 'Selecting category',

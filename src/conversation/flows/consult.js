@@ -1,7 +1,7 @@
 const { sendText, sendButtons, sendList } = require('../../services/whatsapp');
 const { astrologyReading, reviewAndPrescribe } = require('../../services/openai');
 const { saveSession, resetSession } = require('../stateManager');
-const questions = require('../questions');
+const { getQuestions } = require('../questions');
 const User = require('../../models/User');
 const AnalysisHistory = require('../../models/AnalysisHistory');
 
@@ -21,20 +21,23 @@ const SATISFACTION_BUCKETS = ['0-25', '25-50', '50-75', '75-100'];
  * @param {Object} user - User document
  */
 async function startAstrology(whatsappId, user) {
-  await sendText(whatsappId, `🔮 Reading the stars for you, *${user.name}*... please wait a moment.`);
+  const language = user.language || 'en';
+  await sendText(whatsappId, `🔮 Reading your palm, *${user.name}*... please wait a moment.`);
 
   let reading;
   try {
-    reading = await astrologyReading({
-      name: user.name,
-      dob: user.dob,
-      raashi: user.raashi,
-      address: user.address,
-      age: user.age,
-      gender: user.gender,
-    });
+    reading = await astrologyReading(
+      {
+        name: user.name,
+        dob: user.dob,
+        age: user.age,
+        city: user.address,
+        language,
+      },
+      user.imageUrl
+    );
   } catch (err) {
-    console.error('[Consult] Astrology error:', err.message);
+    console.error('[Consult] Reading error:', err.message);
     await sendText(
       whatsappId,
       'Sorry, the reading service is temporarily unavailable. Please type *"hi"* to try again in a moment.'
@@ -43,7 +46,7 @@ async function startAstrology(whatsappId, user) {
     return;
   }
 
-  await saveSession(whatsappId, { state: 'ASTRO_SATISFACTION', astrologyResult: reading });
+  await saveSession(whatsappId, { state: 'ASTRO_SATISFACTION', language, astrologyResult: reading });
 
   await sendText(whatsappId, `✨ *Your Reading*\n\n${reading}`);
 
@@ -116,6 +119,7 @@ async function sendCategoryButtons(whatsappId) {
 
 // ── Step 2: category selection ────────────────────────────────────────────────
 async function handleCategorySelect(whatsappId, message, session) {
+  const lang = session.language || 'en';
   const id = interactiveId(message);
   let category = null;
 
@@ -127,7 +131,8 @@ async function handleCategorySelect(whatsappId, message, session) {
     else if (text === 'sexual health' || text === 'sexual') category = 'sex';
   }
 
-  if (!category || !questions[category]) {
+  const set = category && getQuestions(category, lang);
+  if (!set) {
     await sendText(whatsappId, 'Please tap *Mental*, *Addiction*, or *Sexual health* to continue.');
     return;
   }
@@ -141,9 +146,9 @@ async function handleCategorySelect(whatsappId, message, session) {
 
   await sendText(
     whatsappId,
-    `✅ Starting the *${categoryLabels[category]}* questionnaire — ${questions[category].length} questions.`
+    `✅ Starting the *${categoryLabels[category]}* questionnaire — ${set.length} questions.`
   );
-  await askQuestion(whatsappId, category, 0);
+  await askQuestion(whatsappId, category, 0, lang);
 }
 
 // ── Step 3: questionnaire ─────────────────────────────────────────────────────
@@ -155,9 +160,10 @@ function canUseList(q) {
   return !q.multiSelect && q.options.length <= 10 && q.options.every((o) => o.length <= 24);
 }
 
-async function askQuestion(whatsappId, category, qIndex) {
-  const q = questions[category][qIndex];
-  const total = questions[category].length;
+async function askQuestion(whatsappId, category, qIndex, lang = 'en') {
+  const set = getQuestions(category, lang);
+  const q = set[qIndex];
+  const total = set.length;
   const header = `Question ${qIndex + 1} of ${total}`;
 
   if (canUseList(q)) {
@@ -180,9 +186,11 @@ async function askQuestion(whatsappId, category, qIndex) {
 }
 
 async function handleQuestion(whatsappId, message, session) {
+  const lang = session.language || 'en';
   const category = session.category;
   const qIndex = session.currentQuestion;
-  const q = questions[category][qIndex];
+  const set = getQuestions(category, lang);
+  const q = set[qIndex];
 
   const answer = parseAnswer(message, q);
   if (answer === null) {
@@ -198,9 +206,9 @@ async function handleQuestion(whatsappId, message, session) {
   const updatedAnswers = [...(session.recoverAnswers || []), answer];
   const nextQ = qIndex + 1;
 
-  if (nextQ < questions[category].length) {
+  if (nextQ < set.length) {
     await saveSession(whatsappId, { recoverAnswers: updatedAnswers, currentQuestion: nextQ });
-    await askQuestion(whatsappId, category, nextQ);
+    await askQuestion(whatsappId, category, nextQ, lang);
     return;
   }
 
@@ -238,10 +246,11 @@ function parseAnswer(message, q) {
 }
 
 async function finishConsult(whatsappId, session, category, answers) {
+  const lang = session.language || 'en';
   await sendText(whatsappId, '✅ Reviewing your answers and preparing your result... ⏳');
 
   const user = await User.findOne({ whatsappId });
-  const questionTexts = questions[category].map((q) => q.text);
+  const questionTexts = getQuestions(category, lang).map((q) => q.text);
 
   let resultText;
   try {
@@ -250,9 +259,10 @@ async function finishConsult(whatsappId, session, category, answers) {
       questions: questionTexts,
       answers,
       user: user
-        ? { name: user.name, age: user.age, gender: user.gender, raashi: user.raashi }
+        ? { name: user.name, age: user.age, gender: user.gender }
         : undefined,
       astrologyResult: session.astrologyResult,
+      language: lang,
     });
   } catch (err) {
     console.error('[Consult] review error:', err.message);

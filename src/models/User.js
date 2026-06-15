@@ -32,16 +32,22 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
     },
     imageUrl: {
-      type: String,
+      type: String, // palm photo
       default: null,
+    },
+    // Preferred language for questions and AI results: 'en' | 'hi'
+    language: {
+      type: String,
+      enum: ['en', 'hi'],
+      default: 'en',
     },
     // ── Astrology / basic details ───────────────────────────────────────────
     dob: {
-      type: String, // stored as the user typed it, e.g. "1990-05-21" or "21 May 1990"
+      type: String, // normalized to dd-mm-yyyy
       default: null,
     },
     raashi: {
-      type: String, // moon sign / zodiac (raashi)
+      type: String, // legacy — no longer collected
       default: null,
     },
     address: {

@@ -70,41 +70,71 @@ Please provide a thorough wellness assessment and recommend which support catego
 }
 
 /**
- * Generate a basic astrological reading from the user's birth details.
- *
- * ⚠️ PLACEHOLDER PROMPT — the real astrology prompt will be provided later.
- * Swap out `systemPrompt` / `userMessage` below without touching the call site.
- *
- * @param {Object} details - { name, dob, raashi, address, age, gender }
- * @returns {Promise<string>} - Astrology reading text
+ * Map a language code to its display name for prompt instructions.
  */
-async function astrologyReading(details) {
+function languageName(code) {
+  return code === 'hi' ? 'Hindi' : 'English';
+}
+
+/**
+ * Generate the first personalized profile from the user's details and palm photo.
+ * Uses a single GPT-4o vision call: the model analyses the attached palm photo
+ * and produces the profile in one shot.
+ *
+ * @param {Object} details - { name, dob, age, city, language }
+ * @param {string|null} imageUrl - Public URL of the user's palm photo (may be null)
+ * @returns {Promise<string>} - Profile text (6 bullet points)
+ */
+async function astrologyReading(details, imageUrl) {
   const client = getClient();
+  const language = languageName(details.language);
 
-  // ── PLACEHOLDER PROMPT (replace later) ──────────────────────────────────────
-  const systemPrompt = `You are an astrology and wellness guide. Given a person's
-basic birth details, produce a short, warm, general astrological reading focused
-on temperament, current emotional tendencies, and well-being. Keep it under 200
-words. Do NOT make medical claims. [PLACEHOLDER PROMPT — to be replaced.]`;
+  const palmLine = imageUrl
+    ? 'Derive the Palm Analysis from the attached palm photo.'
+    : 'No palm photo was provided — infer a plausible reading from the other details.';
 
-  const userMessage = `Birth details:
-Name: ${details.name || ''}
-Date of birth: ${details.dob || ''}
-Raashi (moon sign): ${details.raashi || ''}
-Address: ${details.address || ''}
-Age: ${details.age ?? ''}
-Gender: ${details.gender || ''}
+  const systemPrompt = `You are an expert astrologer and palmistry interpreter.
 
-Please give a brief astrological reading.`;
-  // ────────────────────────────────────────────────────────────────────────────
+Based on:
+- Name: ${details.name || ''}
+- Date of Birth: ${details.dob || ''}
+- Age: ${details.age ?? ''}
+- Residence City: ${details.city || ''}
+- Palm Analysis: ${palmLine}
+
+Generate a short personalized profile consisting of exactly 6 bullet points.
+
+Focus on:
+1. Core personality traits
+2. Thinking and decision-making style
+3. Communication style
+4. Career and ambition tendencies
+5. Relationship and social behavior
+6. Hidden strength or growth area
+
+Requirements:
+- Each bullet should be 1-2 sentences.
+- Sound highly personalized and specific.
+- Use confident but non-absolute language.
+- Do not mention astrology signs, planets, houses, palm lines, or technical terms.
+- Do not make health, legal, financial, or lifespan predictions.
+- Avoid generic statements that could apply to everyone.
+- Make the profile feel insightful and relatable.
+- Return only the bullet points.
+- Write the entire response in ${language}.`;
+
+  const userContent = [{ type: 'text', text: 'Generate the profile.' }];
+  if (imageUrl) {
+    userContent.push({ type: 'image_url', image_url: { url: imageUrl, detail: 'low' } });
+  }
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     messages: [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMessage },
+      { role: 'user', content: userContent },
     ],
-    max_tokens: 500,
+    max_tokens: 600,
     temperature: 0.7,
   });
 
@@ -244,14 +274,16 @@ const reviewCategoryLabels = {
  * @param {string} params.category   - 'addiction' | 'mental' | 'sex'
  * @param {string[]} params.questions - Questions asked, in order
  * @param {string[]} params.answers   - User's answers, aligned with questions
- * @param {Object} [params.user]     - { name, age, gender, raashi, ... } (optional context)
- * @param {string} [params.astrologyResult] - Earlier astrology reading (optional context)
+ * @param {Object} [params.user]     - { name, age, gender, ... } (optional context)
+ * @param {string} [params.astrologyResult] - Earlier profile reading (optional context)
+ * @param {string} [params.language] - 'en' | 'hi' (output language)
  * @returns {Promise<string>} - Result text to show the user
  */
-async function reviewAndPrescribe({ category, questions, answers, user, astrologyResult }) {
+async function reviewAndPrescribe({ category, questions, answers, user, astrologyResult, language }) {
   const client = getClient();
 
   const label = reviewCategoryLabels[category] || category;
+  const outputLanguage = languageName(language);
 
   const qaPairs = questions
     .map((q, i) => `Q${i + 1}: ${q}\nA${i + 1}: ${answers[i] || '(no answer)'}`)
@@ -263,11 +295,11 @@ async function reviewAndPrescribe({ category, questions, answers, user, astrolog
     if (user?.name) ctx.push(`Name: ${user.name}`);
     if (user?.age != null) ctx.push(`Age: ${user.age}`);
     if (user?.gender) ctx.push(`Gender: ${user.gender}`);
-    if (user?.raashi) ctx.push(`Raashi: ${user.raashi}`);
-    if (astrologyResult) ctx.push(`Astrology reading: ${astrologyResult}`);
+    if (astrologyResult) ctx.push(`Profile reading: ${astrologyResult}`);
     if (ctx.length) userBlocks.push(`Context:\n${ctx.join('\n')}`);
   }
   userBlocks.push(`Category: ${label}\n\nQuestionnaire responses:\n\n${qaPairs}`);
+  userBlocks.push(`Write the entire response in ${outputLanguage}.`);
 
   const response = await client.chat.completions.create({
     model: 'gpt-4o',
