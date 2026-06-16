@@ -58,7 +58,7 @@ async function dispatch(whatsappId, message) {
     'REGISTERING_ADDRESS',
   ];
 
-  const consultStates = ['ASTRO_SATISFACTION', 'CATEGORY_SELECT', 'CONSULT_Q', 'CONSULT_ACTION'];
+  const consultStates = ['ASTRO_SATISFACTION', 'CATEGORY_SELECT', 'CONSULT_Q', 'PAYMENT_PENDING', 'CONSULT_ACTION'];
 
   if (registrationStates.includes(state)) {
     // Allow "register" / "hi" / "hello" / "start" to kick off registration
@@ -143,6 +143,7 @@ function formatState(state) {
     ASTRO_SATISFACTION: 'Astrology (rating)',
     CATEGORY_SELECT: 'Selecting category',
     CONSULT_Q: 'Questionnaire',
+    PAYMENT_PENDING: 'Awaiting payment',
     CONSULT_ACTION: 'Choosing next step',
   };
   return labels[state] || state;

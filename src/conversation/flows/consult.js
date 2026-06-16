@@ -1,5 +1,6 @@
 const { sendText, sendButtons, sendList } = require('../../services/whatsapp');
 const { astrologyReading, reviewAndPrescribe } = require('../../services/openai');
+const razorpay = require('../../services/razorpay');
 const { saveSession, resetSession } = require('../stateManager');
 const { getQuestions } = require('../questions');
 const { t, categoryLabel } = require('../i18n');
@@ -65,6 +66,8 @@ async function handle(whatsappId, message, session) {
       return handleCategorySelect(whatsappId, message, session);
     case 'CONSULT_Q':
       return handleQuestion(whatsappId, message, session);
+    case 'PAYMENT_PENDING':
+      return handlePayment(whatsappId, message, session);
     case 'CONSULT_ACTION':
       return handleAction(whatsappId, message, session);
     default:
@@ -283,10 +286,120 @@ async function finishConsult(whatsappId, session, category, answers) {
     console.error('[Consult] History save error:', err.message);
   }
 
-  await saveSession(whatsappId, { state: 'CONSULT_ACTION' });
-
   await sendText(whatsappId, t('resultIntro', lang, { result: message }));
 
+  // Gate the Order / Consult choice behind a ₹399 payment.
+  await requestPayment(whatsappId, lang, user);
+}
+
+/**
+ * Create a Razorpay payment link and ask the user to pay before unlocking the
+ * Order / Consult choice. If Razorpay isn't configured or the API call fails we
+ * fail open — the user still gets their next-step options rather than a dead end.
+ */
+async function requestPayment(whatsappId, lang, user) {
+  if (!razorpay.isConfigured()) {
+    console.warn('[Consult] Razorpay not configured — skipping payment gate.');
+    await sendActionButtons(whatsappId, lang);
+    await saveSession(whatsappId, { state: 'CONSULT_ACTION' });
+    return;
+  }
+
+  let link;
+  try {
+    link = await razorpay.createPaymentLink({ whatsappId, name: user?.name });
+  } catch (err) {
+    console.error('[Consult] Payment link creation failed:', err.response?.data || err.message);
+    // Fail open: don't trap the user if billing is down.
+    await sendActionButtons(whatsappId, lang);
+    await saveSession(whatsappId, { state: 'CONSULT_ACTION' });
+    return;
+  }
+
+  await saveSession(whatsappId, {
+    state: 'PAYMENT_PENDING',
+    paymentLinkId: link.id,
+    paymentStatus: 'pending',
+  });
+
+  await sendButtons(
+    whatsappId,
+    t('paymentPrompt', lang, { link: link.shortUrl }),
+    [{ id: 'pay:check', title: t('paymentPaidButton', lang) }],
+    { header: t('paymentHeader', lang) }
+  );
+}
+
+// ── Step 3b: payment gate ─────────────────────────────────────────────────────
+async function handlePayment(whatsappId, message, session) {
+  const lang = session.language || 'en';
+
+  // Already confirmed (e.g. webhook fired first) — just move on.
+  if (session.paymentStatus === 'paid') {
+    return completePayment(whatsappId);
+  }
+
+  const id = interactiveId(message);
+  const text = extractText(message)?.trim().toLowerCase();
+  const wantsCheck =
+    (id && id === 'pay:check') || text === "i've paid" || text === 'paid' || text === 'i have paid';
+
+  if (!wantsCheck) {
+    // Nudge: re-show the pay button without creating a new link.
+    await sendButtons(
+      whatsappId,
+      t('paymentNotReceived', lang),
+      [{ id: 'pay:check', title: t('paymentPaidButton', lang) }],
+      { header: t('paymentHeader', lang) }
+    );
+    return;
+  }
+
+  // Verify against Razorpay before unlocking.
+  let status;
+  try {
+    status = await razorpay.getPaymentLinkStatus(session.paymentLinkId);
+  } catch (err) {
+    console.error('[Consult] Payment status check failed:', err.response?.data || err.message);
+    await sendText(whatsappId, t('paymentUnavailable', lang));
+    return;
+  }
+
+  if (status === 'paid') {
+    await saveSession(whatsappId, { paymentStatus: 'paid' });
+    return completePayment(whatsappId);
+  }
+
+  await sendButtons(
+    whatsappId,
+    t('paymentNotReceived', lang),
+    [{ id: 'pay:check', title: t('paymentPaidButton', lang) }],
+    { header: t('paymentHeader', lang) }
+  );
+}
+
+/**
+ * Advance from a confirmed payment to the Order / Consult choice. Safe to call
+ * from both the WhatsApp flow and the Razorpay webhook; it is idempotent.
+ * @param {string} whatsappId
+ */
+async function completePayment(whatsappId) {
+  const Session = require('../../models/Session');
+  const session = await Session.findOne({ whatsappId });
+  if (!session) return;
+
+  // Only valid coming out of the payment step; ignore stale/duplicate triggers.
+  if (session.state !== 'PAYMENT_PENDING' && session.state !== 'CONSULT_ACTION') return;
+  if (session.state === 'CONSULT_ACTION') return; // already advanced
+
+  const lang = session.language || 'en';
+
+  await saveSession(whatsappId, { state: 'CONSULT_ACTION', paymentStatus: 'paid' });
+  await sendText(whatsappId, t('paymentConfirmed', lang));
+  await sendActionButtons(whatsappId, lang);
+}
+
+async function sendActionButtons(whatsappId, lang = 'en') {
   await sendButtons(
     whatsappId,
     t('nextStepPrompt', lang),
@@ -334,4 +447,4 @@ function extractText(message) {
   return null;
 }
 
-module.exports = { startAstrology, handle };
+module.exports = { startAstrology, handle, completePayment };

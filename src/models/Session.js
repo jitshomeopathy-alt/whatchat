@@ -27,6 +27,7 @@ const sessionSchema = new mongoose.Schema(
         'ASTRO_SATISFACTION', // reading shown, awaiting 0-25/25-50/50-75/75-100 tap
         'CATEGORY_SELECT', // awaiting category button tap
         'CONSULT_Q', // answering category questions
+        'PAYMENT_PENDING', // result shown, awaiting ₹399 payment before order/consult
         'CONSULT_ACTION', // review shown, awaiting order/consult tap
         // ── Legacy (kept for back-compat) ─────────────────────────────────
         'ANALYSE_PENDING',
@@ -67,6 +68,16 @@ const sessionSchema = new mongoose.Schema(
     },
     satisfaction: {
       type: String, // one of '0-25', '25-50', '50-75', '75-100'
+      default: null,
+    },
+    // ── Payment (Razorpay) ──────────────────────────────────────────────────
+    paymentLinkId: {
+      type: String, // Razorpay payment link id (plink_...), indexed for webhook lookup
+      default: null,
+      index: true,
+    },
+    paymentStatus: {
+      type: String, // null | 'pending' | 'paid'
       default: null,
     },
     updatedAt: {

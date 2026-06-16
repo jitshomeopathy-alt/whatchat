@@ -14,7 +14,15 @@ const WEBSITE_DIR = path.join(__dirname, '../website');
 
 // ── Middleware ──────────────────────────────────────────────────────────────────
 
-app.use(express.json({ limit: '10mb' }));
+// Capture the raw body so webhook signatures (e.g. Razorpay) can be verified.
+app.use(
+  express.json({
+    limit: '10mb',
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Admin UI pages (static HTML that fetch the protected APIs with a bearer token).

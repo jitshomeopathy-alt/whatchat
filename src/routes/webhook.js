@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { dispatch } = require('../conversation/dispatcher');
+const razorpay = require('../services/razorpay');
+const { completePayment } = require('../conversation/flows/consult');
 
 /**
  * GET /webhook
@@ -86,6 +88,39 @@ router.post('/', async (req, res) => {
   }
 
   // Always acknowledge so Meta does not retry-storm us.
+  return res.sendStatus(200);
+});
+
+/**
+ * POST /webhook/razorpay
+ * Razorpay payment webhook. On `payment_link.paid` we advance the matching
+ * user's session from the payment gate to the Order / Consult choice.
+ */
+router.post('/razorpay', async (req, res) => {
+  // Verify the signature against the raw bytes Razorpay sent.
+  const signature = req.headers['x-razorpay-signature'];
+  if (!razorpay.verifyWebhookSignature(req.rawBody, signature)) {
+    console.warn('[Razorpay] Webhook signature verification failed');
+    return res.sendStatus(400);
+  }
+
+  try {
+    const event = req.body?.event;
+    if (event === 'payment_link.paid') {
+      const entity = req.body?.payload?.payment_link?.entity || {};
+      const whatsappId = entity?.notes?.whatsappId;
+      if (whatsappId) {
+        console.log(`[Razorpay] Payment confirmed for ${whatsappId} (${entity.id})`);
+        await completePayment(whatsappId);
+      } else {
+        console.warn('[Razorpay] payment_link.paid missing notes.whatsappId');
+      }
+    }
+  } catch (err) {
+    console.error('[Razorpay] Webhook handler error:', err.message);
+  }
+
+  // Always 200 so Razorpay does not retry-storm us.
   return res.sendStatus(200);
 });
 

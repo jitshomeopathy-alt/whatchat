@@ -176,6 +176,27 @@ const STRINGS = {
     en: ({ result }) => `🩺 *Based on everything you shared, here’s what I’ve prepared for you:*\n\n${result}`,
     hi: ({ result }) => `🩺 *आपने जो कुछ बताया, उसके आधार पर मैंने आपके लिए यह तैयार किया है:*\n\n${result}`,
   },
+  // ── Payment (Razorpay) ──────────────────────────────────────────────────────
+  paymentPrompt: {
+    en: ({ link }) =>
+      `💳 *Unlock your personalised plan*\n\nTo continue and choose how you'd like to proceed, please complete a one-time payment of *₹399*.\n\n👉 Pay securely here:\n${link}\n\nOnce your payment is done, it’ll continue automatically — or tap *I’ve paid* below. 💚`,
+    hi: ({ link }) =>
+      `💳 *अपनी विशेष योजना अनलॉक करें*\n\nआगे बढ़ने और अपना विकल्प चुनने के लिए, कृपया *₹399* का एक बार भुगतान पूरा करें।\n\n👉 यहाँ सुरक्षित भुगतान करें:\n${link}\n\nभुगतान होते ही यह अपने आप आगे बढ़ जाएगा — या नीचे *भुगतान हो गया* पर टैप करें। 💚`,
+  },
+  paymentPaidButton: { en: 'I’ve paid ✅', hi: 'भुगतान हो गया ✅' },
+  paymentHeader: { en: 'Payment', hi: 'भुगतान' },
+  paymentNotReceived: {
+    en: 'I haven’t received your payment yet. 🙏 Please complete it using the link above, then tap *I’ve paid* again. If you just paid, give it a few seconds. 💚',
+    hi: 'मुझे अभी तक आपका भुगतान नहीं मिला है। 🙏 कृपया ऊपर दिए लिंक से भुगतान पूरा करें, फिर दोबारा *भुगतान हो गया* पर टैप करें। यदि आपने अभी भुगतान किया है, तो कुछ सेकंड दीजिए। 💚',
+  },
+  paymentConfirmed: {
+    en: '✅ *Payment received — thank you!* 💚 Here’s your next step:',
+    hi: '✅ *भुगतान प्राप्त हुआ — धन्यवाद!* 💚 आपका अगला कदम यह रहा:',
+  },
+  paymentUnavailable: {
+    en: 'I’m so sorry — payment is taking a short break. 😔 Please type *"hi"* to try again in a moment. 🙏',
+    hi: 'मुझे खेद है — भुगतान सेवा अभी थोड़ी देर के लिए उपलब्ध नहीं है। 😔 कृपया एक पल में दोबारा कोशिश करने के लिए *"hi"* लिखिए। 🙏',
+  },
   nextStepPrompt: {
     en: 'What feels right for you as a next step? I’m here with you. 🤝💚',
     hi: 'आगे के लिए आपको क्या सही लगता है? मैं आपके साथ हूँ। 🤝💚',

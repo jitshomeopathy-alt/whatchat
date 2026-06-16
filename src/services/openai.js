@@ -86,21 +86,65 @@ function languageName(code) {
  * @returns {Promise<string>} - Profile text (6 bullet points)
  */
 async function astrologyReading(details, imageUrl) {
+  // First attempt: include the photo (if any) as light inspiration. If the
+  // vision model refuses to engage with the image, transparently fall back to
+  // a details-only reading so the user always receives a profile.
+  if (imageUrl) {
+    const withImage = await generateReading(details, imageUrl);
+    if (!looksLikeRefusal(withImage)) return withImage;
+    console.warn('[OpenAI] Vision model declined the palm photo — retrying without image.');
+  }
+  return generateReading(details, null);
+}
+
+/**
+ * Heuristic: did the model return a refusal / "I can't analyze this image"
+ * style message instead of an actual reading?
+ */
+function looksLikeRefusal(text) {
+  if (!text) return true;
+  const t = text.toLowerCase();
+  const phrases = [
+    "i'm sorry",
+    'i am sorry',
+    "i can't help",
+    'i cannot help',
+    "i can't assist",
+    'i cannot assist',
+    "i can't identify",
+    'i cannot identify',
+    "i can't analyze",
+    'i cannot analyze',
+    "i'm unable to",
+    'i am unable to',
+    'unable to identify',
+    'unable to analyze',
+    'as an ai',
+  ];
+  return phrases.some((p) => t.includes(p));
+}
+
+/**
+ * Single GPT-4o call that produces the 6-bullet profile.
+ * @param {Object} details - { name, dob, age, city, language }
+ * @param {string|null} imageUrl - palm photo URL, or null for a details-only reading
+ */
+async function generateReading(details, imageUrl) {
   const client = getClient();
   const language = languageName(details.language);
 
   const palmLine = imageUrl
-    ? 'Derive the Palm Analysis from the attached palm photo.'
-    : 'No palm photo was provided — infer a plausible reading from the other details.';
+    ? 'A photo of the person\'s hand is attached — use its general look and feel only as light, artistic inspiration for the character reading.'
+    : 'No photo was provided — craft a plausible reading from the other details.';
 
-  const systemPrompt = `You are an expert astrologer and palmistry interpreter.
+  const systemPrompt = `You are a warm, intuitive personality guide who writes uplifting character readings.
 
 Based on:
 - Name: ${details.name || ''}
 - Date of Birth: ${details.dob || ''}
 - Age: ${details.age ?? ''}
 - Residence City: ${details.city || ''}
-- Palm Analysis: ${palmLine}
+- Inspiration: ${palmLine}
 
 Generate a short personalized profile consisting of exactly 6 bullet points.
 
@@ -117,6 +161,7 @@ Requirements:
 - Sound highly personalized and specific.
 - Use confident but non-absolute language.
 - Do not mention astrology signs, planets, houses, palm lines, or technical terms.
+- Do not describe, identify, or analyze the photo itself; never refer to it.
 - Do not make health, legal, financial, or lifespan predictions.
 - Avoid generic statements that could apply to everyone.
 - Make the profile feel insightful and relatable.
