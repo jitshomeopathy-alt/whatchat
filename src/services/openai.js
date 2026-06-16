@@ -259,8 +259,7 @@ Rules for "message" (shown to the user):
 4. NEVER name, mention, abbreviate, or hint at any specific medicine, remedy, brand,
    ingredient, or product. Refer only generally to "a personalised remedy plan" or
    "the recommended remedies". This is a strict requirement.
-5. End with a gentle reminder that this is informational and not a substitute for a doctor.
-6. Do not diagnose serious conditions.
+5. Do not diagnose serious conditions.
 
 Rules for "medicines" (internal — for the care team only, NEVER shown to the user):
 1. List 1-4 concrete suggested remedies, each with a short one-line reason.

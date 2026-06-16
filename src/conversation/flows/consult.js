@@ -294,7 +294,7 @@ async function finishConsult(whatsappId, session, category, answers) {
       { id: 'act:order', title: t('actionOrder', lang) },
       { id: 'act:consult', title: t('actionConsult', lang) },
     ],
-    { header: t('nextStepHeader', lang), footer: t('nextStepFooter', lang) }
+    { header: t('nextStepHeader', lang) }
   );
 }
 

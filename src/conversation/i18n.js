@@ -98,8 +98,8 @@ const STRINGS = {
 
   // ── Consult: astrology + satisfaction ────────────────────────────────────────
   readingPalm: {
-    en: ({ name }) => `🔮 Reading your palm, *${name}*... take a deep breath, this’ll be just a moment. 🌬️✨`,
-    hi: ({ name }) => `🔮 आपकी हथेली पढ़ रहा हूँ, *${name}*... एक गहरी साँस लीजिए, बस एक पल में। 🌬️✨`,
+    en: ({ name }) => `🔮 Reading your details, *${name}*... take a deep breath, this’ll be just a moment. 🌬️✨`,
+    hi: ({ name }) => `🔮 आपकी जानकारी देख रहा हूँ, *${name}*... एक गहरी साँस लीजिए, बस एक पल में। 🌬️✨`,
   },
   readingUnavailable: {
     en: 'I’m so sorry — the reading service is taking a short break. 😔 Please type *"hi"* to try again in a moment. 🙏',

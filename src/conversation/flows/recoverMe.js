@@ -187,7 +187,7 @@ async function handle(whatsappId, message, session) {
     }
 
     finalMessage +=
-      `\n---\n⚠️ _These suggestions are for informational purposes only. Please consult a qualified healthcare professional before starting any new treatment._\n\n` +
+      `\n---\n` +
       `Type *"analyse me"* for a fresh health analysis or *"recover me"* to start a new questionnaire.`;
 
     await sendText(whatsappId, finalMessage);

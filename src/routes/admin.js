@@ -19,17 +19,27 @@ const fs = require('fs');
  * Body: { secret: string }
  */
 router.post('/token', (req, res) => {
-  const { secret } = req.body;
+  const { secret } = req.body || {};
+
+  if (!process.env.ADMIN_SECRET || !process.env.JWT_SECRET) {
+    console.error('[Admin] Missing ADMIN_SECRET or JWT_SECRET in environment');
+    return res.status(500).json({ error: 'Server auth is not configured (ADMIN_SECRET / JWT_SECRET missing)' });
+  }
 
   if (!secret || secret !== process.env.ADMIN_SECRET) {
     return res.status(401).json({ error: 'Invalid admin secret' });
   }
 
-  const token = jwt.sign({ role: 'admin', sub: 'admin' }, process.env.JWT_SECRET, {
-    expiresIn: '24h',
-  });
+  try {
+    const token = jwt.sign({ role: 'admin', sub: 'admin' }, process.env.JWT_SECRET, {
+      expiresIn: '24h',
+    });
 
-  return res.json({ token, expiresIn: '24h' });
+    return res.json({ token, expiresIn: '24h' });
+  } catch (err) {
+    console.error('[Admin] Token signing failed:', err.message);
+    return res.status(500).json({ error: 'Failed to issue admin token' });
+  }
 });
 
 // ── All routes below require admin JWT ────────────────────────────────────────
