@@ -3,6 +3,7 @@ const { uploadFromUrl } = require('../../services/imagekit');
 const { saveSession } = require('../stateManager');
 const { formatDob, isValidDob } = require('../../utils/date');
 const consultFlow = require('./consult');
+const { t } = require('../i18n');
 const User = require('../../models/User');
 
 /**
@@ -56,18 +57,16 @@ async function handle(whatsappId, message, session) {
       language,
       registrationBuffer: buffer,
     });
-    await sendText(
-      whatsappId,
-      `Let's get you registered first. What is your *full name*?`
-    );
+    await sendText(whatsappId, t('askName', language));
     return;
   }
 
   // ── REGISTERING_NAME ─────────────────────────────────────────────────────────
   if (state === 'REGISTERING_NAME') {
+    const lang = session.language || 'en';
     const name = extractText(message);
     if (!name || name.length < 2) {
-      await sendText(whatsappId, 'Please enter a valid name (at least 2 characters).');
+      await sendText(whatsappId, t('invalidName', lang));
       return;
     }
 
@@ -76,17 +75,18 @@ async function handle(whatsappId, message, session) {
       state: 'REGISTERING_AGE',
       registrationBuffer: buffer,
     });
-    await sendText(whatsappId, `Nice to meet you, *${name}*! 😊\n\nHow old are you? Please enter your age as a number.`);
+    await sendText(whatsappId, t('askAge', lang, { name }));
     return;
   }
 
   // ── REGISTERING_AGE ──────────────────────────────────────────────────────────
   if (state === 'REGISTERING_AGE') {
+    const lang = session.language || 'en';
     const text = extractText(message);
     const age = parseInt(text, 10);
 
     if (isNaN(age) || age < 1 || age > 150) {
-      await sendText(whatsappId, 'Please enter a valid age (a number between 1 and 150).');
+      await sendText(whatsappId, t('invalidAge', lang));
       return;
     }
 
@@ -97,11 +97,11 @@ async function handle(whatsappId, message, session) {
     });
     await sendButtons(
       whatsappId,
-      `Got it — *${age} years old*.\n\nWhat is your gender?`,
+      t('askGender', lang, { age }),
       [
-        { id: 'male', title: 'Male' },
-        { id: 'female', title: 'Female' },
-        { id: 'other', title: 'Other' },
+        { id: 'male', title: t('genderMale', lang) },
+        { id: 'female', title: t('genderFemale', lang) },
+        { id: 'other', title: t('genderOther', lang) },
       ]
     );
     return;
@@ -109,17 +109,18 @@ async function handle(whatsappId, message, session) {
 
   // ── REGISTERING_GENDER ───────────────────────────────────────────────────────
   if (state === 'REGISTERING_GENDER') {
+    const lang = session.language || 'en';
     const text = (message.interactive?.id || extractText(message))?.toLowerCase().trim();
     const allowed = ['male', 'female', 'other'];
 
     if (!allowed.includes(text)) {
       await sendButtons(
         whatsappId,
-        'Please choose your gender:',
+        t('genderRetry', lang),
         [
-          { id: 'male', title: 'Male' },
-          { id: 'female', title: 'Female' },
-          { id: 'other', title: 'Other' },
+          { id: 'male', title: t('genderMale', lang) },
+          { id: 'female', title: t('genderFemale', lang) },
+          { id: 'other', title: t('genderOther', lang) },
         ]
       );
       return;
@@ -130,17 +131,18 @@ async function handle(whatsappId, message, session) {
       state: 'REGISTERING_EMAIL',
       registrationBuffer: buffer,
     });
-    await sendText(whatsappId, `Thank you! Now, what is your *email address*?`);
+    await sendText(whatsappId, t('askEmail', lang));
     return;
   }
 
   // ── REGISTERING_EMAIL ────────────────────────────────────────────────────────
   if (state === 'REGISTERING_EMAIL') {
+    const lang = session.language || 'en';
     const text = extractText(message)?.trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!text || !emailRegex.test(text)) {
-      await sendText(whatsappId, 'Please enter a valid email address.');
+      await sendText(whatsappId, t('invalidEmail', lang));
       return;
     }
 
@@ -149,15 +151,13 @@ async function handle(whatsappId, message, session) {
       state: 'REGISTERING_IMAGE',
       registrationBuffer: buffer,
     });
-    await sendText(
-      whatsappId,
-      `Great! Almost done. ✋📸\n\nPlease send a clear *photo of your palm* (open hand, fingers spread) so I can read it for a more personalised profile.\n\n_(You can skip this by typing "skip")_`
-    );
+    await sendText(whatsappId, t('askImage', lang));
     return;
   }
 
   // ── REGISTERING_IMAGE ────────────────────────────────────────────────────────
   if (state === 'REGISTERING_IMAGE') {
+    const lang = session.language || 'en';
     const buffer = session.registrationBuffer || {};
     let imageUrl = null;
 
@@ -170,24 +170,21 @@ async function handle(whatsappId, message, session) {
       try {
         const mediaId = message.image?.id;
         if (!mediaId) {
-          await sendText(whatsappId, 'Could not read the image. Please try again or type "skip".');
+          await sendText(whatsappId, t('imageReadError', lang));
           return;
         }
 
-        await sendText(whatsappId, '⏳ Uploading your photo, please wait...');
+        await sendText(whatsappId, t('imageUploading', lang));
         const mediaBuffer = await downloadMedia(mediaId);
         const filename = `user_${whatsappId}_palm.jpg`;
         imageUrl = await uploadFromUrl(null, filename, mediaBuffer);
       } catch (err) {
         console.error('[Registration] Image upload error:', err.message);
-        await sendText(
-          whatsappId,
-          `Sorry, I couldn't upload your photo (${err.message}). Please try again or type "skip".`
-        );
+        await sendText(whatsappId, t('imageUploadError', lang, { msg: err.message }));
         return;
       }
     } else {
-      await sendText(whatsappId, 'Please send a *photo* or type *"skip"* to continue without one.');
+      await sendText(whatsappId, t('imageSendPrompt', lang));
       return;
     }
 
@@ -197,18 +194,16 @@ async function handle(whatsappId, message, session) {
       state: 'REGISTERING_DOB',
       registrationBuffer: updatedBuffer,
     });
-    await sendText(
-      whatsappId,
-      `Almost there! 🔮 A couple of details for your profile.\n\nWhat is your *date of birth*? Please use *dd-mm-yyyy* (e.g., 21-05-1990).`
-    );
+    await sendText(whatsappId, t('askDob', lang));
     return;
   }
 
   // ── REGISTERING_DOB ──────────────────────────────────────────────────────────
   if (state === 'REGISTERING_DOB') {
+    const lang = session.language || 'en';
     const dobInput = extractText(message)?.trim();
     if (!isValidDob(dobInput)) {
-      await sendText(whatsappId, 'Please enter a valid date of birth in *dd-mm-yyyy* format (e.g., 21-05-1990).');
+      await sendText(whatsappId, t('invalidDob', lang));
       return;
     }
 
@@ -218,15 +213,16 @@ async function handle(whatsappId, message, session) {
       state: 'REGISTERING_ADDRESS',
       registrationBuffer: buffer,
     });
-    await sendText(whatsappId, `Got it — *${dob}*. Finally, what is your *city*?`);
+    await sendText(whatsappId, t('askAddress', lang, { dob }));
     return;
   }
 
   // ── REGISTERING_ADDRESS (final step → save + start astrology) ─────────────────
   if (state === 'REGISTERING_ADDRESS') {
+    const lang = session.language || 'en';
     const address = extractText(message)?.trim();
     if (!address || address.length < 2) {
-      await sendText(whatsappId, 'Please enter your address or city.');
+      await sendText(whatsappId, t('invalidAddress', lang));
       return;
     }
 
@@ -253,7 +249,7 @@ async function handle(whatsappId, message, session) {
       );
     } catch (err) {
       console.error('[Registration] User save error:', err.message);
-      await sendText(whatsappId, 'Sorry, there was an error saving your profile. Please try again.');
+      await sendText(whatsappId, t('saveError', lang));
       return;
     }
 
@@ -262,7 +258,7 @@ async function handle(whatsappId, message, session) {
       registrationBuffer: {},
     });
 
-    await sendText(whatsappId, `🎉 You're all set, *${buffer.name}*! Your profile is complete.`);
+    await sendText(whatsappId, t('profileComplete', lang, { name: buffer.name }));
 
     // Automatically generate the astrological reading (next step in the flow).
     await consultFlow.startAstrology(whatsappId, user);

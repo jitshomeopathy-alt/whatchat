@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const { randomUUID: uuidv4 } = require('crypto');
 const adminAuth = require('../middleware/adminAuth');
 const Medicine = require('../models/Medicine');
+const User = require('../models/User');
+const AnalysisHistory = require('../models/AnalysisHistory');
 const { upsertMedicine, deleteMedicine } = require('../services/qdrant');
 
 const path = require('path');
@@ -31,6 +33,65 @@ router.post('/token', (req, res) => {
 });
 
 // ── All routes below require admin JWT ────────────────────────────────────────
+
+/**
+ * GET /admin/users
+ * Paginated list of registered users (newest first).
+ * Optional ?q= filters by name / email / whatsappId.
+ */
+router.get('/users', adminAuth, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+    const q = (req.query.q || '').trim();
+
+    const filter = {};
+    if (q) {
+      const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ name: rx }, { email: rx }, { whatsappId: rx }];
+    }
+
+    const total = await User.countDocuments(filter);
+    const users = await User.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    return res.json({
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+      data: users,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /admin/users/:id
+ * A single user's profile plus their consultation history (answers, the AI
+ * result shown to them, and the internal medicine suggestions).
+ */
+router.get('/users/:id', adminAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).lean();
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const history = await AnalysisHistory.find({ userId: user._id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.json({ user, history });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 
 /**
  * POST /admin/medicines/seed

@@ -283,3 +283,6 @@ for webhooks:-
 publish app:-
 
 - after all these setting/conigs you have to publish the app
+
+for whatapp manager rate limit:-
+https://business.facebook.com/latest/billing_hub/payment_methods/

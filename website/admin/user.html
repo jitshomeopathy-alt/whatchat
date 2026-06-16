@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User detail · WhatChat Admin</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="dot">💬</span> WhatChat</div>
+      <div class="nav-item active" id="usersNav"><span class="ico">👥</span> Users</div>
+      <div class="spacer"></div>
+      <div class="nav-item signout" id="signout"><span class="ico">↩︎</span> Sign out</div>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <h1>User detail</h1>
+        <div class="who">
+          <span>Administrator</span>
+          <div class="avatar">A</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <a class="back-link" href="/admin">← Back to users</a>
+        <div id="root">
+          <div class="loading">Loading…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('wc_admin_token');
+    if (!token) location.replace('/admin/login');
+
+    document.getElementById('signout').addEventListener('click', () => {
+      localStorage.removeItem('wc_admin_token');
+      location.replace('/admin/login');
+    });
+    document.getElementById('usersNav').addEventListener('click', () => location.href = '/admin');
+
+    const id = new URLSearchParams(location.search).get('id');
+
+    function fmtDate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    }
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]
+      ));
+    }
+
+    async function load() {
+      const root = document.getElementById('root');
+      if (!id) { root.innerHTML = '<div class="empty">Missing user id.</div>'; return; }
+
+      let res;
+      try {
+        res = await fetch('/admin/users/' + encodeURIComponent(id), {
+          headers: { Authorization: 'Bearer ' + token },
+        });
+      } catch (err) {
+        root.innerHTML = '<div class="empty">Network error. Please retry.</div>';
+        return;
+      }
+
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('wc_admin_token');
+        location.replace('/admin/login');
+        return;
+      }
+      if (res.status === 404) { root.innerHTML = '<div class="empty">User not found.</div>'; return; }
+      if (!res.ok) { root.innerHTML = '<div class="empty">Failed to load user.</div>'; return; }
+
+      const data = await res.json();
+      render(data.user, data.history || []);
+    }
+
+    function profileCard(u) {
+      const initials = (u.name || '?').trim().charAt(0).toUpperCase();
+      const palm = u.imageUrl
+        ? `<img class="palm" src="${esc(u.imageUrl)}" alt="palm photo" />`
+        : `<div class="palm placeholder">No palm<br>photo</div>`;
+      const field = (k, v) => `<div class="field"><div class="k">${k}</div><div class="v">${esc(v || '—')}</div></div>`;
+      return `
+        <div class="card profile">
+          ${palm}
+          <div>
+            <div class="pname">${esc(u.name)} <span class="badge">${u.language === 'hi' ? 'हिंदी' : 'English'}</span></div>
+            <div class="fields">
+              ${field('WhatsApp', u.whatsappId)}
+              ${field('Email', u.email)}
+              ${field('Age', u.age)}
+              ${field('Gender', u.gender)}
+              ${field('Date of birth', u.dob)}
+              ${field('City', u.address)}
+              ${field('Registered', fmtDate(u.createdAt))}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function historyCard(history) {
+      if (!history.length) {
+        return `<div class="card"><div class="empty">No consultations yet.</div></div>`;
+      }
+
+      const items = history.map((h) => {
+        // Answers — prefer structured qa; fall back to parsing the legacy prompt.
+        let qa = Array.isArray(h.qa) && h.qa.length ? h.qa : [];
+        if (!qa.length && h.prompt) {
+          qa = h.prompt.split(' | ').map((pair) => {
+            const idx = pair.indexOf(':');
+            return idx === -1
+              ? { question: pair, answer: '' }
+              : { question: pair.slice(0, idx).trim(), answer: pair.slice(idx + 1).trim() };
+          });
+        }
+
+        const qaHtml = qa.length
+          ? `<div class="section-title">Questionnaire answers</div>
+             <div class="qa-list">${qa.map((p) => `
+               <div class="qa"><div class="q">${esc(p.question)}</div><div class="a">${esc(p.answer) || '—'}</div></div>`).join('')}</div>`
+          : '';
+
+        const meds = Array.isArray(h.medicines) ? h.medicines.filter((m) => m && m.name) : [];
+        const medsHtml = meds.length
+          ? `<div class="block-label">💊 Suggested medicines <span class="badge gray">internal only</span></div>
+             <div class="meds">${meds.map((m, i) => `
+               <div class="med"><div class="num">${i + 1}</div>
+                 <div><div class="mname">${esc(m.name)}</div>
+                 ${m.reason || m.description ? `<div class="mreason">${esc(m.reason || m.description)}</div>` : ''}</div>
+               </div>`).join('')}</div>
+             <div class="med-note">⚠️ Medicine names are never shown to the user in WhatsApp — only the AI message below is sent.</div>`
+          : '';
+
+        return `
+          <div class="history-item">
+            <div class="history-meta">
+              <span class="badge">${esc(h.type || 'consult')}</span>
+              <span class="when">${fmtDate(h.createdAt)}</span>
+            </div>
+            ${qaHtml}
+            <div class="block-label">🤖 AI result (sent to user)</div>
+            <div class="ai-answer">${esc(h.response) || '—'}</div>
+            ${medsHtml}
+          </div>`;
+      }).join('');
+
+      return `<div class="card"><div class="card-head"><h2>Consultation history</h2></div>${items}</div>`;
+    }
+
+    function render(user, history) {
+      document.getElementById('root').innerHTML =
+        `<div class="grid">${profileCard(user)}${historyCard(history)}</div>`;
+    }
+
+    load();
+  </script>
+</body>
+</html>

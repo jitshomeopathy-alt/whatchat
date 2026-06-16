@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login · WhatChat</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <div class="login-wrap">
+    <form class="login-card" id="loginForm">
+      <div class="brand"><span class="dot">💬</span> WhatChat Admin</div>
+      <p class="sub">Sign in to manage users and consultations.</p>
+
+      <label for="secret">Admin secret</label>
+      <input type="password" id="secret" autocomplete="current-password" placeholder="Enter admin secret" required />
+
+      <button type="submit" class="btn btn-block" id="submitBtn">Sign in</button>
+      <div class="error-msg" id="error"></div>
+    </form>
+  </div>
+
+  <script>
+    // Already signed in? Go straight to the dashboard.
+    if (localStorage.getItem('wc_admin_token')) {
+      location.replace('/admin');
+    }
+
+    const form = document.getElementById('loginForm');
+    const errorEl = document.getElementById('error');
+    const btn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      const secret = document.getElementById('secret').value.trim();
+      try {
+        const res = await fetch('/admin/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ secret }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+
+        localStorage.setItem('wc_admin_token', data.token);
+        location.replace('/admin');
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      }
+    });
+  </script>
+</body>
+</html>

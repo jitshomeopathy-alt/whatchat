@@ -17,6 +17,14 @@ const WEBSITE_DIR = path.join(__dirname, '../website');
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Admin UI pages (static HTML that fetch the protected APIs with a bearer token).
+// Registered before the static + API middleware so the clean URLs resolve to the
+// pages with a 200, while the data endpoints (/admin/token, /admin/users,
+// /admin/medicines, ...) still fall through to the API router below.
+app.get('/admin', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/index.html')));
+app.get('/admin/login', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/login.html')));
+app.get('/admin/user', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/user.html')));
+
 // Serve static files from /public (assets, if any)
 app.use(express.static(path.join(__dirname, '../public')));
 

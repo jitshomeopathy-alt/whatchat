@@ -243,16 +243,31 @@ async function embedText(text) {
   return response.data[0].embedding;
 }
 
-// ⚠️ PLACEHOLDER SYSTEM PROMPT — replace with the real prompt when provided.
 const REVIEW_SYSTEM_PROMPT = `You are a compassionate homeopathic health advisor.
 You receive a user's category and their answers to a fixed questionnaire.
-Based ONLY on those answers, write a short, warm result the user will read on
-WhatsApp. Include:
-1. A one-paragraph review of what their answers indicate ("Based on your answers...").
-2. The suggested remedies/medicines with a one-line reason each.
-3. A reminder that this is informational and not a substitute for a doctor.
-Keep it under 250 words. Do not diagnose serious conditions.
-[PLACEHOLDER PROMPT — to be replaced.]`;
+Based ONLY on those answers, return a single JSON object with exactly these keys:
+
+{
+  "message": "the warm, supportive text the user will read on WhatsApp",
+  "medicines": [ { "name": "remedy name", "reason": "one-line reason it was chosen" } ]
+}
+
+Rules for "message" (shown to the user):
+1. Keep it under 220 words, warm and reassuring.
+2. Open by reflecting back what their answers indicate ("Based on what you've shared...").
+3. Reassure them that a personalised remedy plan has been prepared for them.
+4. NEVER name, mention, abbreviate, or hint at any specific medicine, remedy, brand,
+   ingredient, or product. Refer only generally to "a personalised remedy plan" or
+   "the recommended remedies". This is a strict requirement.
+5. End with a gentle reminder that this is informational and not a substitute for a doctor.
+6. Do not diagnose serious conditions.
+
+Rules for "medicines" (internal — for the care team only, NEVER shown to the user):
+1. List 1-4 concrete suggested remedies, each with a short one-line reason.
+2. These names must never appear anywhere in "message".
+
+Write the human-readable text ("message" and each "reason") in the requested output language.
+Return ONLY the JSON object, with no surrounding text or markdown.`;
 
 const reviewCategoryLabels = {
   addiction: 'De-addiction / Substance Recovery',
@@ -277,7 +292,9 @@ const reviewCategoryLabels = {
  * @param {Object} [params.user]     - { name, age, gender, ... } (optional context)
  * @param {string} [params.astrologyResult] - Earlier profile reading (optional context)
  * @param {string} [params.language] - 'en' | 'hi' (output language)
- * @returns {Promise<string>} - Result text to show the user
+ * @returns {Promise<{ message: string, medicines: Array<{ name: string, reason: string }> }>}
+ *   message    - user-facing text (contains NO direct medicine names)
+ *   medicines  - internal remedy suggestions for the care team / admin only
  */
 async function reviewAndPrescribe({ category, questions, answers, user, astrologyResult, language }) {
   const client = getClient();
@@ -299,7 +316,7 @@ async function reviewAndPrescribe({ category, questions, answers, user, astrolog
     if (ctx.length) userBlocks.push(`Context:\n${ctx.join('\n')}`);
   }
   userBlocks.push(`Category: ${label}\n\nQuestionnaire responses:\n\n${qaPairs}`);
-  userBlocks.push(`Write the entire response in ${outputLanguage}.`);
+  userBlocks.push(`Write the human-readable text in ${outputLanguage}.`);
 
   const response = await client.chat.completions.create({
     model: 'gpt-4o',
@@ -309,9 +326,33 @@ async function reviewAndPrescribe({ category, questions, answers, user, astrolog
     ],
     max_tokens: 1500,
     temperature: 0.5,
+    response_format: { type: 'json_object' },
   });
 
-  return response.choices[0].message.content.trim();
+  const raw = response.choices[0].message.content.trim();
+
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    // If the model didn't return valid JSON, fall back to treating the whole
+    // output as the user message with no separate medicine list. This keeps the
+    // user experience safe (no stray medicine names leak through structure loss).
+    console.error('[OpenAI] reviewAndPrescribe JSON parse failed:', err.message);
+    return { message: raw, medicines: [] };
+  }
+
+  const message = typeof parsed.message === 'string' ? parsed.message.trim() : '';
+  const medicines = Array.isArray(parsed.medicines)
+    ? parsed.medicines
+        .filter((m) => m && (m.name || m.reason))
+        .map((m) => ({
+          name: String(m.name || '').trim(),
+          reason: String(m.reason || '').trim(),
+        }))
+    : [];
+
+  return { message, medicines };
 }
 
 module.exports = { analyseUser, astrologyReading, recoverSynthesis, detectCategory, embedText, reviewAndPrescribe };

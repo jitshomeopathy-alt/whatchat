@@ -2,14 +2,9 @@ const { sendText, sendButtons, sendList } = require('../../services/whatsapp');
 const { astrologyReading, reviewAndPrescribe } = require('../../services/openai');
 const { saveSession, resetSession } = require('../stateManager');
 const { getQuestions } = require('../questions');
+const { t, categoryLabel } = require('../i18n');
 const User = require('../../models/User');
 const AnalysisHistory = require('../../models/AnalysisHistory');
-
-const categoryLabels = {
-  addiction: 'De-addiction / Substance Recovery',
-  mental: 'Mental / Emotional Wellness',
-  sex: 'Sexual Health & Wellness',
-};
 
 // Satisfaction buckets shown after the astrology reading.
 const SATISFACTION_BUCKETS = ['0-25', '25-50', '50-75', '75-100'];
@@ -22,7 +17,7 @@ const SATISFACTION_BUCKETS = ['0-25', '25-50', '50-75', '75-100'];
  */
 async function startAstrology(whatsappId, user) {
   const language = user.language || 'en';
-  await sendText(whatsappId, `🔮 Reading your palm, *${user.name}*... please wait a moment.`);
+  await sendText(whatsappId, t('readingPalm', language, { name: user.name }));
 
   let reading;
   try {
@@ -38,24 +33,21 @@ async function startAstrology(whatsappId, user) {
     );
   } catch (err) {
     console.error('[Consult] Reading error:', err.message);
-    await sendText(
-      whatsappId,
-      'Sorry, the reading service is temporarily unavailable. Please type *"hi"* to try again in a moment.'
-    );
+    await sendText(whatsappId, t('readingUnavailable', language));
     await saveSession(whatsappId, { state: 'REGISTERED' });
     return;
   }
 
   await saveSession(whatsappId, { state: 'ASTRO_SATISFACTION', language, astrologyResult: reading });
 
-  await sendText(whatsappId, `✨ *Your Reading*\n\n${reading}`);
+  await sendText(whatsappId, t('yourReading', language, { reading }));
 
   await sendList(
     whatsappId,
-    'How satisfied are you with this reading? Pick the range that fits.',
-    'Rate it',
+    t('satisfactionPrompt', language),
+    t('satisfactionButton', language),
     SATISFACTION_BUCKETS.map((b) => ({ id: `sat:${b}`, title: `${b}%` })),
-    { header: 'Your satisfaction', sectionTitle: 'Satisfaction %' }
+    { header: t('satisfactionHeader', language), sectionTitle: t('satisfactionSection', language) }
   );
 }
 
@@ -82,6 +74,7 @@ async function handle(whatsappId, message, session) {
 
 // ── Step 1: satisfaction rating (record & always continue) ────────────────────
 async function handleSatisfaction(whatsappId, message, session) {
+  const lang = session.language || 'en';
   const id = interactiveId(message);
   let bucket = null;
 
@@ -96,24 +89,24 @@ async function handleSatisfaction(whatsappId, message, session) {
   }
 
   if (!bucket) {
-    await sendText(whatsappId, 'Please tap one of the satisfaction options to continue.');
+    await sendText(whatsappId, t('satisfactionRetry', lang));
     return;
   }
 
   await saveSession(whatsappId, { satisfaction: bucket, state: 'CATEGORY_SELECT' });
-  await sendCategoryButtons(whatsappId);
+  await sendCategoryButtons(whatsappId, lang);
 }
 
-async function sendCategoryButtons(whatsappId) {
+async function sendCategoryButtons(whatsappId, lang = 'en') {
   await sendButtons(
     whatsappId,
-    'Thanks! Which area would you like to focus on?',
+    t('categoryPrompt', lang),
     [
-      { id: 'cat:mental', title: 'Mental' },
-      { id: 'cat:addiction', title: 'Addiction' },
-      { id: 'cat:sex', title: 'Sexual health' },
+      { id: 'cat:mental', title: t('categoryMental', lang) },
+      { id: 'cat:addiction', title: t('categoryAddiction', lang) },
+      { id: 'cat:sex', title: t('categorySex', lang) },
     ],
-    { header: 'Choose your area' }
+    { header: t('categoryHeader', lang) }
   );
 }
 
@@ -133,7 +126,7 @@ async function handleCategorySelect(whatsappId, message, session) {
 
   const set = category && getQuestions(category, lang);
   if (!set) {
-    await sendText(whatsappId, 'Please tap *Mental*, *Addiction*, or *Sexual health* to continue.');
+    await sendText(whatsappId, t('categoryRetry', lang));
     return;
   }
 
@@ -146,7 +139,7 @@ async function handleCategorySelect(whatsappId, message, session) {
 
   await sendText(
     whatsappId,
-    `✅ Starting the *${categoryLabels[category]}* questionnaire — ${set.length} questions.`
+    t('startQuestionnaire', lang, { label: categoryLabel(category, lang), count: set.length })
   );
   await askQuestion(whatsappId, category, 0, lang);
 }
@@ -164,15 +157,15 @@ async function askQuestion(whatsappId, category, qIndex, lang = 'en') {
   const set = getQuestions(category, lang);
   const q = set[qIndex];
   const total = set.length;
-  const header = `Question ${qIndex + 1} of ${total}`;
+  const header = t('questionHeader', lang, { index: qIndex + 1, total });
 
   if (canUseList(q)) {
     await sendList(
       whatsappId,
       q.text,
-      'Choose',
+      t('chooseButton', lang),
       q.options.map((o, i) => ({ id: `opt:${i}`, title: o })),
-      { header, sectionTitle: 'Options' }
+      { header, sectionTitle: t('optionsSection', lang) }
     );
     return;
   }
@@ -180,8 +173,8 @@ async function askQuestion(whatsappId, category, qIndex, lang = 'en') {
   // Numbered-text fallback (too many options, long titles, or multi-select).
   const numbered = q.options.map((o, i) => `${i + 1}. ${o}`).join('\n');
   const instruction = q.multiSelect
-    ? '\n\n_Reply with the number(s) — for multiple, separate with commas (e.g. 1,3,5)._'
-    : '\n\n_Reply with the option number._';
+    ? t('multiSelectInstruction', lang)
+    : t('singleSelectInstruction', lang);
   await sendText(whatsappId, `*${header}*\n${q.text}\n\n${numbered}${instruction}`);
 }
 
@@ -196,9 +189,7 @@ async function handleQuestion(whatsappId, message, session) {
   if (answer === null) {
     await sendText(
       whatsappId,
-      q.multiSelect
-        ? 'Please reply with the option number(s), separated by commas.'
-        : 'Please tap an option or reply with the option number.'
+      q.multiSelect ? t('multiSelectRetry', lang) : t('singleSelectRetry', lang)
     );
     return;
   }
@@ -247,14 +238,15 @@ function parseAnswer(message, q) {
 
 async function finishConsult(whatsappId, session, category, answers) {
   const lang = session.language || 'en';
-  await sendText(whatsappId, '✅ Reviewing your answers and preparing your result... ⏳');
+  await sendText(whatsappId, t('reviewing', lang));
 
   const user = await User.findOne({ whatsappId });
   const questionTexts = getQuestions(category, lang).map((q) => q.text);
 
-  let resultText;
+  let message;
+  let medicines = [];
   try {
-    resultText = await reviewAndPrescribe({
+    const result = await reviewAndPrescribe({
       category,
       questions: questionTexts,
       answers,
@@ -264,17 +256,17 @@ async function finishConsult(whatsappId, session, category, answers) {
       astrologyResult: session.astrologyResult,
       language: lang,
     });
+    message = result.message;
+    medicines = result.medicines || [];
   } catch (err) {
     console.error('[Consult] review error:', err.message);
-    await sendText(
-      whatsappId,
-      'Sorry, the review service is temporarily unavailable. Please type *"hi"* to start again shortly.'
-    );
+    await sendText(whatsappId, t('reviewUnavailable', lang));
     await resetSession(whatsappId, true);
     return;
   }
 
-  // Save to history.
+  // Save to history. The user-facing `message` carries no medicine names — the
+  // suggested medicines are stored separately for the care team / admin view.
   try {
     if (user) {
       await AnalysisHistory.create({
@@ -282,8 +274,9 @@ async function finishConsult(whatsappId, session, category, answers) {
         whatsappId,
         type: 'recover',
         prompt: questionTexts.map((q, i) => `${q}: ${answers[i] || ''}`).join(' | ').slice(0, 1000),
-        response: resultText,
-        medicines: [],
+        qa: questionTexts.map((q, i) => ({ question: q, answer: answers[i] || '' })),
+        response: message,
+        medicines: medicines.map((m) => ({ name: m.name, reason: m.reason })),
       });
     }
   } catch (err) {
@@ -292,21 +285,22 @@ async function finishConsult(whatsappId, session, category, answers) {
 
   await saveSession(whatsappId, { state: 'CONSULT_ACTION' });
 
-  await sendText(whatsappId, `🩺 *We reviewed your illness based on your answers and prepared your result:*\n\n${resultText}`);
+  await sendText(whatsappId, t('resultIntro', lang, { result: message }));
 
   await sendButtons(
     whatsappId,
-    'What would you like to do next?',
+    t('nextStepPrompt', lang),
     [
-      { id: 'act:order', title: 'Order online' },
-      { id: 'act:consult', title: 'Consult a doctor' },
+      { id: 'act:order', title: t('actionOrder', lang) },
+      { id: 'act:consult', title: t('actionConsult', lang) },
     ],
-    { header: 'Next step', footer: 'Informational only — not a substitute for a doctor.' }
+    { header: t('nextStepHeader', lang), footer: t('nextStepFooter', lang) }
   );
 }
 
 // ── Step 4: final action ──────────────────────────────────────────────────────
 async function handleAction(whatsappId, message, session) {
+  const lang = session.language || 'en';
   const id = interactiveId(message);
   const text = extractText(message)?.trim().toLowerCase();
 
@@ -316,24 +310,16 @@ async function handleAction(whatsappId, message, session) {
   else if (text === 'consult a doctor' || text === 'consult') action = 'consult';
 
   if (action === 'order') {
-    await sendText(
-      whatsappId,
-      '🛒 *Order online*\n\nGreat — our team will help you order the recommended medicines. ' +
-        'You will receive a secure ordering link shortly.\n\n_(Ordering integration coming soon.)_'
-    );
+    await sendText(whatsappId, t('orderResponse', lang));
   } else if (action === 'consult') {
-    await sendText(
-      whatsappId,
-      '👨‍⚕️ *Consult a doctor*\n\nWe will connect you with a qualified doctor for a consultation. ' +
-        'You will receive an appointment link shortly.\n\n_(Consultation booking coming soon.)_'
-    );
+    await sendText(whatsappId, t('consultResponse', lang));
   } else {
-    await sendText(whatsappId, 'Please tap *Order online* or *Consult a doctor*.');
+    await sendText(whatsappId, t('actionRetry', lang));
     return;
   }
 
   await resetSession(whatsappId, true);
-  await sendText(whatsappId, 'Thank you! 🙏 Type *"hi"* anytime for a fresh reading and consultation.');
+  await sendText(whatsappId, t('thankYou', lang));
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Users · WhatChat Admin</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="dot">💬</span> WhatChat</div>
+      <div class="nav-item active"><span class="ico">👥</span> Users</div>
+      <div class="spacer"></div>
+      <div class="nav-item signout" id="signout"><span class="ico">↩︎</span> Sign out</div>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <h1>Registered Users</h1>
+        <div class="who">
+          <span>Administrator</span>
+          <div class="avatar">A</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="card">
+          <div class="card-head">
+            <h2>All users</h2>
+            <div class="search">
+              <input type="search" id="search" placeholder="Search name, email or number…" />
+            </div>
+          </div>
+
+          <div id="tableWrap">
+            <div class="loading">Loading users…</div>
+          </div>
+
+          <div class="pager" id="pager" style="display:none;">
+            <span id="pageInfo"></span>
+            <button class="btn btn-ghost" id="prevBtn">Prev</button>
+            <button class="btn btn-ghost" id="nextBtn">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('wc_admin_token');
+    if (!token) location.replace('/admin/login');
+
+    document.getElementById('signout').addEventListener('click', () => {
+      localStorage.removeItem('wc_admin_token');
+      location.replace('/admin/login');
+    });
+
+    let state = { page: 1, pages: 1, q: '' };
+
+    function fmtDate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    }
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]
+      ));
+    }
+
+    async function load() {
+      const wrap = document.getElementById('tableWrap');
+      wrap.innerHTML = '<div class="loading">Loading users…</div>';
+
+      const params = new URLSearchParams({ page: state.page, limit: 50 });
+      if (state.q) params.set('q', state.q);
+
+      let res;
+      try {
+        res = await fetch('/admin/users?' + params.toString(), {
+          headers: { Authorization: 'Bearer ' + token },
+        });
+      } catch (err) {
+        wrap.innerHTML = '<div class="empty">Network error. Please retry.</div>';
+        return;
+      }
+
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('wc_admin_token');
+        location.replace('/admin/login');
+        return;
+      }
+      if (!res.ok) {
+        wrap.innerHTML = '<div class="empty">Failed to load users.</div>';
+        return;
+      }
+
+      const data = await res.json();
+      state.pages = data.pages || 1;
+      render(data.data || [], data.total || 0);
+    }
+
+    function render(users, total) {
+      const wrap = document.getElementById('tableWrap');
+      if (!users.length) {
+        wrap.innerHTML = '<div class="empty">No users found.</div>';
+        document.getElementById('pager').style.display = 'none';
+        return;
+      }
+
+      const rows = users.map((u) => `
+        <tr class="clickable" data-id="${u._id}">
+          <td><div class="name">${esc(u.name)}</div><div class="muted">${esc(u.whatsappId)}</div></td>
+          <td>${esc(u.email)}</td>
+          <td>${u.age != null ? u.age : '—'}</td>
+          <td><span class="badge gray">${esc(u.gender || '—')}</span></td>
+          <td><span class="badge">${u.language === 'hi' ? 'हिंदी' : 'English'}</span></td>
+          <td class="muted">${fmtDate(u.createdAt)}</td>
+        </tr>`).join('');
+
+      wrap.innerHTML = `
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Age</th><th>Gender</th><th>Language</th><th>Registered</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      wrap.querySelectorAll('tr.clickable').forEach((tr) => {
+        tr.addEventListener('click', () => {
+          location.href = '/admin/user?id=' + tr.dataset.id;
+        });
+      });
+
+      const pager = document.getElementById('pager');
+      pager.style.display = 'flex';
+      document.getElementById('pageInfo').textContent =
+        `${total} user${total === 1 ? '' : 's'} · page ${state.page} of ${state.pages}`;
+      document.getElementById('prevBtn').disabled = state.page <= 1;
+      document.getElementById('nextBtn').disabled = state.page >= state.pages;
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (state.page > 1) { state.page--; load(); }
+    });
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (state.page < state.pages) { state.page++; load(); }
+    });
+
+    let searchTimer;
+    document.getElementById('search').addEventListener('input', (e) => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.q = e.target.value.trim();
+        state.page = 1;
+        load();
+      }, 300);
+    });
+
+    load();
+  </script>
+</body>
+</html>

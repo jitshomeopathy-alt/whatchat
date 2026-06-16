@@ -22,6 +22,16 @@ const analysisHistorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    // Structured question/answer pairs from the questionnaire (for the admin view).
+    qa: {
+      type: [
+        {
+          question: String,
+          answer: String,
+        },
+      ],
+      default: [],
+    },
     response: {
       type: String,
       required: true,
@@ -31,6 +41,7 @@ const analysisHistorySchema = new mongoose.Schema(
         {
           name: String,
           description: String,
+          reason: String,
           category: String,
           score: Number,
         },
