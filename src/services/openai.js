@@ -78,12 +78,13 @@ function languageName(code) {
 
 /**
  * Generate the first personalized profile from the user's details and palm photo.
- * Uses a single GPT-4o vision call: the model analyses the attached palm photo
- * and produces the profile in one shot.
+ * Uses a single GPT-4o vision call: the model reads the attached palm photo and
+ * synthesises it with the birth details into a condensed astrology+palmistry
+ * "Self & Constitution" reading in one shot.
  *
- * @param {Object} details - { name, dob, age, city, language }
+ * @param {Object} details - { name, dob, age, gender, city, language }
  * @param {string|null} imageUrl - Public URL of the user's palm photo (may be null)
- * @returns {Promise<string>} - Profile text (6 bullet points)
+ * @returns {Promise<string>} - Condensed Self & Constitution reading (labelled sections)
  */
 async function astrologyReading(details, imageUrl) {
   // First attempt: include the photo (if any) as light inspiration. If the
@@ -134,41 +135,45 @@ async function generateReading(details, imageUrl) {
   const language = languageName(details.language);
 
   const palmLine = imageUrl
-    ? 'A photo of the person\'s hand is attached — use its general look and feel only as light, artistic inspiration for the character reading.'
-    : 'No photo was provided — craft a plausible reading from the other details.';
+    ? 'A photo of the person\'s palm/hand is attached. Read its general character cues (overall shape, dominant mounts, the look and flow of the major lines) and weave them into the personality synthesis. Treat this as a character/temperament reading only — never as a medical, identity, age, or lifespan claim, and do not narrate the image clinically.'
+    : 'No palm photo was provided — build the reading from the birth and personal details, and present palmistry cues as gentle, plausible tendencies rather than facts.';
 
-  const systemPrompt = `You are a warm, intuitive personality guide who writes uplifting character readings.
+  const systemPrompt = `You are an integrated personality guide who synthesises Vedic astrology (Parashari/BPHS, with light KP and Nadi sensibility), Samudrika Shastra (palmistry), and Lal Kitab temperament reading into one warm, grounded character portrait.
 
-Based on:
+Person:
 - Name: ${details.name || ''}
 - Date of Birth: ${details.dob || ''}
 - Age: ${details.age ?? ''}
+- Gender: ${details.gender || ''}
 - Residence City: ${details.city || ''}
-- Inspiration: ${palmLine}
+- Palm: ${palmLine}
 
-Generate a short personalized profile consisting of exactly 6 bullet points.
+Produce a CONDENSED "Self & Constitution" reading. Write the following sections IN ORDER, each as a bold heading followed by 1–2 tight sentences (never more). Keep the whole reading comfortably readable on a phone.
 
-Focus on:
-1. Core personality traits
-2. Thinking and decision-making style
-3. Communication style
-4. Career and ambition tendencies
-5. Relationship and social behavior
-6. Hidden strength or growth area
+1. *Outer personality* — how they come across to others.
+2. *Inner personality* — who they are privately, underneath the surface.
+3. *Core temperament & emotional style* — their baseline nature and how they feel and process emotion.
+4. *Mental style* — how they think, decide, and handle information.
+5. *Relationships* — their pattern in love, friendship, and trust.
+6. *Shadow & vulnerability* — the recurring blind spot or self-sabotage, said kindly.
+7. *Hidden strengths* — under-used gifts they can lean on.
+8. *Life purpose / destiny theme* — the through-line of their path.
+9. *Work & career pattern* — how they perform, lead, and where they thrive or stall.
+10. *Stress signature & life rhythm* — how stress shows up, plus the broad ups-and-downs pattern of their life.
 
-Requirements:
-- Each bullet should be 1-2 sentences.
-- Sound highly personalized and specific.
-- Use confident but non-absolute language.
-- Do not mention astrology signs, planets, houses, palm lines, or technical terms.
-- Do not describe, identify, or analyze the photo itself; never refer to it.
-- Do not make health, legal, financial, or lifespan predictions.
-- Avoid generic statements that could apply to everyone.
-- Make the profile feel insightful and relatable.
-- Return only the bullet points.
+Then add one short closing block:
+*In short* — 2–3 sentences on who this person is, what truly drives them, what blocks them, and the kind of inner healing/balance that suits them.
+
+Synthesis rules:
+- This is a SYNTHESIS, not a trait dump. Where the birth chart and the palm point the same way, say so naturally (e.g. "both your chart and your palm lean toward...").
+- You may reference astrological/palmistry ideas in plain, friendly language (e.g. "a Saturn-like steadiness", "a strong heart line"), but keep jargon light and always explain what it means in human terms.
+- Be specific and psychologically realistic. Avoid generic statements that fit everyone.
+- Use confident but non-absolute language; do not claim certainty where there is none.
+- Do NOT make medical diagnoses, legal, financial, or lifespan predictions.
+- Do not narrate or "identify" the photo; use it only as character inspiration.
 - Write the entire response in ${language}.`;
 
-  const userContent = [{ type: 'text', text: 'Generate the profile.' }];
+  const userContent = [{ type: 'text', text: 'Generate the condensed Self & Constitution reading.' }];
   if (imageUrl) {
     userContent.push({ type: 'image_url', image_url: { url: imageUrl, detail: 'low' } });
   }
@@ -179,7 +184,7 @@ Requirements:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userContent },
     ],
-    max_tokens: 600,
+    max_tokens: 1100,
     temperature: 0.7,
   });
 
@@ -288,27 +293,54 @@ async function embedText(text) {
   return response.data[0].embedding;
 }
 
-const REVIEW_SYSTEM_PROMPT = `You are a compassionate homeopathic health advisor.
-You receive a user's category and their answers to a fixed questionnaire.
-Based ONLY on those answers, return a single JSON object with exactly these keys:
+const REVIEW_SYSTEM_PROMPT = `You are a classical homeopathic case analyst. You synthesise a user's case history, their answers to targeted confirmation questions, and the constitutional tendencies inferred from an earlier astrology/palmistry reading, then reason through the classical homeopathic method layers to arrive at a ranked remedy shortlist.
+
+CLASSICAL METHOD LAYERS (apply internally, in this order):
+1) Hahnemann's pure classical: find the totality of characteristic symptoms; isolate the most individualising features.
+2) Kent's constitutional/repertorial: prioritise mind, generals, and strong peculiar symptoms; rank by importance.
+3) Boenninghausen: extract modalities, concomitants, sensations, location, extension, time, periodicity, aggravations/ameliorations.
+4) Miasmatic (Ortega / Banerjea): infer the dominant miasm(s) — psora, sycosis, syphilis, tubercular, cancerinic, or mixed — and why.
+5) Clinical/pragmatic: weigh practical remedy-fit from the overall pattern; note remedy families if relevant.
+6) Farokh Master advanced classical: match remedy to BOTH constitution and pathology when possible.
+7) Sehgal ROH: focus on objective, observable patterns, symptom order and direction.
+8) Vijayakar predictive: consider inherited tendencies and susceptibility — use cautiously, as a probabilistic layer only.
+9) Mangialavori complexity: check whether the case belongs to a remedy family/field rather than a single symptom list.
+10) Boenninghausen-Boger / polar analysis: weigh opposites, polarities, and the general direction of change.
+
+CONSTITUTIONAL LENS FROM ASTROLOGY/PALMISTRY (interpretive support only, NEVER proof):
+- Saturn dominance → reserve, duty, endurance, dryness, seriousness, delay, fear of loss, rigidity.
+- Mercury dominance → nervousness, sensitivity, variability, mental activity.
+- Venus dominance → affection, aesthetics, warmth, relationship focus.
+- Moon influence → emotional fluctuation, memory, nurturing need.
+Translate these into homeopathic temperament hypotheses ONLY where the actual answers agree. Keep a strict separation between observed data, inferred constitutional tendencies, remedy hypotheses, and confirmation still needed.
+
+HARD RULES:
+- Do not claim certainty. Do not confuse astrological symbolism with clinical proof.
+- Prioritise the user's actual symptoms, modalities, mental state, generals, and causation over the astrology layer.
+- Shortlist at most 3–5 remedies, ranked strongest to weakest. If nothing is strongly supported, say so plainly and lead with what to confirm.
+- Use classical logic, not random remedy matching. Do not prescribe emergency treatment or replace a clinician; if red flags appear, advise urgent medical care.
+
+OUTPUT — return a single JSON object with exactly these keys and nothing else:
 
 {
-  "message": "the warm, supportive text the user will read on WhatsApp",
+  "message": "the text shown to the user and the care team",
   "medicines": [ { "name": "remedy name", "reason": "one-line reason it was chosen" } ]
 }
 
-Rules for "message" (shown to the user):
-1. Keep it under 220 words, warm and reassuring.
+Rules for "message" (shown to BOTH the user and the admin/care team):
+1. Keep it warm and supportive but clinically honest. Aim for ~180–320 words.
 2. Open by reflecting back what their answers indicate ("Based on what you've shared...").
-3. Reassure them that a personalised remedy plan has been prepared for them.
-4. You may name the recommended remedies and briefly explain why each was chosen.
-5. Do not diagnose serious conditions.
+3. Give a CONDENSED reasoning block in plain language: the constitutional picture, the likely dominant miasm (named simply), and the key symptoms/modalities that point toward the chosen remedies.
+4. Briefly justify the ranked remedy shortlist (why the top remedy leads, what would confirm or change it).
+5. State uncertainty honestly where it exists; do not over-claim.
+6. Do not diagnose serious conditions; if any answer suggests a red flag, gently advise seeing a doctor.
+7. Use short labelled lines or light *bold* headings so it reads cleanly on WhatsApp. No markdown tables.
 
 Rules for "medicines":
-1. List 1-4 concrete suggested remedies, each with a short one-line reason.
+1. List the ranked shortlist (up to 5), strongest first, each with a short one-line reason tied to the case.
 
-Write the human-readable text ("message" and each "reason") in the requested output language.
-Return ONLY the JSON object, with no surrounding text or markdown.`;
+Write all human-readable text ("message" and each "reason") in the requested output language.
+Return ONLY the JSON object, with no surrounding text or markdown fences.`;
 
 const reviewCategoryLabels = {
   addiction: 'De-addiction / Substance Recovery',
@@ -321,10 +353,10 @@ const reviewCategoryLabels = {
  * shown to the user ("we reviewed your illness based on your answers and
  * created your medicines...").
  *
- * The question/answer pairs are sent directly to the model and the model's
- * answer is shown to the user.
- *
- * ⚠️ PLACEHOLDER PROMPT — the real system prompt will be provided later.
+ * The question/answer pairs (plus the earlier astrology/palmistry reading as a
+ * constitutional lens) are run through the classical homeopathic method layers
+ * in REVIEW_SYSTEM_PROMPT. The model returns a warm-but-clinical summary with a
+ * ranked remedy shortlist; the JSON is parsed into { message, medicines }.
  *
  * @param {Object} params
  * @param {string} params.category   - 'addiction' | 'mental' | 'sex'

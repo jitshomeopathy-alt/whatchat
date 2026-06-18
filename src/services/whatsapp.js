@@ -7,7 +7,22 @@ const BASE_URL = 'https://graph.facebook.com/v20.0';
  * @param {string} to   - Recipient WhatsApp phone number (e.g. "919876543210")
  * @param {string} text - Message text (max 4096 chars)
  */
+// WhatsApp rejects text bodies longer than 4096 chars. Our richer astrology /
+// prescription messages can exceed that, so sendText splits oversized bodies
+// into ordered chunks and sends them sequentially.
+const WHATSAPP_TEXT_LIMIT = 4096;
+
 async function sendText(to, text) {
+  const body = String(text ?? '');
+  const chunks = chunkText(body, WHATSAPP_TEXT_LIMIT);
+  let last;
+  for (const chunk of chunks) {
+    last = await sendTextRaw(to, chunk);
+  }
+  return last;
+}
+
+async function sendTextRaw(to, text) {
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const token = process.env.WHATSAPP_TOKEN;
 
@@ -41,6 +56,53 @@ async function sendText(to, text) {
     console.error('[WhatsApp] sendText error:', JSON.stringify(detail));
     throw new Error(`Failed to send WhatsApp message: ${JSON.stringify(detail)}`);
   }
+}
+
+/**
+ * Split text into chunks no longer than `max`, preferring paragraph then line
+ * then word boundaries so messages stay readable. Always returns >= 1 chunk.
+ */
+function chunkText(text, max) {
+  if (text.length <= max) return [text];
+
+  const chunks = [];
+  let current = '';
+
+  const flush = () => {
+    if (current.length) {
+      chunks.push(current.trimEnd());
+      current = '';
+    }
+  };
+
+  // Split on blank lines first; fall back to single newlines, then hard slicing.
+  const blocks = text.split(/\n\n+/);
+  for (let block of blocks) {
+    // A single block that is itself too large gets broken down further.
+    while (block.length > max) {
+      const slicePoint = findBreak(block, max);
+      const head = block.slice(0, slicePoint);
+      if (current.length + head.length + 2 > max) flush();
+      current += (current ? '\n\n' : '') + head;
+      flush();
+      block = block.slice(slicePoint).replace(/^\s+/, '');
+    }
+    if (current.length + block.length + 2 > max) flush();
+    current += (current ? '\n\n' : '') + block;
+  }
+  flush();
+
+  return chunks.length ? chunks : [text.slice(0, max)];
+}
+
+/** Find a good break point within the first `max` chars (newline > space > hard cut). */
+function findBreak(str, max) {
+  const window = str.slice(0, max);
+  const nl = window.lastIndexOf('\n');
+  if (nl > max * 0.5) return nl;
+  const sp = window.lastIndexOf(' ');
+  if (sp > max * 0.5) return sp;
+  return max;
 }
 
 /**

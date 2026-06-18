@@ -27,6 +27,7 @@ async function startAstrology(whatsappId, user) {
         name: user.name,
         dob: user.dob,
         age: user.age,
+        gender: user.gender,
         city: user.address,
         language,
       },
