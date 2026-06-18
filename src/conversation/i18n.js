@@ -176,6 +176,10 @@ const STRINGS = {
     en: ({ result }) => `🩺 *Based on everything you shared, here’s what I’ve prepared for you:*\n\n${result}`,
     hi: ({ result }) => `🩺 *आपने जो कुछ बताया, उसके आधार पर मैंने आपके लिए यह तैयार किया है:*\n\n${result}`,
   },
+  medicinesList: {
+    en: ({ items }) => `\n\n💊 *Recommended remedies:*\n${items}`,
+    hi: ({ items }) => `\n\n💊 *सुझाई गई दवाएँ:*\n${items}`,
+  },
   // ── Payment (Razorpay) ──────────────────────────────────────────────────────
   paymentPrompt: {
     en: ({ link }) =>

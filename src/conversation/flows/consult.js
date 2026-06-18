@@ -268,8 +268,8 @@ async function finishConsult(whatsappId, session, category, answers) {
     return;
   }
 
-  // Save to history. The user-facing `message` carries no medicine names — the
-  // suggested medicines are stored separately for the care team / admin view.
+  // Save to history. The suggested medicines are shown to the user and also
+  // stored for the care team / admin view.
   try {
     if (user) {
       await AnalysisHistory.create({
@@ -286,7 +286,15 @@ async function finishConsult(whatsappId, session, category, answers) {
     console.error('[Consult] History save error:', err.message);
   }
 
-  await sendText(whatsappId, t('resultIntro', lang, { result: message }));
+  let resultText = message;
+  if (medicines.length) {
+    const items = medicines
+      .map((m) => (m.reason ? `• *${m.name}* — ${m.reason}` : `• *${m.name}*`))
+      .join('\n');
+    resultText += t('medicinesList', lang, { items });
+  }
+
+  await sendText(whatsappId, t('resultIntro', lang, { result: resultText }));
 
   // Gate the Order / Consult choice behind a ₹399 payment.
   await requestPayment(whatsappId, lang, user);

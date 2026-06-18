@@ -301,14 +301,11 @@ Rules for "message" (shown to the user):
 1. Keep it under 220 words, warm and reassuring.
 2. Open by reflecting back what their answers indicate ("Based on what you've shared...").
 3. Reassure them that a personalised remedy plan has been prepared for them.
-4. NEVER name, mention, abbreviate, or hint at any specific medicine, remedy, brand,
-   ingredient, or product. Refer only generally to "a personalised remedy plan" or
-   "the recommended remedies". This is a strict requirement.
+4. You may name the recommended remedies and briefly explain why each was chosen.
 5. Do not diagnose serious conditions.
 
-Rules for "medicines" (internal — for the care team only, NEVER shown to the user):
+Rules for "medicines":
 1. List 1-4 concrete suggested remedies, each with a short one-line reason.
-2. These names must never appear anywhere in "message".
 
 Write the human-readable text ("message" and each "reason") in the requested output language.
 Return ONLY the JSON object, with no surrounding text or markdown.`;
@@ -337,8 +334,8 @@ const reviewCategoryLabels = {
  * @param {string} [params.astrologyResult] - Earlier profile reading (optional context)
  * @param {string} [params.language] - 'en' | 'hi' (output language)
  * @returns {Promise<{ message: string, medicines: Array<{ name: string, reason: string }> }>}
- *   message    - user-facing text (contains NO direct medicine names)
- *   medicines  - internal remedy suggestions for the care team / admin only
+ *   message    - user-facing text (may name the recommended remedies)
+ *   medicines  - remedy suggestions, also surfaced to the user and stored for admin
  */
 async function reviewAndPrescribe({ category, questions, answers, user, astrologyResult, language }) {
   const client = getClient();
@@ -381,7 +378,7 @@ async function reviewAndPrescribe({ category, questions, answers, user, astrolog
   } catch (err) {
     // If the model didn't return valid JSON, fall back to treating the whole
     // output as the user message with no separate medicine list. This keeps the
-    // user experience safe (no stray medicine names leak through structure loss).
+    // user experience safe.
     console.error('[OpenAI] reviewAndPrescribe JSON parse failed:', err.message);
     return { message: raw, medicines: [] };
   }

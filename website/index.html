@@ -3,7 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WhatChat — AI Health Assistant on WhatsApp</title>
+    <title>Astro Vaidhya — AI-Guided Homeopathic Wellness, on WhatsApp</title>
+    <meta name="description" content="Astro Vaidhya pairs classical homeopathic case-taking with AI, delivered entirely through a private WhatsApp conversation — across mental wellness, addiction recovery and intimate wellness." />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap"
+      rel="stylesheet"
+    />
+
     <style>
       *,
       *::before,
@@ -14,502 +23,1230 @@
       }
 
       :root {
-        --green: #25d366;
-        --green-dark: #128c7e;
-        --green-light: #dcf8c6;
-        --white: #ffffff;
-        --gray-light: #f5f5f5;
-        --gray: #888888;
-        --text: #1a1a1a;
-        --text-light: #555555;
-        --shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-        --radius: 16px;
+        --ink: #0b0e1a;
+        --ink-soft: #5b5f72;
+        --panel: #131a2c;
+        --panel-edge: #1f2740;
+        --brass: #c99a4b;
+        --brass-light: #e8c57e;
+        --parchment: #f8f4ec;
+        --parchment-dim: #efe7d6;
+        --sage: #5d7d63;
+        --hairline: rgba(201, 154, 75, 0.22);
+        --hairline-dark: rgba(232, 197, 126, 0.16);
+        --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+        --sans:
+          "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+        --wrap: 1140px;
       }
 
-      html,
-      body {
-        height: 100%;
+      html {
+        scroll-behavior: smooth;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+        }
       }
 
       body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          "Helvetica Neue", Arial, sans-serif;
-        background: var(--gray-light);
-        color: var(--text);
-        line-height: 1.6;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
+        font-family: var(--sans);
+        background: var(--parchment);
+        color: var(--ink);
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
         overflow-x: hidden;
-        width: 100%;
+      }
+
+      .wrap {
+        max-width: var(--wrap);
+        margin: 0 auto;
+        padding: 0 28px;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      img,
+      svg {
+        display: block;
         max-width: 100%;
       }
 
-      /* ── HERO ─────────────────────────────────────────────────────────────── */
-      .hero {
-        background: linear-gradient(
-          135deg,
-          var(--green-dark) 0%,
-          var(--green) 100%
-        );
-        color: var(--white);
-        padding: 64px 24px 80px;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
+      :focus-visible {
+        outline: 2px solid var(--brass);
+        outline-offset: 3px;
       }
 
-      .hero::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--brass);
       }
 
-      .logo-ring {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 96px;
-        height: 96px;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 50%;
-        border: 3px solid rgba(255, 255, 255, 0.35);
-        margin-bottom: 24px;
-        position: relative;
-        z-index: 1;
+      .eyebrow.on-dark {
+        color: var(--brass-light);
       }
 
-      .logo-ring svg {
-        width: 52px;
-        height: 52px;
-        fill: var(--white);
-      }
-
-      .hero h1 {
-        font-size: clamp(2rem, 5vw, 3rem);
-        font-weight: 800;
-        letter-spacing: -0.5px;
-        margin-bottom: 12px;
-        position: relative;
-        z-index: 1;
-      }
-
-      .hero h1 span {
-        color: var(--green-light);
-      }
-
-      .hero p {
-        font-size: clamp(1rem, 2.5vw, 1.2rem);
-        opacity: 0.92;
-        max-width: 560px;
-        margin: 0 auto 36px;
-        position: relative;
-        z-index: 1;
-      }
-
-      .cta-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        background: var(--white);
-        color: var(--green-dark);
-        font-size: 1.05rem;
-        font-weight: 700;
-        padding: 16px 36px;
-        border-radius: 50px;
-        text-decoration: none;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+      .reveal {
+        opacity: 0;
+        transform: translateY(18px);
         transition:
-          transform 0.18s ease,
-          box-shadow 0.18s ease;
-        position: relative;
-        z-index: 1;
+          opacity 0.7s ease,
+          transform 0.7s ease;
       }
-
-      .cta-btn:hover,
-      .cta-btn:focus {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
-        outline: none;
-      }
-
-      .cta-btn:active {
+      .reveal.is-visible {
+        opacity: 1;
         transform: translateY(0);
       }
 
-      .cta-btn svg {
-        width: 22px;
-        height: 22px;
-        fill: var(--green);
+      /* ── NAV ──────────────────────────────────────────────────────────── */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(11, 14, 26, 0.92);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--hairline-dark);
       }
 
-      /* ── FEATURES ─────────────────────────────────────────────────────────── */
-      .features {
-        max-width: 960px;
-        margin: 30px auto 0;
-        padding: 0 24px 60px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
-        gap: 20px;
+      .nav-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 76px;
+        gap: 24px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: var(--parchment);
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+        flex-shrink: 0;
+      }
+
+      .brand-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+      }
+
+      .brand-word {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: 1.18rem;
+        letter-spacing: 0.02em;
+      }
+
+      .brand-tag {
+        font-family: var(--mono);
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--brass-light);
+        opacity: 0.85;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        font-size: 0.92rem;
+        color: rgba(248, 244, 236, 0.78);
+      }
+
+      .nav-links a {
+        text-decoration: none;
+        transition: color 0.15s ease;
+      }
+      .nav-links a:hover {
+        color: var(--brass-light);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--sans);
+        font-weight: 600;
+        font-size: 0.92rem;
+        padding: 13px 24px;
+        border-radius: 4px;
+        text-decoration: none;
+        white-space: nowrap;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease,
+          background 0.15s ease;
+        border: 1px solid transparent;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .btn-brass {
+        background: var(--brass);
+        color: var(--ink);
+      }
+      .btn-brass:hover {
+        background: var(--brass-light);
+        box-shadow: 0 8px 22px rgba(201, 154, 75, 0.3);
+      }
+
+      .btn-ghost-dark {
+        background: transparent;
+        border-color: rgba(248, 244, 236, 0.28);
+        color: var(--parchment);
+      }
+      .btn-ghost-dark:hover {
+        border-color: var(--brass-light);
+        color: var(--brass-light);
+      }
+
+      .btn-ghost-light {
+        background: transparent;
+        border-color: rgba(11, 14, 26, 0.22);
+        color: var(--ink);
+      }
+      .btn-ghost-light:hover {
+        border-color: var(--ink);
+      }
+
+      .wa-dot {
+        width: 16px;
+        height: 16px;
+        fill: #25d366;
+        flex-shrink: 0;
+      }
+
+      @media (max-width: 900px) {
+        .nav-links {
+          display: none;
+        }
+        .brand-tag {
+          display: none;
+        }
+      }
+
+      /* ── HERO ─────────────────────────────────────────────────────────── */
+      .hero {
+        position: relative;
+        background: radial-gradient(
+            ellipse 120% 90% at 80% -10%,
+            #1c2440 0%,
+            var(--ink) 55%
+          ),
+          var(--ink);
+        color: var(--parchment);
+        overflow: hidden;
+        padding: 96px 0 110px;
+      }
+
+      .starfield,
+      .starfield::after {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        width: 2px;
+        height: 2px;
+        background: transparent;
+      }
+
+      .starfield {
+        top: 0;
+        left: 0;
+        box-shadow:
+          6vw 8vh #fff,
+          14vw 22vh #fff,
+          22vw 5vh rgba(255, 255, 255, 0.7),
+          31vw 30vh #fff,
+          39vw 12vh rgba(255, 255, 255, 0.6),
+          47vw 38vh #fff,
+          54vw 6vh rgba(255, 255, 255, 0.8),
+          61vw 26vh #fff,
+          68vw 44vh rgba(255, 255, 255, 0.6),
+          76vw 16vh #fff,
+          83vw 34vh rgba(255, 255, 255, 0.7),
+          90vw 9vh #fff,
+          96vw 48vh rgba(255, 255, 255, 0.6),
+          4vw 52vh rgba(255, 255, 255, 0.5),
+          11vw 64vh #fff,
+          18vw 58vh rgba(255, 255, 255, 0.6),
+          27vw 70vh #fff,
+          35vw 60vh rgba(255, 255, 255, 0.5),
+          44vw 76vh #fff,
+          52vw 66vh rgba(255, 255, 255, 0.7),
+          58vw 82vh #fff,
+          65vw 72vh rgba(255, 255, 255, 0.5),
+          73vw 88vh #fff,
+          81vw 78vh rgba(255, 255, 255, 0.6),
+          89vw 92vh #fff,
+          95vw 80vh rgba(255, 255, 255, 0.5),
+          2vw 18vh rgba(255, 255, 255, 0.4),
+          9vw 36vh rgba(255, 255, 255, 0.45),
+          16vw 46vh rgba(255, 255, 255, 0.4),
+          24vw 40vh rgba(255, 255, 255, 0.5),
+          33vw 50vh rgba(255, 255, 255, 0.4),
+          41vw 22vh rgba(255, 255, 255, 0.45),
+          49vw 56vh rgba(255, 255, 255, 0.4),
+          57vw 14vh rgba(255, 255, 255, 0.5),
+          63vw 60vh rgba(255, 255, 255, 0.4),
+          71vw 24vh rgba(255, 255, 255, 0.45),
+          79vw 54vh rgba(255, 255, 255, 0.4),
+          87vw 62vh rgba(255, 255, 255, 0.45),
+          93vw 30vh rgba(255, 255, 255, 0.4);
+        animation: twinkle 6s ease-in-out infinite;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .starfield {
+          animation: twinkle 6s ease-in-out infinite;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .starfield {
+          animation: none;
+        }
+      }
+
+      @keyframes twinkle {
+        0%,
+        100% {
+          opacity: 0.55;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      .hero-grid {
         position: relative;
         z-index: 2;
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        align-items: center;
+        gap: 40px;
       }
 
-      .card {
-        background: var(--white);
-        border-radius: var(--radius);
-        padding: 28px 24px;
-        box-shadow: var(--shadow);
-        transition:
-          transform 0.18s ease,
-          box-shadow 0.18s ease;
+      .hero h1 {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: clamp(2.3rem, 4.4vw, 3.6rem);
+        line-height: 1.12;
+        letter-spacing: -0.01em;
+        margin: 18px 0 22px;
+        max-width: 19ch;
       }
 
-      .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      .hero h1 em {
+        font-style: italic;
+        color: var(--brass-light);
+        font-weight: 500;
       }
 
-      .card-icon {
-        font-size: 2rem;
-        margin-bottom: 14px;
-        line-height: 1;
+      .hero p.lede {
+        font-size: 1.08rem;
+        color: rgba(248, 244, 236, 0.82);
+        max-width: 46ch;
+        margin-bottom: 34px;
       }
 
-      .card h3 {
-        font-size: 1.05rem;
-        font-weight: 700;
-        margin-bottom: 8px;
-        color: var(--text);
-      }
-
-      .card p {
-        font-size: 0.92rem;
-        color: var(--text-light);
-      }
-
-      /* ── HOW IT WORKS ──────────────────────────────────────────────────────── */
-      .section {
-        max-width: 800px;
-        margin: 0 auto 60px;
-        padding: 0 24px;
-        text-align: center;
-      }
-
-      .section h2 {
-        font-size: clamp(1.5rem, 3.5vw, 2rem);
-        font-weight: 800;
-        margin-bottom: 12px;
-      }
-
-      .section > p {
-        color: var(--text-light);
+      .hero-ctas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
         margin-bottom: 36px;
+      }
+
+      .trust-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 22px;
+        font-size: 0.82rem;
+        color: rgba(248, 244, 236, 0.62);
+      }
+      .trust-row span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .trust-row svg {
+        width: 13px;
+        height: 13px;
+        fill: var(--brass-light);
+        flex-shrink: 0;
+      }
+
+      .hero-graphic {
+        position: relative;
+        aspect-ratio: 1 / 1;
+      }
+
+      .hero-graphic svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .node-pulse {
+        animation: pulse 3.2s ease-in-out infinite;
+        transform-origin: center;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .node-pulse {
+          animation: none;
+        }
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.85;
+          r: 7;
+        }
+        50% {
+          opacity: 1;
+          r: 9;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+        .hero h1 {
+          max-width: none;
+        }
+        .hero-graphic {
+          max-width: 320px;
+          margin: 0 auto;
+          opacity: 0.85;
+        }
+      }
+
+      /* ── PATHS ────────────────────────────────────────────────────────── */
+      .paths {
+        padding: 96px 0 90px;
+        background: var(--parchment);
+      }
+
+      .section-head {
+        max-width: 640px;
+        margin-bottom: 52px;
+      }
+
+      .section-head h2 {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: clamp(1.7rem, 3vw, 2.3rem);
+        margin: 14px 0 12px;
+        letter-spacing: -0.01em;
+      }
+
+      .section-head p {
+        color: var(--ink-soft);
+        font-size: 1.02rem;
+      }
+
+      .path-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        background: var(--hairline);
+        border: 1px solid var(--hairline);
+      }
+
+      .path-card {
+        background: var(--parchment);
+        padding: 38px 32px 32px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .path-icon {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 22px;
+      }
+
+      .path-code {
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.14em;
+        color: var(--brass);
+        margin-bottom: 8px;
+      }
+
+      .path-card h3 {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: 1.28rem;
+        margin-bottom: 10px;
+      }
+
+      .path-card p {
+        color: var(--ink-soft);
+        font-size: 0.93rem;
+        flex-grow: 1;
+      }
+
+      .path-note {
+        margin-top: 18px;
+        font-size: 0.76rem;
+        font-family: var(--mono);
+        letter-spacing: 0.04em;
+        color: var(--sage);
+        text-transform: uppercase;
+      }
+
+      @media (max-width: 900px) {
+        .path-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── HOW IT WORKS ─────────────────────────────────────────────────── */
+      .how {
+        padding: 90px 0;
+        background: var(--parchment-dim);
+        border-top: 1px solid var(--hairline);
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .how-grid {
+        display: grid;
+        grid-template-columns: 0.8fr 1.2fr;
+        gap: 60px;
+      }
+
+      .how-grid .section-head {
+        margin-bottom: 0;
       }
 
       .steps {
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        text-align: left;
       }
 
       .step {
-        display: flex;
-        align-items: flex-start;
-        gap: 16px;
-        background: var(--white);
-        border-radius: var(--radius);
-        padding: 20px 22px;
-        box-shadow: var(--shadow);
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        gap: 20px;
+        padding: 26px 0;
+        border-top: 1px solid var(--hairline);
+      }
+      .step:first-child {
+        border-top: none;
       }
 
       .step-num {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 40px;
-        height: 40px;
-        background: var(--green);
-        color: var(--white);
-        font-weight: 800;
-        font-size: 1rem;
-        border-radius: 50%;
+        font-family: var(--mono);
+        font-size: 0.95rem;
+        color: var(--brass);
+        padding-top: 2px;
       }
 
       .step-text h4 {
-        font-size: 0.98rem;
-        font-weight: 700;
-        margin-bottom: 4px;
+        font-family: var(--sans);
+        font-weight: 600;
+        font-size: 1.02rem;
+        margin-bottom: 6px;
       }
 
       .step-text p {
+        color: var(--ink-soft);
+        font-size: 0.92rem;
+      }
+
+      .step-text code {
+        font-family: var(--mono);
+        background: rgba(201, 154, 75, 0.14);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.85em;
+      }
+
+      @media (max-width: 900px) {
+        .how-grid {
+          grid-template-columns: 1fr;
+          gap: 36px;
+        }
+      }
+
+      /* ── DEPTH / STATS ────────────────────────────────────────────────── */
+      .depth {
+        padding: 90px 0;
+        background: var(--ink);
+        color: var(--parchment);
+      }
+
+      .depth .section-head p {
+        color: rgba(248, 244, 236, 0.68);
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+        border-top: 1px solid var(--hairline-dark);
+        border-left: 1px solid var(--hairline-dark);
+      }
+
+      .stat {
+        padding: 30px 26px;
+        border-right: 1px solid var(--hairline-dark);
+        border-bottom: 1px solid var(--hairline-dark);
+      }
+
+      .stat .num {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: 2.1rem;
+        color: var(--brass-light);
+      }
+
+      .stat .label {
+        font-size: 0.84rem;
+        color: rgba(248, 244, 236, 0.7);
+        margin-top: 6px;
+      }
+
+      .depth-note {
+        margin-top: 30px;
         font-size: 0.88rem;
-        color: var(--text-light);
+        color: rgba(248, 244, 236, 0.6);
+        max-width: 64ch;
       }
 
-      /* ── BOTTOM CTA ────────────────────────────────────────────────────────── */
-      .bottom-cta {
-        background: linear-gradient(
-          135deg,
-          var(--green-dark) 0%,
-          var(--green) 100%
-        );
-        color: var(--white);
+      @media (max-width: 900px) {
+        .stat-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      /* ── FOUNDER ──────────────────────────────────────────────────────── */
+      .founder {
+        padding: 96px 0;
+        background: var(--parchment);
+      }
+
+      .founder-grid {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 48px;
+        align-items: start;
+      }
+
+      .seal {
+        width: 150px;
+        height: 150px;
+      }
+
+      .founder-credentials {
+        margin-top: 18px;
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        letter-spacing: 0.04em;
+        color: var(--ink-soft);
+        line-height: 1.7;
+      }
+
+      .founder-copy h3 {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: 1.6rem;
+        margin-bottom: 16px;
+      }
+
+      .founder-copy p {
+        color: var(--ink-soft);
+        font-size: 1rem;
+        max-width: 64ch;
+        margin-bottom: 16px;
+      }
+
+      .founder-copy p:last-child {
+        margin-bottom: 0;
+      }
+
+      @media (max-width: 760px) {
+        .founder-grid {
+          grid-template-columns: 1fr;
+        }
+        .seal {
+          width: 110px;
+          height: 110px;
+        }
+      }
+
+      /* ── PRIVACY ──────────────────────────────────────────────────────── */
+      .privacy {
+        padding: 90px 0;
+        background: var(--panel);
+        color: var(--parchment);
+        border-top: 1px solid var(--hairline-dark);
+      }
+
+      .privacy-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 36px;
+        margin-top: 44px;
+      }
+
+      .privacy-item h4 {
+        font-family: var(--sans);
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 10px;
+        color: var(--brass-light);
+      }
+
+      .privacy-item p {
+        font-size: 0.9rem;
+        color: rgba(248, 244, 236, 0.72);
+      }
+
+      .disclaimer-block {
+        margin-top: 50px;
+        padding-top: 30px;
+        border-top: 1px solid var(--hairline-dark);
+        font-size: 0.82rem;
+        color: rgba(248, 244, 236, 0.55);
+        max-width: 72ch;
+      }
+
+      @media (max-width: 900px) {
+        .privacy-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── CTA BAND ─────────────────────────────────────────────────────── */
+      .cta-band {
+        position: relative;
+        background: linear-gradient(135deg, #161c30 0%, var(--ink) 100%);
+        color: var(--parchment);
+        padding: 84px 0;
         text-align: center;
-        padding: 60px 24px;
+        overflow: hidden;
       }
 
-      .bottom-cta h2 {
-        font-size: clamp(1.4rem, 3.5vw, 2rem);
-        font-weight: 800;
-        margin-bottom: 12px;
+      .cta-band h2 {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+        margin: 0 auto 14px;
+        max-width: 26ch;
       }
 
-      .bottom-cta p {
-        opacity: 0.9;
-        margin-bottom: 28px;
-        max-width: 480px;
-        margin-left: auto;
-        margin-right: auto;
+      .cta-band p {
+        color: rgba(248, 244, 236, 0.72);
+        max-width: 50ch;
+        margin: 0 auto 32px;
       }
 
-      /* ── FOOTER ────────────────────────────────────────────────────────────── */
+      .cta-band .hero-ctas {
+        justify-content: center;
+        margin-bottom: 0;
+      }
+
+      /* ── FOOTER ───────────────────────────────────────────────────────── */
       footer {
-        background: #111;
-        color: #aaa;
-        text-align: center;
-        padding: 22px 24px;
-        font-size: 0.83rem;
-        margin-top: auto;
+        background: var(--ink);
+        color: rgba(248, 244, 236, 0.55);
+        padding: 36px 0 30px;
+        border-top: 1px solid var(--hairline-dark);
       }
 
-      footer a {
-        color: var(--green);
+      .footer-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        font-size: 0.82rem;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 22px;
+        flex-wrap: wrap;
+      }
+
+      .footer-links a {
         text-decoration: none;
+        color: rgba(248, 244, 236, 0.65);
       }
-
-      /* ── DISCLAIMER ────────────────────────────────────────────────────────── */
-      .disclaimer {
-        max-width: 680px;
-        margin: 0 auto 40px;
-        padding: 0 24px;
-        text-align: center;
-        font-size: 0.8rem;
-        color: var(--gray);
-        border-top: 1px solid #e0e0e0;
-        padding-top: 24px;
+      .footer-links a:hover {
+        color: var(--brass-light);
       }
 
       @media (max-width: 480px) {
         .hero {
-          padding: 48px 16px 72px;
+          padding: 70px 0 80px;
         }
-        .cta-btn {
-          font-size: 0.95rem;
-          padding: 14px 28px;
+        .wrap {
+          padding: 0 20px;
         }
-        .features {
-          padding: 0 16px 48px;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 12px;
-        }
-        .card {
-          padding: 18px 14px;
-        }
-        .card-icon {
-          font-size: 1.6rem;
-          margin-bottom: 10px;
-        }
-        .card h3 {
-          font-size: 1rem;
-        }
-        .card p {
-          font-size: 0.82rem;
-        }
-        .section,
-        .bottom-cta {
-          padding-left: 16px;
-          padding-right: 16px;
+        .path-card,
+        .stat {
+          padding: 26px 20px;
         }
       }
     </style>
   </head>
   <body>
-    <!-- HERO ──────────────────────────────────────────────────────────────────── -->
-    <section class="hero">
-      <div class="logo-ring">
-        <!-- WhatsApp-style icon (simplified) -->
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z"
-          />
-        </svg>
+    <!-- NAV ───────────────────────────────────────────────────────────────── -->
+    <nav class="nav">
+      <div class="wrap nav-row">
+        <a class="brand" href="#top">
+          <svg class="brand-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" fill="none" stroke="#c99a4b" stroke-width="1" opacity="0.55" />
+            <g stroke="#e8c57e" stroke-width="1.4" stroke-linecap="round">
+              <line x1="20" y1="20" x2="20" y2="6" />
+              <line x1="20" y1="20" x2="31.3" y2="13" />
+              <line x1="20" y1="20" x2="31.3" y2="27" />
+              <line x1="20" y1="20" x2="20" y2="34" />
+              <line x1="20" y1="20" x2="8.7" y2="27" />
+              <line x1="20" y1="20" x2="8.7" y2="13" />
+            </g>
+            <circle cx="20" cy="20" r="3.4" fill="#e8c57e" />
+          </svg>
+          <span class="brand-text">
+            <span class="brand-word">Astro&nbsp;Vaidhya</span>
+            <span class="brand-tag">AI Homeopathic Wellness</span>
+          </span>
+        </a>
+        <div class="nav-links">
+          <a href="#paths">The Three Paths</a>
+          <a href="#how">How It Works</a>
+          <a href="#depth">Inside the System</a>
+          <a href="#founder">Founder</a>
+          <a href="#privacy">Privacy</a>
+        </div>
+        <a class="btn btn-brass" href="https://wa.me/918818809542?text=Hi" target="_blank" rel="noopener">
+          <svg class="wa-dot" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z" />
+          </svg>
+          Begin on WhatsApp
+        </a>
       </div>
-      <h1>What<span>Chat</span></h1>
-      <p>
-        Your personal AI health assistant — available 24/7 on WhatsApp. Get
-        health insights, wellness analysis, and personalised recovery
-        recommendations instantly.
-      </p>
-      <a
-        class="cta-btn"
-        href="https://wa.me/918818809542?text=Hi"
-        target="_blank"
-        rel="noopener"
-      >
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z"
-          />
-        </svg>
-        Start Chat on WhatsApp
-      </a>
+    </nav>
+
+    <!-- HERO ──────────────────────────────────────────────────────────────── -->
+    <header class="hero" id="top">
+      <div class="starfield" aria-hidden="true"></div>
+      <div class="wrap hero-grid">
+        <div>
+          <p class="eyebrow on-dark">AI Homeopathy · Delivered on WhatsApp</p>
+          <h1>Every feeling has a shape.<br />We learn to <em>read it.</em></h1>
+          <p class="lede">
+            Astro Vaidhya guides you, through a private WhatsApp conversation, from the
+            sensation you're carrying today toward the constitutional remedy it points
+            toward — across mental wellness, addiction recovery and intimate wellness.
+            Clinically directed by a practising homeopathic physician. Run by AI that
+            never sleeps.
+          </p>
+          <div class="hero-ctas">
+            <a class="btn btn-brass" href="https://wa.me/918818809542?text=Hi" target="_blank" rel="noopener">
+              <svg class="wa-dot" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z" />
+              </svg>
+              Start Your Reading
+            </a>
+            <a class="btn btn-ghost-dark" href="#how">See how it works</a>
+          </div>
+          <div class="trust-row">
+            <span>
+              <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-4z" /></svg>
+              Founded &amp; clinically directed by a BHMS&nbsp;MD
+            </span>
+            <span>
+              <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-4z" /></svg>
+              Private, encrypted conversations
+            </span>
+            <span>
+              <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-4z" /></svg>
+              No app, no waiting room
+            </span>
+          </div>
+        </div>
+
+        <div class="hero-graphic" aria-hidden="true">
+          <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
+            <g stroke="#c99a4b" stroke-width="1" opacity="0.4" fill="none">
+              <path d="M80,60 150,40 220,90 300,50 380,110 420,200 360,280 280,340 190,380 110,330 60,250 40,160 80,60" />
+              <line x1="80" y1="60" x2="240" y2="210" />
+              <line x1="380" y1="110" x2="240" y2="210" />
+              <line x1="190" y1="380" x2="240" y2="210" />
+              <line x1="60" y1="250" x2="240" y2="210" />
+              <line x1="420" y1="200" x2="240" y2="210" />
+              <line x1="140" y1="180" x2="240" y2="210" />
+              <line x1="260" y1="160" x2="240" y2="210" />
+            </g>
+            <g fill="#e8c57e">
+              <circle cx="80" cy="60" r="3" />
+              <circle cx="150" cy="40" r="2.4" />
+              <circle cx="220" cy="90" r="3" />
+              <circle cx="300" cy="50" r="2.4" />
+              <circle cx="380" cy="110" r="3.4" />
+              <circle cx="420" cy="200" r="2.6" />
+              <circle cx="360" cy="280" r="3" />
+              <circle cx="280" cy="340" r="2.6" />
+              <circle cx="190" cy="380" r="3.4" />
+              <circle cx="110" cy="330" r="2.4" />
+              <circle cx="60" cy="250" r="3" />
+              <circle cx="40" cy="160" r="2.6" />
+              <circle cx="140" cy="180" r="2.4" />
+              <circle cx="260" cy="160" r="2.4" />
+            </g>
+            <circle class="node-pulse" cx="240" cy="210" r="8" fill="#c99a4b" />
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- THREE PATHS ───────────────────────────────────────────────────────── -->
+    <section class="paths" id="paths">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <p class="eyebrow">Three Verticals, One Conversation</p>
+          <h2>Wherever you're carrying weight, there's a path for it.</h2>
+          <p>
+            Every path begins the same way — with a single question about the sensation
+            that's actually present, not the story around it. From there, the system
+            branches toward a constitutional reading suited to what you've described.
+          </p>
+        </div>
+
+        <div class="path-grid reveal">
+          <article class="path-card">
+            <svg class="path-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <g stroke="#c99a4b" stroke-width="1" opacity="0.5">
+                <line x1="32" y1="32" x2="12" y2="14" />
+                <line x1="32" y1="32" x2="50" y2="10" />
+                <line x1="32" y1="32" x2="54" y2="40" />
+                <line x1="32" y1="32" x2="30" y2="56" />
+                <line x1="32" y1="32" x2="8" y2="46" />
+              </g>
+              <g fill="#c99a4b">
+                <circle cx="12" cy="14" r="2.6" />
+                <circle cx="50" cy="10" r="2.6" />
+                <circle cx="54" cy="40" r="2.6" />
+                <circle cx="30" cy="56" r="2.6" />
+                <circle cx="8" cy="46" r="2.6" />
+              </g>
+              <circle cx="32" cy="32" r="4.2" fill="#e8c57e" />
+            </svg>
+            <p class="path-code">MH · MENTAL WELLNESS</p>
+            <h3>Mental Wellness</h3>
+            <p>
+              From grief, anxiety and suppressed anger to the quieter, newer states —
+              burnout, loneliness, identity loss and the feeling of never being enough.
+              Eight starting sensations, each routed to its own line of questions.
+            </p>
+            <p class="path-note">6 adaptive branches</p>
+          </article>
+
+          <article class="path-card">
+            <svg class="path-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <g stroke="#c99a4b" stroke-width="1" opacity="0.5">
+                <line x1="10" y1="46" x2="24" y2="30" />
+                <line x1="24" y1="30" x2="32" y2="40" />
+                <line x1="32" y1="40" x2="42" y2="22" />
+                <line x1="42" y1="22" x2="56" y2="32" />
+              </g>
+              <g fill="#c99a4b">
+                <circle cx="10" cy="46" r="2.6" />
+                <circle cx="24" cy="30" r="2.6" />
+                <circle cx="42" cy="22" r="2.6" />
+                <circle cx="56" cy="32" r="2.6" />
+              </g>
+              <circle cx="32" cy="40" r="4.2" fill="#e8c57e" />
+            </svg>
+            <p class="path-code">AD · ADDICTION RECOVERY</p>
+            <h3>Addiction Recovery</h3>
+            <p>
+              Substance patterns and the newer behavioural ones alike — tobacco and
+              alcohol sit alongside screens, gaming, food and the compulsions this
+              generation rarely names out loud. A path built around the person, not the habit.
+            </p>
+            <p class="path-note">10 behavioural categories</p>
+          </article>
+
+          <article class="path-card">
+            <svg class="path-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <g stroke="#c99a4b" stroke-width="1" opacity="0.5">
+                <line x1="14" y1="20" x2="32" y2="32" />
+                <line x1="50" y1="20" x2="32" y2="32" />
+                <line x1="14" y1="48" x2="32" y2="32" />
+                <line x1="50" y1="48" x2="32" y2="32" />
+              </g>
+              <g fill="#c99a4b">
+                <circle cx="14" cy="20" r="2.6" />
+                <circle cx="50" cy="20" r="2.6" />
+                <circle cx="14" cy="48" r="2.6" />
+                <circle cx="50" cy="48" r="2.6" />
+              </g>
+              <circle cx="32" cy="32" r="4.2" fill="#e8c57e" />
+            </svg>
+            <p class="path-code">SX · INTIMATE WELLNESS</p>
+            <h3>Intimate Wellness</h3>
+            <p>
+              Concerns that are rarely spoken aloud, handled with the same clinical care
+              as everything else — desire, performance, comfort and connection between
+              partners. No judgment, no waiting room, no one else in the room.
+            </p>
+            <p class="path-note">8 branches · 18+ only</p>
+          </article>
+        </div>
+      </div>
     </section>
 
-    <!-- FEATURE CARDS ──────────────────────────────────────────────────────────── -->
-    <div class="features">
-      <div class="card">
-        <div class="card-icon">🔍</div>
-        <h3>AI Health Analysis</h3>
-        <p>
-          Send "analyse me" and get a comprehensive AI-powered wellness
-          assessment based on your profile and photo.
-        </p>
-      </div>
-      <div class="card">
-        <div class="card-icon">🌿</div>
-        <h3>Personalised Recovery Plans</h3>
-        <p>
-          Answer targeted questions in your chosen category and receive tailored
-          recovery recommendations and remedy suggestions.
-        </p>
-      </div>
-      <div class="card">
-        <div class="card-icon">💊</div>
-        <h3>Smart Medicine Matching</h3>
-        <p>
-          Semantically matched supplement and medicine recommendations from a
-          curated database, ranked by relevance to your symptoms.
-        </p>
-      </div>
-      <div class="card">
-        <div class="card-icon">🔒</div>
-        <h3>Secure &amp; Private</h3>
-        <p>
-          Your data is stored securely. Photos are uploaded to a private CDN and
-          your health information never leaves your conversation.
-        </p>
-      </div>
-      <div class="card">
-        <div class="card-icon">📱</div>
-        <h3>No App Required</h3>
-        <p>
-          Everything happens inside WhatsApp — no downloads, no sign-ups on a
-          website. Just open a chat and start talking.
-        </p>
-      </div>
-      <div class="card">
-        <div class="card-icon">⚡</div>
-        <h3>Available 24/7</h3>
-        <p>
-          The AI never sleeps. Get health guidance any time of day, whether it's
-          2 AM or a public holiday.
-        </p>
-      </div>
-    </div>
+    <!-- HOW IT WORKS ──────────────────────────────────────────────────────── -->
+    <section class="how" id="how">
+      <div class="wrap how-grid">
+        <div class="section-head reveal">
+          <p class="eyebrow">From First Message to Remedy</p>
+          <h2>Four steps. Under two minutes to begin.</h2>
+          <p>
+            No download, no account, no form. The entire experience lives inside the
+            WhatsApp conversation you already have open.
+          </p>
+        </div>
 
-    <!-- HOW IT WORKS ────────────────────────────────────────────────────────────── -->
-    <section class="section">
-      <h2>How It Works</h2>
-      <p>Getting started takes less than 2 minutes</p>
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-text">
-            <h4>Open WhatsApp &amp; Start a Chat</h4>
-            <p>
-              Tap the "Start Chat" button above or scan the QR code to open a
-              conversation with WhatChat.
-            </p>
+        <div class="steps reveal">
+          <div class="step">
+            <div class="step-num">01</div>
+            <div class="step-text">
+              <h4>Open WhatsApp and say hello</h4>
+              <p>Tap "Begin on WhatsApp" above, or save the number and start a chat yourself.</p>
+            </div>
           </div>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-text">
-            <h4>Register Your Profile</h4>
-            <p>
-              The bot will guide you through a quick registration — name, age,
-              gender, email, and an optional profile photo for visual analysis.
-            </p>
+          <div class="step">
+            <div class="step-num">02</div>
+            <div class="step-text">
+              <h4>Share a little about yourself</h4>
+              <p>Name, age and gender — and, if you'd like a deeper visual read, an optional photo.</p>
+            </div>
           </div>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-text">
-            <h4>Get Your Health Analysis</h4>
-            <p>
-              Type <strong>"analyse me"</strong> and receive a personalised
-              wellness assessment powered by GPT-4o vision AI.
-            </p>
+          <div class="step">
+            <div class="step-num">03</div>
+            <div class="step-text">
+              <h4>Send <code>analyse me</code></h4>
+              <p>Receive a full constitutional wellness reading, generated for you in the moment.</p>
+            </div>
           </div>
-        </div>
-        <div class="step">
-          <div class="step-num">4</div>
-          <div class="step-text">
-            <h4>Follow Your Recovery Plan</h4>
-            <p>
-              Type <strong>"recover me"</strong>, choose your wellness category,
-              answer a short questionnaire, and receive actionable
-              recommendations including matched remedies.
-            </p>
+          <div class="step">
+            <div class="step-num">04</div>
+            <div class="step-text">
+              <h4>Send <code>recover me</code></h4>
+              <p>Choose your path, answer a short adaptive set of questions, and receive your personalised plan.</p>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- BOTTOM CTA ──────────────────────────────────────────────────────────────── -->
-    <section class="bottom-cta">
-      <h2>Ready to start your wellness journey?</h2>
-      <p>
-        Join thousands of users getting AI-powered health guidance directly on
-        WhatsApp.
-      </p>
-      <a
-        class="cta-btn"
-        href="https://wa.me/918818809542?text=Hi"
-        target="_blank"
-        rel="noopener"
-      >
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z"
-          />
-        </svg>
-        Chat with WhatChat Now
-      </a>
+    <!-- DEPTH / WHAT'S INSIDE ─────────────────────────────────────────────── -->
+    <section class="depth" id="depth">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <p class="eyebrow on-dark">What's Actually Inside</p>
+          <h2>Built on clinical literature, not guesswork.</h2>
+          <p>
+            Every branch of logic was written and audited against classical homeopathic
+            case-taking and current research — cross-referenced with WHO data, AIIMS
+            studies, Indian Psychiatric Society reports and India's Economic Survey
+            2025–26 — before a single question reached a user.
+          </p>
+        </div>
+
+        <div class="stat-grid reveal">
+          <div class="stat">
+            <div class="num">3</div>
+            <div class="label">Wellness verticals in one conversation</div>
+          </div>
+          <div class="stat">
+            <div class="num">24</div>
+            <div class="label">Adaptive question branches, end to end</div>
+          </div>
+          <div class="stat">
+            <div class="num">10</div>
+            <div class="label">Addiction &amp; behavioural categories covered</div>
+          </div>
+          <div class="stat">
+            <div class="num">24/7</div>
+            <div class="label">A conversation that's always open</div>
+          </div>
+        </div>
+        <p class="depth-note">
+          And a hard boundary on the other side: severe psychiatric presentations, trauma
+          processing, fertility care and anyone under 18 are never handled by the
+          automated system. They're routed directly to a licensed physician, with the
+          full conversation in hand — not closed off, just handled by a person.
+        </p>
+      </div>
     </section>
 
-    <!-- DISCLAIMER ────────────────────────────────────────────────────────────── -->
-    <div class="disclaimer">
-      <p>
-        ⚠️ WhatChat is an AI-powered wellness information tool and is not a
-        substitute for professional medical advice, diagnosis, or treatment.
-        Always consult a qualified healthcare professional for medical concerns.
-      </p>
-    </div>
+    <!-- FOUNDER ───────────────────────────────────────────────────────────── -->
+    <section class="founder" id="founder">
+      <div class="wrap founder-grid">
+        <div class="reveal">
+          <svg class="seal" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="75" cy="75" r="72" fill="none" stroke="#c99a4b" stroke-width="1" />
+            <circle cx="75" cy="75" r="60" fill="none" stroke="#c99a4b" stroke-width="0.6" opacity="0.5" />
+            <text x="75" y="86" text-anchor="middle" font-family="Fraunces, serif" font-weight="600" font-size="38" fill="#0b0e1a">JP</text>
+          </svg>
+          <p class="founder-credentials">
+            DR. JITENDRA PAL<br />
+            BHMS, MD (HOMEOPATHY)<br />
+            FOUNDER &amp; CHIEF MEDICAL OFFICER
+          </p>
+        </div>
+        <div class="founder-copy reveal">
+          <p class="eyebrow">The Physician Behind the System</p>
+          <h3>Clinically directed, not just AI-assisted.</h3>
+          <p>
+            Astro Vaidhya is built and clinically directed by a practising homeopathic
+            physician. Every branch in the system — from the first question to the final
+            remedy — has been written and audited against classical repertories and
+            current Indian and global research, not generated from a generic model and
+            left unchecked.
+          </p>
+          <p>
+            The same principle holds at the edges of what AI should handle alone: when a
+            conversation moves into territory that needs a human — a sign of crisis, a
+            case too complex for an automated remedy, a question of fertility or trauma —
+            it's routed to Dr. Pal directly, with the full context already in hand.
+          </p>
+        </div>
+      </div>
+    </section>
 
-    <!-- FOOTER ──────────────────────────────────────────────────────────────────── -->
+    <!-- PRIVACY & SAFETY ──────────────────────────────────────────────────── -->
+    <section class="privacy" id="privacy">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <p class="eyebrow on-dark">Privacy &amp; Safety</p>
+          <h2 style="font-family: var(--serif); font-weight: 600; font-size: clamp(1.7rem, 3vw, 2.3rem); margin: 14px 0 0;">
+            Built to handle what people don't say out loud.
+          </h2>
+        </div>
+
+        <div class="privacy-grid reveal">
+          <div class="privacy-item">
+            <h4>Encrypted, always</h4>
+            <p>
+              Conversations are encrypted in transit and handled in line with India's
+              Digital Personal Data Protection Act. Nothing is sold, and nothing leaves
+              the conversation it was shared in.
+            </p>
+          </div>
+          <div class="privacy-item">
+            <h4>A human, when it matters</h4>
+            <p>
+              If a conversation ever shows signs of crisis, the system pauses its usual
+              flow and routes the person toward real clinical support — not an automated
+              remedy, and never a sales prompt.
+            </p>
+          </div>
+          <div class="privacy-item">
+            <h4>Known limits, on purpose</h4>
+            <p>
+              Severe psychiatric presentations, trauma, fertility, and anyone under 18
+              are explicitly outside the automated system's scope. The platform is
+              strongest when it knows where it ends.
+            </p>
+          </div>
+        </div>
+
+        <div class="disclaimer-block reveal">
+          Astro Vaidhya is an AI-powered wellness information tool and is not a
+          substitute for professional medical, psychiatric or psychological care. Always
+          consult a qualified healthcare professional for diagnosis and treatment. If
+          you're in crisis, please reach out to a licensed professional or your local
+          emergency services right away.
+        </div>
+      </div>
+    </section>
+
+    <!-- BOTTOM CTA ────────────────────────────────────────────────────────── -->
+    <section class="cta-band">
+      <div class="starfield" aria-hidden="true" style="opacity: 0.5"></div>
+      <div class="wrap" style="position: relative; z-index: 2">
+        <h2>Ready to understand what you're actually carrying?</h2>
+        <p>One conversation, on the app you already have open. No downloads, no forms, no waiting room.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-brass" href="https://wa.me/918818809542?text=Hi" target="_blank" rel="noopener">
+            <svg class="wa-dot" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4zM22.5 19.1c-.33-.17-1.94-.96-2.24-1.07-.3-.11-.52-.17-.74.17s-.85 1.07-1.04 1.28c-.19.22-.38.24-.71.08-.33-.17-1.4-.52-2.66-1.65-.98-.87-1.64-1.95-1.84-2.28-.19-.33-.02-.51.15-.67.15-.15.33-.39.5-.58.17-.19.22-.33.33-.55.11-.22.06-.41-.03-.58-.08-.17-.74-1.78-1.01-2.44-.27-.64-.54-.55-.74-.56l-.63-.01c-.22 0-.57.08-.87.41-.3.33-1.14 1.11-1.14 2.71s1.17 3.15 1.33 3.37c.17.22 2.3 3.51 5.57 4.92.78.34 1.38.54 1.86.69.78.25 1.49.21 2.05.13.63-.09 1.94-.79 2.21-1.56.27-.76.27-1.42.19-1.56-.08-.14-.3-.22-.63-.38z" />
+            </svg>
+            Chat with Astro Vaidhya
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER ────────────────────────────────────────────────────────────── -->
     <footer>
-      <p style="margin-bottom: 12px">
-        <a href="/about">About Us</a> &nbsp;·&nbsp;
-        <a href="/contact">Contact Us</a> &nbsp;·&nbsp;
-        <a href="/privacy">Privacy Policy</a> &nbsp;·&nbsp;
-        <a href="/terms">Terms of Service</a>
-      </p>
-      <p>&copy; 2026 WhatChat.</p>
+      <div class="wrap footer-row">
+        <span>&copy; 2026 Astro Vaidhya.</span>
+        <div class="footer-links">
+          <a href="/about">About</a>
+          <a href="/contact">Contact</a>
+          <a href="/privacy">Privacy Policy</a>
+          <a href="/terms">Terms of Service</a>
+        </div>
+      </div>
     </footer>
+
+    <script>
+      (function () {
+        var prefersReduced = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        var targets = document.querySelectorAll(".reveal");
+        if (prefersReduced || !("IntersectionObserver" in window)) {
+          targets.forEach(function (el) {
+            el.classList.add("is-visible");
+          });
+          return;
+        }
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.15 },
+        );
+        targets.forEach(function (el) {
+          observer.observe(el);
+        });
+      })();
+    </script>
   </body>
 </html>
