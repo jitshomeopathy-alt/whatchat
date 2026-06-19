@@ -248,6 +248,40 @@ const STRINGS = {
 };
 
 /**
+ * Short, warm "human touch" lines dropped in between questions to keep the
+ * questionnaire feeling like a caring conversation rather than a form. Picked in
+ * rotation so a single session sees variety.
+ */
+const ENCOURAGEMENTS = {
+  en: [
+    'You’re doing really well — thank you for being so open with me. 💚',
+    'I appreciate you sharing this. Let’s keep going, you’ve got this. 🌟',
+    'Every answer helps me understand you better. You’re doing great. 🤝',
+    'Take a breath — you’re doing wonderfully. Just a few more. 🌸',
+    'Thank you for trusting me with this. We’re almost there. 💪',
+  ],
+  hi: [
+    'आप बहुत अच्छा कर रहे हैं — मुझ पर भरोसा करने के लिए धन्यवाद। 💚',
+    'आपका साझा करना मेरे लिए मायने रखता है। चलिए आगे बढ़ते हैं, आप कर सकते हैं। 🌟',
+    'आपका हर जवाब आपको बेहतर समझने में मदद करता है। आप बढ़िया कर रहे हैं। 🤝',
+    'एक गहरी साँस लीजिए — आप बहुत अच्छा कर रहे हैं। बस कुछ और सवाल। 🌸',
+    'इस पर भरोसा करने के लिए धन्यवाद। हम लगभग पहुँच ही गए हैं। 💪',
+  ],
+};
+
+/**
+ * Pick a localized encouragement line. `n` (e.g. how many questions answered so
+ * far) rotates through the list so the user doesn't see the same line twice.
+ * @param {string} lang - 'en' | 'hi'
+ * @param {number} [n]  - rotation index
+ * @returns {string}
+ */
+function encouragement(lang = 'en', n = 0) {
+  const list = ENCOURAGEMENTS[lang === 'hi' ? 'hi' : 'en'] || ENCOURAGEMENTS.en;
+  return list[Math.abs(n) % list.length];
+}
+
+/**
  * Translate a key into the given language, interpolating vars when the entry
  * is a function.
  * @param {string} key  - key in STRINGS
@@ -269,4 +303,4 @@ function categoryLabel(category, lang = 'en') {
   return map[category] ? t(map[category], lang) : category;
 }
 
-module.exports = { t, categoryLabel };
+module.exports = { t, categoryLabel, encouragement };

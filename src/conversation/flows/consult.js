@@ -3,7 +3,7 @@ const { astrologyReading, reviewAndPrescribe, reviewFreeform } = require('../../
 const razorpay = require('../../services/razorpay');
 const { saveSession, resetSession } = require('../stateManager');
 const { getQuestions } = require('../questions');
-const { t, categoryLabel } = require('../i18n');
+const { t, categoryLabel, encouragement } = require('../i18n');
 const User = require('../../models/User');
 const AnalysisHistory = require('../../models/AnalysisHistory');
 
@@ -287,6 +287,11 @@ async function handleQuestion(whatsappId, message, session) {
 
   if (nextQ < set.length) {
     await saveSession(whatsappId, { recoverAnswers: updatedAnswers, currentQuestion: nextQ });
+    // Human touch: every 2 answers, send a short motivating line before the next
+    // question (skipped when the next message would be the final review).
+    if (updatedAnswers.length % 2 === 0) {
+      await sendText(whatsappId, encouragement(lang, updatedAnswers.length / 2 - 1));
+    }
     await askQuestion(whatsappId, category, nextQ, lang);
     return;
   }
