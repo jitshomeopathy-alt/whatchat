@@ -26,6 +26,7 @@ const sessionSchema = new mongoose.Schema(
         // ── New astrology → consult flow ──────────────────────────────────
         'ASTRO_SATISFACTION', // reading shown, awaiting 0-25/25-50/50-75/75-100 tap
         'CATEGORY_SELECT', // awaiting category button tap
+        'CONSULT_OTHER', // "Something else" chosen, awaiting free-text problem
         'CONSULT_Q', // answering category questions
         'PAYMENT_PENDING', // result shown, awaiting ₹399 payment before order/consult
         'CONSULT_ACTION', // review shown, awaiting order/consult tap
@@ -40,7 +41,7 @@ const sessionSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['addiction', 'mental', 'sex', null],
+      enum: ['addiction', 'mental', 'sex', 'other', null],
       default: null,
     },
     // Preferred language for the current flow: 'en' | 'hi'

@@ -402,16 +402,66 @@ async function reviewAndPrescribe({ category, questions, answers, user, astrolog
     response_format: { type: 'json_object' },
   });
 
+  return parseReviewResponse(response);
+}
+
+/**
+ * Free-text variant of reviewAndPrescribe for the "Other / Something else"
+ * category, where the user describes their concern in their own words instead
+ * of answering a fixed questionnaire. The same classical-homeopathic prompt and
+ * { message, medicines } JSON contract are used so the rest of the consult flow
+ * (result display, payment, next-step actions) is identical.
+ *
+ * @param {Object} params
+ * @param {string} params.problem - The user's free-text description of their concern.
+ * @param {Object} [params.user]  - { name, age, gender } (optional context)
+ * @param {string} [params.astrologyResult] - Earlier profile reading (optional context)
+ * @param {string} [params.language] - 'en' | 'hi' (output language)
+ * @returns {Promise<{ message: string, medicines: Array<{ name: string, reason: string }> }>}
+ */
+async function reviewFreeform({ problem, user, astrologyResult, language }) {
+  const client = getClient();
+  const outputLanguage = languageName(language);
+
+  const userBlocks = [];
+  if (user || astrologyResult) {
+    const ctx = [];
+    if (user?.name) ctx.push(`Name: ${user.name}`);
+    if (user?.age != null) ctx.push(`Age: ${user.age}`);
+    if (user?.gender) ctx.push(`Gender: ${user.gender}`);
+    if (astrologyResult) ctx.push(`Profile reading: ${astrologyResult}`);
+    if (ctx.length) userBlocks.push(`Context:\n${ctx.join('\n')}`);
+  }
+  userBlocks.push(`Category: Other / general concern\n\nThe user described their concern in their own words:\n\n"${problem}"`);
+  userBlocks.push(`Write the human-readable text in ${outputLanguage}.`);
+
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'system', content: REVIEW_SYSTEM_PROMPT },
+      { role: 'user', content: userBlocks.join('\n\n') },
+    ],
+    max_tokens: 1500,
+    temperature: 0.5,
+    response_format: { type: 'json_object' },
+  });
+
+  return parseReviewResponse(response);
+}
+
+/**
+ * Parse a chat completion that follows the REVIEW_SYSTEM_PROMPT JSON contract
+ * into { message, medicines }. Falls back to using the raw text as the message
+ * if the model didn't return valid JSON, so the user experience stays safe.
+ */
+function parseReviewResponse(response) {
   const raw = response.choices[0].message.content.trim();
 
   let parsed;
   try {
     parsed = JSON.parse(raw);
   } catch (err) {
-    // If the model didn't return valid JSON, fall back to treating the whole
-    // output as the user message with no separate medicine list. This keeps the
-    // user experience safe.
-    console.error('[OpenAI] reviewAndPrescribe JSON parse failed:', err.message);
+    console.error('[OpenAI] review JSON parse failed:', err.message);
     return { message: raw, medicines: [] };
   }
 
@@ -428,4 +478,4 @@ async function reviewAndPrescribe({ category, questions, answers, user, astrolog
   return { message, medicines };
 }
 
-module.exports = { analyseUser, astrologyReading, recoverSynthesis, detectCategory, embedText, reviewAndPrescribe };
+module.exports = { analyseUser, astrologyReading, recoverSynthesis, detectCategory, embedText, reviewAndPrescribe, reviewFreeform };

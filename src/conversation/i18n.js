@@ -127,13 +127,25 @@ const STRINGS = {
     hi: 'मुझ पर भरोसा करने के लिए धन्यवाद। 🙏\n\nअब, आप अपनी ज़िंदगी के किस हिस्से पर हम साथ मिलकर ध्यान देना चाहेंगे? 💚',
   },
   categoryHeader: { en: 'Choose your area', hi: 'अपना क्षेत्र चुनें' },
+  categoryButton: { en: 'Choose 👇', hi: 'चुनें 👇' },
+  categorySection: { en: 'Areas', hi: 'क्षेत्र' },
   categoryMental: { en: 'Mental 🧠', hi: 'मानसिक 🧠' },
   categoryAddiction: { en: 'Addiction 🌱', hi: 'व्यसन 🌱' },
   categorySex: { en: 'Sexual health 💗', hi: 'यौन स्वास्थ्य 💗' },
+  categoryOther: { en: 'Something else ✍️', hi: 'कुछ और ✍️' },
   categoryRetry: {
-    en: 'Please tap *Mental* 🧠, *Addiction* 🌱, or *Sexual health* 💗 to continue. 🙂',
-    hi: 'कृपया आगे बढ़ने के लिए *मानसिक* 🧠, *व्यसन* 🌱, या *यौन स्वास्थ्य* 💗 चुनिए। 🙂',
+    en: 'Please tap *Mental* 🧠, *Addiction* 🌱, *Sexual health* 💗, or *Something else* ✍️ to continue. 🙂',
+    hi: 'कृपया आगे बढ़ने के लिए *मानसिक* 🧠, *व्यसन* 🌱, *यौन स्वास्थ्य* 💗, या *कुछ और* ✍️ चुनिए। 🙂',
   },
+  askOtherProblem: {
+    en: 'Of course — tell me in your own words. ✍️💚\n\nPlease describe what you’re going through or what’s troubling you, in as much detail as you’d like. I’ll read it carefully and prepare something just for you. 🙂',
+    hi: 'ज़रूर — अपने शब्दों में बताइए। ✍️💚\n\nकृपया बताइए कि आप किस चीज़ से गुज़र रहे हैं या आपको क्या परेशानी है, जितना चाहें उतने विस्तार से। मैं इसे ध्यान से पढ़ूँगा और सिर्फ़ आपके लिए कुछ तैयार करूँगा। 🙂',
+  },
+  otherProblemRetry: {
+    en: 'Please type a few words describing your concern so I can help. ✍️🙂',
+    hi: 'कृपया अपनी परेशानी के बारे में कुछ शब्द लिखिए ताकि मैं मदद कर सकूँ। ✍️🙂',
+  },
+  otherProblemLabel: { en: 'Your concern', hi: 'आपकी परेशानी' },
 
   // ── Consult: questionnaire ───────────────────────────────────────────────────
   startQuestionnaire: {

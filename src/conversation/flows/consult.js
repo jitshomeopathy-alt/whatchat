@@ -1,5 +1,5 @@
 const { sendText, sendButtons, sendList } = require('../../services/whatsapp');
-const { astrologyReading, reviewAndPrescribe } = require('../../services/openai');
+const { astrologyReading, reviewAndPrescribe, reviewFreeform } = require('../../services/openai');
 const razorpay = require('../../services/razorpay');
 const { saveSession, resetSession } = require('../stateManager');
 const { getQuestions } = require('../questions');
@@ -65,6 +65,8 @@ async function handle(whatsappId, message, session) {
       return handleSatisfaction(whatsappId, message, session);
     case 'CATEGORY_SELECT':
       return handleCategorySelect(whatsappId, message, session);
+    case 'CONSULT_OTHER':
+      return handleOtherProblem(whatsappId, message, session);
     case 'CONSULT_Q':
       return handleQuestion(whatsappId, message, session);
     case 'PAYMENT_PENDING':
@@ -101,16 +103,20 @@ async function handleSatisfaction(whatsappId, message, session) {
   await sendCategoryButtons(whatsappId, lang);
 }
 
+// Rendered as a list (not buttons) because WhatsApp caps reply buttons at 3 and
+// we now offer a 4th "Something else" option.
 async function sendCategoryButtons(whatsappId, lang = 'en') {
-  await sendButtons(
+  await sendList(
     whatsappId,
     t('categoryPrompt', lang),
+    t('categoryButton', lang),
     [
       { id: 'cat:mental', title: t('categoryMental', lang) },
       { id: 'cat:addiction', title: t('categoryAddiction', lang) },
       { id: 'cat:sex', title: t('categorySex', lang) },
+      { id: 'cat:other', title: t('categoryOther', lang) },
     ],
-    { header: t('categoryHeader', lang) }
+    { header: t('categoryHeader', lang), sectionTitle: t('categorySection', lang) }
   );
 }
 
@@ -124,8 +130,17 @@ async function handleCategorySelect(whatsappId, message, session) {
     category = id.slice(4);
   } else {
     const text = extractText(message)?.trim().toLowerCase();
-    if (['mental', 'addiction', 'sex'].includes(text)) category = text;
+    if (['mental', 'addiction', 'sex', 'other'].includes(text)) category = text;
     else if (text === 'sexual health' || text === 'sexual') category = 'sex';
+    else if (text === 'something else' || text === 'other problem') category = 'other';
+  }
+
+  // "Other / something else": skip the fixed questionnaire and let the user
+  // describe their concern in free text, then run it through GPT.
+  if (category === 'other') {
+    await saveSession(whatsappId, { state: 'CONSULT_OTHER', category: 'other' });
+    await sendText(whatsappId, t('askOtherProblem', lang));
+    return;
   }
 
   const set = category && getQuestions(category, lang);
@@ -146,6 +161,75 @@ async function handleCategorySelect(whatsappId, message, session) {
     t('startQuestionnaire', lang, { label: categoryLabel(category, lang), count: set.length })
   );
   await askQuestion(whatsappId, category, 0, lang);
+}
+
+// ── Step 2b: free-text "Other" concern ────────────────────────────────────────
+/**
+ * Handle the free-text problem the user typed after choosing "Something else".
+ * Runs it through GPT (reviewFreeform), shows the result, stores history, then
+ * rejoins the normal flow at the payment gate — identical to finishConsult.
+ */
+async function handleOtherProblem(whatsappId, message, session) {
+  const lang = session.language || 'en';
+  const problem = extractText(message)?.trim();
+
+  // Ignore stray interactive taps / empty messages; ask them to type something.
+  if (!problem || problem.length < 3) {
+    await sendText(whatsappId, t('otherProblemRetry', lang));
+    return;
+  }
+
+  await sendText(whatsappId, t('reviewing', lang));
+
+  const user = await User.findOne({ whatsappId });
+
+  let resultMessage;
+  let medicines = [];
+  try {
+    const result = await reviewFreeform({
+      problem,
+      user: user ? { name: user.name, age: user.age, gender: user.gender } : undefined,
+      astrologyResult: session.astrologyResult,
+      language: lang,
+    });
+    resultMessage = result.message;
+    medicines = result.medicines || [];
+  } catch (err) {
+    console.error('[Consult] freeform review error:', err.message);
+    await sendText(whatsappId, t('reviewUnavailable', lang));
+    await resetSession(whatsappId, true);
+    return;
+  }
+
+  // Store to history so the care team / admin can see the concern + response.
+  try {
+    if (user) {
+      await AnalysisHistory.create({
+        userId: user._id,
+        whatsappId,
+        type: 'recover',
+        prompt: problem.slice(0, 1000),
+        qa: [{ question: t('otherProblemLabel', lang), answer: problem }],
+        response: resultMessage,
+        medicines: medicines.map((m) => ({ name: m.name, reason: m.reason })),
+      });
+    }
+  } catch (err) {
+    console.error('[Consult] History save error:', err.message);
+  }
+
+  let resultText = resultMessage;
+  if (medicines.length) {
+    const items = medicines
+      .map((m) => (m.reason ? `• *${m.name}* — ${m.reason}` : `• *${m.name}*`))
+      .join('\n');
+    resultText += t('medicinesList', lang, { items });
+  }
+
+  await sendText(whatsappId, t('resultIntro', lang, { result: resultText }));
+
+  // Same next step as the questionnaire path: gate Order / Consult behind payment.
+  await requestPayment(whatsappId, lang, user);
 }
 
 // ── Step 3: questionnaire ─────────────────────────────────────────────────────
