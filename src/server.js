@@ -32,6 +32,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.get('/admin', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/index.html')));
 app.get('/admin/login', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/login.html')));
 app.get('/admin/user', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/user.html')));
+app.get('/admin/messages', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/messages.html')));
 
 // Serve static files from /public (assets, if any)
 app.use(express.static(path.join(__dirname, '../public')));

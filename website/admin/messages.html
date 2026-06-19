@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Send Message · WhatChat Admin</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <style>
+    /* Page-specific tweaks for the messaging composer. */
+    .compose-grid { display: grid; grid-template-columns: 1fr 380px; gap: 22px; align-items: start; }
+    @media (max-width: 900px) { .compose-grid { grid-template-columns: 1fr; } }
+
+    .recipient-list { max-height: 460px; overflow-y: auto; }
+    .recipient {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 18px; border-bottom: 1px solid var(--border); cursor: pointer;
+    }
+    .recipient:last-child { border-bottom: none; }
+    .recipient:hover { background: #f6fbf8; }
+    .recipient input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--green); cursor: pointer; flex: none; }
+    .recipient .name { font-weight: 600; font-size: 14px; }
+    .recipient .num { color: var(--muted); font-size: 13px; }
+
+    .selectbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+    .selectbar label { display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; color: var(--text); font-weight: 600; }
+    .selectbar input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--green); }
+    .selected-count { font-size: 13px; color: var(--green-dark); font-weight: 700; }
+
+    .composer .card-head { display: block; }
+    textarea {
+      width: 100%; min-height: 180px; resize: vertical;
+      padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: 15px; outline: none; line-height: 1.5;
+    }
+    textarea:focus { border-color: var(--green); }
+    .composer-body { padding: 18px; }
+    .char-count { font-size: 12px; color: var(--muted); margin-top: 6px; text-align: right; }
+
+    .policy-note {
+      background: #fff8e6; border: 1px solid #f3e0a8; color: #7a5c12;
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.5; margin-top: 14px;
+    }
+    .result-box { border-radius: 10px; padding: 12px 14px; font-size: 13px; margin-top: 14px; display: none; line-height: 1.5; }
+    .result-box.ok { background: #f6fbf8; border: 1px solid var(--green-light); color: var(--green-dark); }
+    .result-box.err { background: #fdecec; border: 1px solid #f3c0c0; color: var(--danger); }
+    .result-box.show { display: block; }
+    .result-box ul { margin: 8px 0 0 18px; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="dot">💬</span> WhatChat</div>
+      <a href="/admin" class="nav-item"><span class="ico">👥</span> Users</a>
+      <a href="/admin/messages" class="nav-item active"><span class="ico">✉️</span> Send Message</a>
+      <div class="spacer"></div>
+      <div class="nav-item signout" id="signout"><span class="ico">↩︎</span> Sign out</div>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <h1>Send Message</h1>
+        <div class="who">
+          <span>Administrator</span>
+          <div class="avatar">A</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="compose-grid">
+          <!-- Recipients -->
+          <div class="card">
+            <div class="card-head">
+              <h2>Recipients</h2>
+              <div class="search">
+                <input type="search" id="search" placeholder="Search name, email or number…" />
+              </div>
+            </div>
+            <div class="selectbar">
+              <label><input type="checkbox" id="selectAll" /> Select all (this page)</label>
+              <span class="selected-count" id="selectedCount">0 selected</span>
+            </div>
+            <div class="recipient-list" id="recipientList">
+              <div class="loading">Loading users…</div>
+            </div>
+          </div>
+
+          <!-- Composer -->
+          <div class="card composer">
+            <div class="card-head"><h2>Your message</h2></div>
+            <div class="composer-body">
+              <textarea id="message" maxlength="4096" placeholder="Type a custom message to send to the selected users…"></textarea>
+              <div class="char-count"><span id="charCount">0</span> / 4096</div>
+
+              <button class="btn btn-block" id="sendBtn">Send to <span id="sendCount">0</span> user(s)</button>
+
+              <div class="policy-note">
+                ⚠️ Free-text messages only reach users who messaged the bot in the
+                last 24&nbsp;hours. Older contacts need a pre-approved template.
+              </div>
+              <div class="result-box" id="resultBox"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('wc_admin_token');
+    if (!token) location.replace('/admin/login');
+
+    document.getElementById('signout').addEventListener('click', () => {
+      localStorage.removeItem('wc_admin_token');
+      location.replace('/admin/login');
+    });
+
+    // Selected numbers persist across searches/pagination.
+    const selected = new Map(); // whatsappId -> name
+    let currentUsers = [];
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]
+      ));
+    }
+
+    function updateCounts() {
+      const n = selected.size;
+      document.getElementById('selectedCount').textContent = n + ' selected';
+      document.getElementById('sendCount').textContent = n;
+      // "Select all" reflects whether every visible user is already selected.
+      const all = currentUsers.length > 0 && currentUsers.every((u) => selected.has(u.whatsappId));
+      document.getElementById('selectAll').checked = all;
+    }
+
+    async function load(q) {
+      const list = document.getElementById('recipientList');
+      list.innerHTML = '<div class="loading">Loading users…</div>';
+
+      const params = new URLSearchParams({ page: 1, limit: 200 });
+      if (q) params.set('q', q);
+
+      let res;
+      try {
+        res = await fetch('/admin/users?' + params.toString(), {
+          headers: { Authorization: 'Bearer ' + token },
+        });
+      } catch (err) {
+        list.innerHTML = '<div class="empty">Network error. Please retry.</div>';
+        return;
+      }
+
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('wc_admin_token');
+        location.replace('/admin/login');
+        return;
+      }
+      if (!res.ok) {
+        list.innerHTML = '<div class="empty">Failed to load users.</div>';
+        return;
+      }
+
+      const data = await res.json();
+      currentUsers = (data.data || []).filter((u) => u.whatsappId);
+      render();
+    }
+
+    function render() {
+      const list = document.getElementById('recipientList');
+      if (!currentUsers.length) {
+        list.innerHTML = '<div class="empty">No users found.</div>';
+        updateCounts();
+        return;
+      }
+
+      list.innerHTML = currentUsers.map((u) => `
+        <label class="recipient">
+          <input type="checkbox" data-id="${esc(u.whatsappId)}" data-name="${esc(u.name)}"
+                 ${selected.has(u.whatsappId) ? 'checked' : ''} />
+          <span>
+            <span class="name">${esc(u.name || 'Unknown')}</span><br/>
+            <span class="num">${esc(u.whatsappId)}</span>
+          </span>
+        </label>`).join('');
+
+      list.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+        cb.addEventListener('change', () => {
+          if (cb.checked) selected.set(cb.dataset.id, cb.dataset.name);
+          else selected.delete(cb.dataset.id);
+          updateCounts();
+        });
+      });
+      updateCounts();
+    }
+
+    document.getElementById('selectAll').addEventListener('change', (e) => {
+      currentUsers.forEach((u) => {
+        if (e.target.checked) selected.set(u.whatsappId, u.name);
+        else selected.delete(u.whatsappId);
+      });
+      render();
+    });
+
+    let searchTimer;
+    document.getElementById('search').addEventListener('input', (e) => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => load(e.target.value.trim()), 300);
+    });
+
+    const messageEl = document.getElementById('message');
+    messageEl.addEventListener('input', () => {
+      document.getElementById('charCount').textContent = messageEl.value.length;
+    });
+
+    function showResult(cls, html) {
+      const box = document.getElementById('resultBox');
+      box.className = 'result-box show ' + cls;
+      box.innerHTML = html;
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', async () => {
+      const recipients = [...selected.keys()];
+      const message = messageEl.value.trim();
+      const btn = document.getElementById('sendBtn');
+
+      if (!recipients.length) return showResult('err', 'Please select at least one user.');
+      if (!message) return showResult('err', 'Please type a message.');
+
+      btn.disabled = true;
+      const original = btn.innerHTML;
+      btn.textContent = 'Sending…';
+
+      try {
+        const res = await fetch('/admin/messages/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ recipients, message }),
+        });
+
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('wc_admin_token');
+          location.replace('/admin/login');
+          return;
+        }
+
+        const data = await res.json();
+        if (!res.ok) {
+          showResult('err', esc(data.error || 'Failed to send.'));
+        } else {
+          const failed = (data.results || []).filter((r) => r.status === 'failed');
+          let html = `✅ Sent to ${data.sent} of ${data.total} user(s).`;
+          if (data.failed) {
+            html += `<br/><strong>${data.failed} failed:</strong><ul>` +
+              failed.map((f) => `<li>${esc(f.to)} — ${esc(f.error)}</li>`).join('') + '</ul>';
+          }
+          showResult(data.failed ? 'err' : 'ok', html);
+        }
+      } catch (err) {
+        showResult('err', 'Network error. Please retry.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+        document.getElementById('sendCount').textContent = selected.size;
+      }
+    });
+
+    load('');
+  </script>
+</body>
+</html>

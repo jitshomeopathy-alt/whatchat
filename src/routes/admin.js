@@ -7,6 +7,7 @@ const Medicine = require('../models/Medicine');
 const User = require('../models/User');
 const AnalysisHistory = require('../models/AnalysisHistory');
 const { upsertMedicine, deleteMedicine } = require('../services/qdrant');
+const { sendText } = require('../services/whatsapp');
 
 const path = require('path');
 const fs = require('fs');
@@ -97,6 +98,58 @@ router.get('/users/:id', adminAuth, async (req, res) => {
       .lean();
 
     return res.json({ user, history });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /admin/messages/send
+ * Send a custom free-text WhatsApp message to one or more users.
+ * Body: { recipients: string[], message: string }
+ *   - recipients: array of WhatsApp numbers (whatsappId) to send to.
+ *   - message:    the custom text to send (1-4096 chars; longer is auto-chunked).
+ *
+ * NOTE (WhatsApp policy): free-text messages only deliver to users who have
+ * messaged the bot within the last 24h (the "customer service window"). Outside
+ * that window Meta drops the message unless it's a pre-approved template — those
+ * errors are surfaced per-recipient in the `results` array below.
+ */
+router.post('/messages/send', adminAuth, async (req, res) => {
+  try {
+    const { recipients, message } = req.body || {};
+
+    if (!Array.isArray(recipients) || recipients.length === 0) {
+      return res.status(400).json({ error: 'recipients must be a non-empty array of numbers' });
+    }
+    const text = String(message || '').trim();
+    if (!text) {
+      return res.status(400).json({ error: 'message is required' });
+    }
+
+    // De-duplicate and keep only non-empty numbers.
+    const numbers = [...new Set(recipients.map((r) => String(r || '').trim()).filter(Boolean))];
+    if (numbers.length === 0) {
+      return res.status(400).json({ error: 'No valid recipient numbers provided' });
+    }
+
+    // Send sequentially so we stay well under Meta's rate limits and can report
+    // a precise per-recipient outcome.
+    const results = [];
+    for (const to of numbers) {
+      try {
+        await sendText(to, text);
+        results.push({ to, status: 'sent' });
+      } catch (err) {
+        console.error(`[Admin] Message send failed for ${to}:`, err.message);
+        results.push({ to, status: 'failed', error: err.message });
+      }
+    }
+
+    const sent = results.filter((r) => r.status === 'sent').length;
+    const failed = results.length - sent;
+
+    return res.json({ total: results.length, sent, failed, results });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
