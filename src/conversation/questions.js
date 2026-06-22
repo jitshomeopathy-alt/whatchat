@@ -2079,8 +2079,172 @@ const questions = {
   ],
 };
 
+// ════════════════════════════════════════════════════════════════════════════
+// ADAPTIVE BRANCHING
+// ════════════════════════════════════════════════════════════════════════════
+// The questions above are stored flat. For a given user we only ask the
+// trunk/router question(s), the ONE branch chosen by the first answer (plus
+// gender for the sexual set), the universal closing block, and the final
+// constitutional question. The medicine-confidence (%) conditional skip from
+// the client doc is intentionally NOT implemented.
+//
+// Branch membership is expressed by INDEX into the flat arrays. The assertions
+// below lock the expected array shapes so that a reorder fails loudly instead
+// of silently mis-routing.
+
+function assertLen(name, arr, n) {
+  if (!arr || arr.length !== n) {
+    throw new Error(`questions.${name}: expected ${n} entries, got ${arr ? arr.length : 'none'}`);
+  }
+}
+assertLen('mental', questions.mental, 38);
+assertLen('addiction', questions.addiction, 21);
+assertLen('sex', questions.sex, 28);
+
+const M = questions.mental;
+const A = questions.addiction;
+const S = questions.sex;
+
+// Each PLAN names the router/trunk questions, the branch groups (arrays of
+// question objects), the shared closing block, and the final question.
+const PLANS = {
+  mental: {
+    trunk: [M[0]], // QMH-1 (router)
+    branches: {
+      sadness: M.slice(1, 9), // QMH-2..9
+      anxiety: M.slice(9, 14), // QMH-A1..A5
+      anger: [...M.slice(14, 19), M[7]], // QMH-D1..D5 + QMH-8 (shared)
+      lonely: [...M.slice(19, 24), M[7]], // QMH-L1..L5 + QMH-8 (shared)
+      burnout: [...M.slice(24, 29), M[22]], // QMH-B1..B4 + QMH-L4 (shared)
+      identity: M.slice(29, 34), // QMH-I1..I5
+      custom: [], // QMH-1 = "describe in my own words" — no fixed branch
+    },
+    closing: M.slice(34, 37),
+    final: M[37], // QMH-10
+  },
+  addiction: {
+    trunk: [A[0]], // QAD-1 (router)
+    branches: {
+      general: A.slice(1, 8), // Safety & Control + QAD-2..7
+      gaming: A.slice(8, 12), // QAD-G1..G4
+      porn: A.slice(12, 17), // QAD-M1 + concern/urge/intimacy/weakness
+    },
+    closing: A.slice(17, 20),
+    final: A[20], // QMH-10
+  },
+  sex: {
+    trunk: S.slice(0, 4), // QSX-1..4 (asked to everyone)
+    branches: {
+      male_lowdesire: S.slice(4, 8), // QSX-M-A1..A4
+      male_disconnect: S.slice(8, 12), // QSX-M-B1..B4
+      male_emotional: S.slice(12, 14), // QSX-M-E1..E2
+      female_lowdesire: S.slice(14, 18), // QSX-F-A1..A4
+      female_pain: S.slice(18, 22), // QSX-F-B1..B4
+      female_emotional: S.slice(22, 24), // QSX-F-E1..E2
+    },
+    closing: S.slice(24, 27),
+    final: S[27], // QMH-10
+  },
+};
+
+// Resolve the chosen option index of a router question from the stored answer
+// (answers store the localized option text). Checks both languages so it works
+// regardless of the session language. Returns -1 if not matched.
+function optionIndex(question, answerText) {
+  if (answerText == null) return -1;
+  for (const l of ['en', 'hi']) {
+    const i = question[l].options.indexOf(answerText);
+    if (i !== -1) return i;
+  }
+  return -1;
+}
+
+// QMH-1 option index → mental branch key.
+function mentalBranch(idx) {
+  return (
+    ['sadness', 'anxiety', 'sadness', 'anger', 'lonely', 'burnout', 'identity', 'custom'][idx] ||
+    'sadness'
+  );
+}
+
+// QAD-1 option index → addiction branch key.
+function addictionBranch(idx) {
+  if (idx === 10) return 'gaming'; // "Gaming"
+  if (idx === 12 || idx === 14) return 'porn'; // "Pornography" / masturbation-semen worry
+  return 'general'; // substances + other behavioural habits
+}
+
+// gender + QSX-1 option index → sexual concern branch key (or null if no built
+// branch, e.g. cycle / hormonal / fertility / "describe myself"). Any gender
+// other than 'female' (male / other / unknown) uses the male set.
+function sexConcernBranch(gender, idx) {
+  const female = gender === 'female';
+  if (idx === 0) return female ? 'female_lowdesire' : 'male_lowdesire';
+  if (idx === 1) return female ? 'female_pain' : 'male_disconnect';
+  return null;
+}
+
+// QSX-4 = fear (idx 1) or wound (idx 3) adds the gender-matched emotional layer.
+function sexEmotionalBranch(gender, idx) {
+  if (idx === 1 || idx === 3) return gender === 'female' ? 'female_emotional' : 'male_emotional';
+  return null;
+}
+
 /**
- * Return a category's questions localized to the given language.
+ * Build the ordered list of question OBJECTS for this user given the answers
+ * collected so far. The list grows deterministically as routing answers come
+ * in: the prefix never changes, so it is safe to recompute every turn and index
+ * into it. Routing answers always precede the questions they gate.
+ */
+function buildPlan(category, gender, answers = []) {
+  const cfg = PLANS[category];
+  if (!cfg) return null;
+
+  if (category === 'sex') {
+    const plan = [...cfg.trunk];
+    if (answers.length >= cfg.trunk.length) {
+      const concern = sexConcernBranch(gender, optionIndex(cfg.trunk[0], answers[0]));
+      if (concern) plan.push(...cfg.branches[concern]);
+      const emo = sexEmotionalBranch(gender, optionIndex(cfg.trunk[3], answers[3]));
+      if (emo) plan.push(...cfg.branches[emo]);
+      plan.push(...cfg.closing, cfg.final);
+    }
+    return plan;
+  }
+
+  // mental / addiction: a single router question gates the branch.
+  const plan = [...cfg.trunk];
+  if (answers.length >= cfg.trunk.length) {
+    const routeFn = category === 'mental' ? mentalBranch : addictionBranch;
+    const branch = routeFn(optionIndex(cfg.trunk[0], answers[0]));
+    plan.push(...cfg.branches[branch]);
+    plan.push(...cfg.closing, cfg.final);
+  }
+  return plan;
+}
+
+/**
+ * Localized adaptive plan for a user.
+ * @param {string} category - 'addiction' | 'mental' | 'sex'
+ * @param {string} [lang='en'] - 'en' | 'hi'
+ * @param {string|null} [gender] - 'male' | 'female' | 'other' | null (sexual routing)
+ * @param {string[]} [answers] - answers (localized option text) collected so far
+ * @returns {Array<{ text: string, options: string[], multiSelect: boolean }>|null}
+ */
+function getQuestionPlan(category, lang = 'en', gender = null, answers = []) {
+  const plan = buildPlan(category, gender, answers);
+  if (!plan) return null;
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return plan.map((q) => ({
+    text: (q[l] || q.en).text,
+    options: (q[l] || q.en).options,
+    multiSelect: q.multiSelect,
+  }));
+}
+
+/**
+ * Return a category's full flat question set localized to the given language.
+ * Kept for callers that want every question regardless of branching.
  * @param {string} category - 'addiction' | 'mental' | 'sex'
  * @param {string} [lang='en'] - 'en' | 'hi'
  * @returns {Array<{ text: string, options: string[], multiSelect: boolean }>}
@@ -2096,4 +2260,4 @@ function getQuestions(category, lang = 'en') {
   }));
 }
 
-module.exports = { getQuestions };
+module.exports = { getQuestions, getQuestionPlan };

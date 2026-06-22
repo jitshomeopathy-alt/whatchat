@@ -47,6 +47,12 @@ const sessionSchema = new mongoose.Schema(
       enum: ['addiction', 'mental', 'sex', 'other', null],
       default: null,
     },
+    // Snapshot of the user's gender for the current consult — used to route the
+    // adaptive sexual-wellness question set without reloading the user.
+    gender: {
+      type: String,
+      default: null,
+    },
     // Preferred language for the current flow: 'en' | 'hi'
     language: {
       type: String,

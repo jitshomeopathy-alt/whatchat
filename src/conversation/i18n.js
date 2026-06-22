@@ -187,12 +187,12 @@ const STRINGS = {
 
   // ── Consult: questionnaire ───────────────────────────────────────────────────
   startQuestionnaire: {
-    en: ({ label, count }) => `✅ Let’s begin the *${label}* journey together — just ${count} gentle questions. Take your time, there are no wrong answers. 💛`,
-    hi: ({ label, count }) => `✅ चलिए साथ मिलकर *${label}* की शुरुआत करते हैं — बस ${count} सरल सवाल। आराम से जवाब दीजिए, कोई जवाब ग़लत नहीं होता। 💛`,
+    en: ({ label }) => `✅ Let’s begin the *${label}* journey together — a few gentle questions. Take your time, there are no wrong answers. 💛`,
+    hi: ({ label }) => `✅ चलिए साथ मिलकर *${label}* की शुरुआत करते हैं — कुछ सरल सवाल। आराम से जवाब दीजिए, कोई जवाब ग़लत नहीं होता। 💛`,
   },
   questionHeader: {
-    en: ({ index, total }) => `Question ${index} of ${total}`,
-    hi: ({ index, total }) => `सवाल ${index} / ${total}`,
+    en: ({ index }) => `Question ${index}`,
+    hi: ({ index }) => `सवाल ${index}`,
   },
   chooseButton: { en: 'Choose 👇', hi: 'चुनें 👇' },
   optionsSection: { en: 'Options', hi: 'विकल्प' },

@@ -2,7 +2,7 @@ const { sendText, sendButtons, sendList } = require('../../services/whatsapp');
 const { astrologyReading, reviewAndPrescribe, reviewFreeform } = require('../../services/openai');
 const razorpay = require('../../services/razorpay');
 const { saveSession, resetSession } = require('../stateManager');
-const { getQuestions } = require('../questions');
+const { getQuestionPlan } = require('../questions');
 const { t, categoryLabel, encouragement } = require('../i18n');
 const User = require('../../models/User');
 const AnalysisHistory = require('../../models/AnalysisHistory');
@@ -176,7 +176,12 @@ async function handleCategorySelect(whatsappId, message, session) {
     return;
   }
 
-  const set = category && getQuestions(category, lang);
+  // Gender (from registration) is needed to route the sexual question set; it is
+  // stashed on the session so we don't reload the user on every answer.
+  const user = await User.findOne({ whatsappId });
+  const gender = user?.gender || null;
+
+  const set = category && getQuestionPlan(category, lang, gender, []);
   if (!set) {
     await sendText(whatsappId, t('categoryRetry', lang));
     return;
@@ -185,15 +190,16 @@ async function handleCategorySelect(whatsappId, message, session) {
   await saveSession(whatsappId, {
     state: 'CONSULT_Q',
     category,
+    gender,
     recoverAnswers: [],
     currentQuestion: 0,
   });
 
   await sendText(
     whatsappId,
-    t('startQuestionnaire', lang, { label: categoryLabel(category, lang), count: set.length })
+    t('startQuestionnaire', lang, { label: categoryLabel(category, lang) })
   );
-  await askQuestion(whatsappId, category, 0, lang);
+  await askQuestion(whatsappId, category, lang, gender, [], 0);
 }
 
 // ── Step 2b: free-text "Other" concern ────────────────────────────────────────
@@ -275,11 +281,10 @@ function canUseList(q) {
   return !q.multiSelect && q.options.length <= 10 && q.options.every((o) => o.length <= 24);
 }
 
-async function askQuestion(whatsappId, category, qIndex, lang = 'en') {
-  const set = getQuestions(category, lang);
-  const q = set[qIndex];
-  const total = set.length;
-  const header = t('questionHeader', lang, { index: qIndex + 1, total });
+async function askQuestion(whatsappId, category, lang, gender, answers, qIndex) {
+  const plan = getQuestionPlan(category, lang, gender, answers);
+  const q = plan[qIndex];
+  const header = t('questionHeader', lang, { index: qIndex + 1 });
 
   if (canUseList(q)) {
     await sendList(
@@ -303,9 +308,14 @@ async function askQuestion(whatsappId, category, qIndex, lang = 'en') {
 async function handleQuestion(whatsappId, message, session) {
   const lang = session.language || 'en';
   const category = session.category;
+  const gender = session.gender || null;
   const qIndex = session.currentQuestion;
-  const set = getQuestions(category, lang);
-  const q = set[qIndex];
+  const answersSoFar = session.recoverAnswers || [];
+
+  // The plan is recomputed from the answers given so far; its prefix is stable,
+  // so plan[qIndex] is exactly the question we last asked.
+  const plan = getQuestionPlan(category, lang, gender, answersSoFar);
+  const q = plan[qIndex];
 
   const answer = parseAnswer(message, q);
   if (answer === null) {
@@ -316,17 +326,20 @@ async function handleQuestion(whatsappId, message, session) {
     return;
   }
 
-  const updatedAnswers = [...(session.recoverAnswers || []), answer];
+  const updatedAnswers = [...answersSoFar, answer];
   const nextQ = qIndex + 1;
+  // Recompute with the new answer: a routing answer can extend the plan
+  // (e.g. the first answer reveals the branch).
+  const fullPlan = getQuestionPlan(category, lang, gender, updatedAnswers);
 
-  if (nextQ < set.length) {
+  if (nextQ < fullPlan.length) {
     await saveSession(whatsappId, { recoverAnswers: updatedAnswers, currentQuestion: nextQ });
     // Human touch: every 2 answers, send a short motivating line before the next
     // question (skipped when the next message would be the final review).
     if (updatedAnswers.length % 2 === 0) {
       await sendText(whatsappId, encouragement(lang, updatedAnswers.length / 2 - 1));
     }
-    await askQuestion(whatsappId, category, nextQ, lang);
+    await askQuestion(whatsappId, category, lang, gender, updatedAnswers, nextQ);
     return;
   }
 
@@ -368,7 +381,10 @@ async function finishConsult(whatsappId, session, category, answers) {
   await sendText(whatsappId, t('reviewing', lang));
 
   const user = await User.findOne({ whatsappId });
-  const questionTexts = getQuestions(category, lang).map((q) => q.text);
+  const gender = session.gender || user?.gender || null;
+  // Use the same adaptive plan the user actually answered so each question lines
+  // up with its answer.
+  const questionTexts = getQuestionPlan(category, lang, gender, answers).map((q) => q.text);
 
   let message;
   let medicines = [];
