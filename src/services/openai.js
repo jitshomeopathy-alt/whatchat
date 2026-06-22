@@ -143,6 +143,7 @@ async function generateReading(details, imageUrl) {
 Person:
 - Name: ${details.name || ''}
 - Date of Birth: ${details.dob || ''}
+- Time of Birth: ${details.birthTime || 'unknown'}
 - Age: ${details.age ?? ''}
 - Gender: ${details.gender || ''}
 - Residence City: ${details.city || ''}
@@ -369,7 +370,7 @@ const reviewCategoryLabels = {
  *   message    - user-facing text (may name the recommended remedies)
  *   medicines  - remedy suggestions, also surfaced to the user and stored for admin
  */
-async function reviewAndPrescribe({ category, questions, answers, user, astrologyResult, language }) {
+async function reviewAndPrescribe({ category, questions, answers, user, astrologyResult, satisfactionNote, language }) {
   const client = getClient();
 
   const label = reviewCategoryLabels[category] || category;
@@ -380,12 +381,13 @@ async function reviewAndPrescribe({ category, questions, answers, user, astrolog
     .join('\n\n');
 
   const userBlocks = [];
-  if (user || astrologyResult) {
+  if (user || astrologyResult || satisfactionNote) {
     const ctx = [];
     if (user?.name) ctx.push(`Name: ${user.name}`);
     if (user?.age != null) ctx.push(`Age: ${user.age}`);
     if (user?.gender) ctx.push(`Gender: ${user.gender}`);
     if (astrologyResult) ctx.push(`Profile reading: ${astrologyResult}`);
+    if (satisfactionNote) ctx.push(`User's note on the profile reading (what felt off / what they hoped for): ${satisfactionNote}`);
     if (ctx.length) userBlocks.push(`Context:\n${ctx.join('\n')}`);
   }
   userBlocks.push(`Category: ${label}\n\nQuestionnaire responses:\n\n${qaPairs}`);
@@ -419,17 +421,18 @@ async function reviewAndPrescribe({ category, questions, answers, user, astrolog
  * @param {string} [params.language] - 'en' | 'hi' (output language)
  * @returns {Promise<{ message: string, medicines: Array<{ name: string, reason: string }> }>}
  */
-async function reviewFreeform({ problem, user, astrologyResult, language }) {
+async function reviewFreeform({ problem, user, astrologyResult, satisfactionNote, language }) {
   const client = getClient();
   const outputLanguage = languageName(language);
 
   const userBlocks = [];
-  if (user || astrologyResult) {
+  if (user || astrologyResult || satisfactionNote) {
     const ctx = [];
     if (user?.name) ctx.push(`Name: ${user.name}`);
     if (user?.age != null) ctx.push(`Age: ${user.age}`);
     if (user?.gender) ctx.push(`Gender: ${user.gender}`);
     if (astrologyResult) ctx.push(`Profile reading: ${astrologyResult}`);
+    if (satisfactionNote) ctx.push(`User's note on the profile reading (what felt off / what they hoped for): ${satisfactionNote}`);
     if (ctx.length) userBlocks.push(`Context:\n${ctx.join('\n')}`);
   }
   userBlocks.push(`Category: Other / general concern\n\nThe user described their concern in their own words:\n\n"${problem}"`);

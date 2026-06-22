@@ -26,6 +26,7 @@ async function startAstrology(whatsappId, user) {
       {
         name: user.name,
         dob: user.dob,
+        birthTime: user.birthTime,
         age: user.age,
         gender: user.gender,
         city: user.address,
@@ -40,7 +41,13 @@ async function startAstrology(whatsappId, user) {
     return;
   }
 
-  await saveSession(whatsappId, { state: 'ASTRO_SATISFACTION', language, astrologyResult: reading });
+  await saveSession(whatsappId, {
+    state: 'ASTRO_SATISFACTION',
+    language,
+    astrologyResult: reading,
+    satisfaction: null,
+    satisfactionNote: null,
+  });
 
   await sendText(whatsappId, t('yourReading', language, { reading }));
 
@@ -63,6 +70,8 @@ async function handle(whatsappId, message, session) {
   switch (session.state) {
     case 'ASTRO_SATISFACTION':
       return handleSatisfaction(whatsappId, message, session);
+    case 'ASTRO_FEEDBACK':
+      return handleSatisfactionNote(whatsappId, message, session);
     case 'CATEGORY_SELECT':
       return handleCategorySelect(whatsappId, message, session);
     case 'CONSULT_OTHER':
@@ -99,7 +108,31 @@ async function handleSatisfaction(whatsappId, message, session) {
     return;
   }
 
+  // A low rating (0-25) → invite a free-text note so we understand the user
+  // better before moving on. Higher ratings go straight to category selection.
+  if (bucket === '0-25') {
+    await saveSession(whatsappId, { satisfaction: bucket, state: 'ASTRO_FEEDBACK' });
+    await sendText(whatsappId, t('satisfactionLowNote', lang));
+    return;
+  }
+
   await saveSession(whatsappId, { satisfaction: bucket, state: 'CATEGORY_SELECT' });
+  await sendCategoryButtons(whatsappId, lang);
+}
+
+// ── Step 1b: free-text note after a low (0-25) rating ─────────────────────────
+async function handleSatisfactionNote(whatsappId, message, session) {
+  const lang = session.language || 'en';
+  const note = extractText(message)?.trim();
+
+  // Capture the note (unless they skip); it's fed into the later AI prescription.
+  if (note && note.toLowerCase() !== 'skip') {
+    await saveSession(whatsappId, { satisfactionNote: note.slice(0, 1000), state: 'CATEGORY_SELECT' });
+    await sendText(whatsappId, t('satisfactionNoteThanks', lang));
+  } else {
+    await saveSession(whatsappId, { state: 'CATEGORY_SELECT' });
+  }
+
   await sendCategoryButtons(whatsappId, lang);
 }
 
@@ -190,6 +223,7 @@ async function handleOtherProblem(whatsappId, message, session) {
       problem,
       user: user ? { name: user.name, age: user.age, gender: user.gender } : undefined,
       astrologyResult: session.astrologyResult,
+      satisfactionNote: session.satisfactionNote,
       language: lang,
     });
     resultMessage = result.message;
@@ -347,6 +381,7 @@ async function finishConsult(whatsappId, session, category, answers) {
         ? { name: user.name, age: user.age, gender: user.gender }
         : undefined,
       astrologyResult: session.astrologyResult,
+      satisfactionNote: session.satisfactionNote,
       language: lang,
     });
     message = result.message;

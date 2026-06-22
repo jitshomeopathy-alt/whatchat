@@ -26,10 +26,11 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
     },
     email: {
-      type: String,
-      required: true,
+      type: String, // collection paused for now — optional
+      required: false,
       trim: true,
       lowercase: true,
+      default: null,
     },
     imageUrl: {
       type: String, // palm photo
@@ -44,6 +45,10 @@ const userSchema = new mongoose.Schema(
     // ── Astrology / basic details ───────────────────────────────────────────
     dob: {
       type: String, // normalized to dd-mm-yyyy
+      default: null,
+    },
+    birthTime: {
+      type: String, // normalized to 24-hour "HH:MM", or null if unknown
       default: null,
     },
     raashi: {

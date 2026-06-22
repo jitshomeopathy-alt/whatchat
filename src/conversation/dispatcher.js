@@ -49,16 +49,18 @@ async function dispatch(whatsappId, message) {
   const registrationStates = [
     'IDLE',
     'REGISTERING_LANGUAGE',
+    'PURPOSE_SELECT',
     'REGISTERING_NAME',
     'REGISTERING_AGE',
     'REGISTERING_GENDER',
     'REGISTERING_EMAIL',
     'REGISTERING_IMAGE',
     'REGISTERING_DOB',
+    'REGISTERING_BIRTH_TIME',
     'REGISTERING_ADDRESS',
   ];
 
-  const consultStates = ['ASTRO_SATISFACTION', 'CATEGORY_SELECT', 'CONSULT_OTHER', 'CONSULT_Q', 'PAYMENT_PENDING', 'CONSULT_ACTION'];
+  const consultStates = ['ASTRO_SATISFACTION', 'ASTRO_FEEDBACK', 'CATEGORY_SELECT', 'CONSULT_OTHER', 'CONSULT_Q', 'PAYMENT_PENDING', 'CONSULT_ACTION'];
 
   if (registrationStates.includes(state)) {
     // Allow "register" / "hi" / "hello" / "start" to kick off registration
@@ -101,7 +103,7 @@ async function dispatch(whatsappId, message) {
 
   await sendText(
     whatsappId,
-    `👋 Hello! I'm WhatChat, your AI health assistant.\n\nType *"help"* to see what I can do for you.`
+    `👋 Hello! I'm Astro Vaidhya, your AI wellness companion.\n\nType *"help"* to see what I can do for you.`
   );
 }
 
@@ -109,7 +111,7 @@ async function sendHelpMessage(whatsappId, state, session) {
   const user = await User.findOne({ whatsappId });
   const isRegistered = !!user;
 
-  let msg = `📋 *WhatChat Help Menu*\n\n`;
+  let msg = `📋 *Astro Vaidhya Help Menu*\n\n`;
 
   if (!isRegistered) {
     msg += `It looks like you haven't registered yet.\n\n`;
@@ -132,15 +134,18 @@ function formatState(state) {
   const labels = {
     IDLE: 'Not registered',
     REGISTERING_LANGUAGE: 'Registering (language)',
+    PURPOSE_SELECT: 'Choosing purpose',
     REGISTERING_NAME: 'Registering (name)',
     REGISTERING_AGE: 'Registering (age)',
     REGISTERING_GENDER: 'Registering (gender)',
     REGISTERING_EMAIL: 'Registering (email)',
     REGISTERING_IMAGE: 'Registering (palm photo)',
     REGISTERING_DOB: 'Registering (date of birth)',
+    REGISTERING_BIRTH_TIME: 'Registering (birth time)',
     REGISTERING_ADDRESS: 'Registering (city)',
     REGISTERED: 'Registered',
     ASTRO_SATISFACTION: 'Astrology (rating)',
+    ASTRO_FEEDBACK: 'Astrology (feedback note)',
     CATEGORY_SELECT: 'Selecting category',
     CONSULT_OTHER: 'Describing concern',
     CONSULT_Q: 'Questionnaire',

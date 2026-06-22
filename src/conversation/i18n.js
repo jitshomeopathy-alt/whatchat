@@ -47,8 +47,8 @@ const STRINGS = {
     hi: 'यह ईमेल पूरा नहीं लग रहा। 🤔 कृपया एक सही ईमेल पता लिखिए (जैसे name@example.com)। 📧',
   },
   askImage: {
-    en: 'Almost there, you’re doing great! ✋📸\n\nCould you send me a clear *photo of your palm* (open hand, fingers spread)? It lets me read you for a much more personal profile. 🔮\n\n_(If you’d rather not, just type "skip" and we’ll continue.)_',
-    hi: 'बस थोड़ा और, आप बहुत अच्छा कर रहे हैं! ✋📸\n\nक्या आप मुझे अपनी *हथेली की एक साफ़ फ़ोटो* भेज सकते हैं (खुला हाथ, उंगलियाँ फैलाकर)? इससे मैं आपको पढ़कर एक ज़्यादा व्यक्तिगत प्रोफ़ाइल बना पाऊँगा। 🔮\n\n_(अगर आप नहीं चाहते, तो बस "skip" लिखिए और हम आगे बढ़ जाएँगे।)_',
+    en: 'Almost there, you’re doing great! ✋📸\n\nCould you send me a clear *photo of both your palms* (both hands open, fingers spread, good lighting)? It lets me read you for a much more personal profile. 🔮\n\n_(If you’d rather not, just type "skip" and we’ll continue.)_',
+    hi: 'बस थोड़ा और, आप बहुत अच्छा कर रहे हैं! ✋📸\n\nक्या आप मुझे अपनी *दोनों हथेलियों की एक साफ़ फ़ोटो* भेज सकते हैं (दोनों हाथ खुले, उंगलियाँ फैलाकर, अच्छी रोशनी में)? इससे मैं आपको पढ़कर एक ज़्यादा व्यक्तिगत प्रोफ़ाइल बना पाऊँगा। 🔮\n\n_(अगर आप नहीं चाहते, तो बस "skip" लिखिए और हम आगे बढ़ जाएँगे।)_',
   },
   imageUploading: {
     en: '⏳ Uploading your photo, hold on just a moment... 📤',
@@ -91,6 +91,36 @@ const STRINGS = {
     hi: ({ name }) => `🎉 सब तैयार है, *${name}*! आपकी प्रोफ़ाइल पूरी हो गई है और आपका यहाँ होना मुझे बहुत अच्छा लगा। 💚`,
   },
 
+  // ── Intro + purpose (shown right after language selection) ────────────────────
+  intro: {
+    en: '🌿 *Welcome to Astro Vaidhya!* 🌿\n\nI’m your personal wellness companion on WhatsApp. I blend classical homeopathy with astrology & palmistry to understand *who you are* — and then guide you, gently and privately, toward remedies and support that truly fit you.\n\nWe care for three areas of life: 🧠 mental & emotional wellness, 🌱 addiction recovery, and 💗 intimate wellness. Everything stays private, and a real doctor is always within reach when you need one. 💚',
+    hi: '🌿 *Astro Vaidhya में आपका स्वागत है!* 🌿\n\nमैं WhatsApp पर आपका निजी वेलनेस साथी हूँ। मैं शास्त्रीय होम्योपैथी को ज्योतिष और हस्तरेखा के साथ जोड़कर समझता हूँ कि *आप कौन हैं* — और फिर धीरे से, निजी तौर पर, आपके लिए सही उपचार और सहारे की ओर आपका मार्गदर्शन करता हूँ।\n\nहम जीवन के तीन क्षेत्रों का ध्यान रखते हैं: 🧠 मानसिक व भावनात्मक कल्याण, 🌱 व्यसन मुक्ति, और 💗 यौन स्वास्थ्य। सब कुछ निजी रहता है, और ज़रूरत पड़ने पर असली डॉक्टर हमेशा उपलब्ध हैं। 💚',
+  },
+  purposePrompt: {
+    en: 'To begin — what brings you here today? 🙂',
+    hi: 'शुरू करने से पहले — आज आप यहाँ किस लिए आए हैं? 🙂',
+  },
+  purposeConsult: { en: 'Consult a doctor 👨‍⚕️', hi: 'डॉक्टर से सलाह 👨‍⚕️' },
+  purposeExplore: { en: 'Explore Astro Vaidhya 🌿', hi: 'Astro Vaidhya देखें 🌿' },
+  purposeRetry: {
+    en: 'Please tap *Consult a doctor* 👨‍⚕️ or *Explore Astro Vaidhya* 🌿 to continue. 🙂',
+    hi: 'कृपया आगे बढ़ने के लिए *डॉक्टर से सलाह* 👨‍⚕️ या *Astro Vaidhya देखें* 🌿 चुनिए। 🙂',
+  },
+  consultDirect: {
+    en: '👨‍⚕️ *Consult a doctor*\n\nThat’s a caring step for yourself. 💚 Our team will connect you with a qualified homeopathic doctor, and you’ll receive an appointment link very soon.\n\n_(Type *"hi"* anytime if you’d like to explore Astro Vaidhya instead.)_',
+    hi: '👨‍⚕️ *डॉक्टर से सलाह*\n\nयह अपने लिए एक अच्छा कदम है। 💚 हमारी टीम आपको एक योग्य होम्योपैथिक डॉक्टर से जोड़ेगी, और जल्द ही आपको अपॉइंटमेंट लिंक मिलेगा।\n\n_(अगर आप इसके बजाय Astro Vaidhya देखना चाहें तो कभी भी *"hi"* लिखिए।)_',
+  },
+
+  // ── Birth time ───────────────────────────────────────────────────────────────
+  askBirthTime: {
+    en: 'And do you know your *time of birth*? ⏰ Please share it in 24-hour format (e.g. 14:30). If you’re not sure, just type *"skip"*. 🙂',
+    hi: 'और क्या आपको अपना *जन्म समय* पता है? ⏰ कृपया 24-घंटे के प्रारूप में बताइए (जैसे 14:30)। यदि निश्चित नहीं हैं, तो बस *"skip"* लिखिए। 🙂',
+  },
+  invalidBirthTime: {
+    en: 'That time doesn’t look right. 🤔 Please use 24-hour format like *14:30*, or type *"skip"* if you’re not sure. ⏰',
+    hi: 'यह समय सही नहीं लग रहा। 🤔 कृपया *14:30* जैसे 24-घंटे प्रारूप में लिखिए, या निश्चित न होने पर *"skip"* लिखिए। ⏰',
+  },
+
   // ── Gender button titles ─────────────────────────────────────────────────────
   genderMale: { en: 'Male', hi: 'पुरुष' },
   genderFemale: { en: 'Female', hi: 'महिला' },
@@ -119,6 +149,14 @@ const STRINGS = {
   satisfactionRetry: {
     en: 'Please tap one of the options above so we can continue. 🙂👆',
     hi: 'कृपया ऊपर दिए विकल्पों में से एक चुनिए ताकि हम आगे बढ़ सकें। 🙂👆',
+  },
+  satisfactionLowNote: {
+    en: 'Thank you for being honest. 🙏 I’d really like to get this right for you.\n\nIn your own words, what felt off or what were you hoping for? ✍️ Your note helps me understand you better.\n\n_(Or type "skip" to carry on.)_',
+    hi: 'ईमानदारी से बताने के लिए धन्यवाद। 🙏 मैं इसे आपके लिए सही करना चाहता हूँ।\n\nअपने शब्दों में बताइए — क्या कमी लगी या आप क्या उम्मीद कर रहे थे? ✍️ आपकी बात मुझे आपको बेहतर समझने में मदद करेगी।\n\n_(या आगे बढ़ने के लिए "skip" लिखिए।)_',
+  },
+  satisfactionNoteThanks: {
+    en: 'Thank you for sharing that — I’ll keep it in mind. 💚',
+    hi: 'बताने के लिए धन्यवाद — मैं इसका ध्यान रखूँगा। 💚',
   },
 
   // ── Consult: category selection ──────────────────────────────────────────────

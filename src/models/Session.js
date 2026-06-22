@@ -14,17 +14,20 @@ const sessionSchema = new mongoose.Schema(
       enum: [
         'IDLE',
         'REGISTERING_LANGUAGE',
+        'PURPOSE_SELECT', // intro shown, awaiting "consult a doctor" vs "explore" choice
         'REGISTERING_NAME',
         'REGISTERING_AGE',
         'REGISTERING_GENDER',
         'REGISTERING_EMAIL',
         'REGISTERING_IMAGE',
         'REGISTERING_DOB',
+        'REGISTERING_BIRTH_TIME',
         'REGISTERING_RAASHI',
         'REGISTERING_ADDRESS',
         'REGISTERED',
         // ── New astrology → consult flow ──────────────────────────────────
         'ASTRO_SATISFACTION', // reading shown, awaiting 0-25/25-50/50-75/75-100 tap
+        'ASTRO_FEEDBACK', // low rating given, awaiting free-text note
         'CATEGORY_SELECT', // awaiting category button tap
         'CONSULT_OTHER', // "Something else" chosen, awaiting free-text problem
         'CONSULT_Q', // answering category questions
@@ -69,6 +72,10 @@ const sessionSchema = new mongoose.Schema(
     },
     satisfaction: {
       type: String, // one of '0-25', '25-50', '50-75', '75-100'
+      default: null,
+    },
+    satisfactionNote: {
+      type: String, // free-text note captured after a low (0-25) rating
       default: null,
     },
     // ── Payment (Razorpay) ──────────────────────────────────────────────────

@@ -23,7 +23,7 @@ async function handle(whatsappId, message, session) {
     });
     await sendButtons(
       whatsappId,
-      `👋 Welcome to WhatChat!\n\nPlease choose your language.\nकृपया अपनी भाषा चुनें।`,
+      `👋 Welcome to Astro Vaidhya!\n\nPlease choose your language.\nकृपया अपनी भाषा चुनें।`,
       [
         { id: 'lang:en', title: 'English' },
         { id: 'lang:hi', title: 'हिंदी' },
@@ -53,11 +53,54 @@ async function handle(whatsappId, message, session) {
 
     const buffer = { ...(session.registrationBuffer || {}), language };
     await saveSession(whatsappId, {
-      state: 'REGISTERING_NAME',
+      state: 'PURPOSE_SELECT',
       language,
       registrationBuffer: buffer,
     });
-    await sendText(whatsappId, t('askName', language));
+    // Short intro about Astro Vaidhya, then ask why they're here.
+    await sendText(whatsappId, t('intro', language));
+    await sendButtons(
+      whatsappId,
+      t('purposePrompt', language),
+      [
+        { id: 'purpose:consult', title: t('purposeConsult', language) },
+        { id: 'purpose:explore', title: t('purposeExplore', language) },
+      ]
+    );
+    return;
+  }
+
+  // ── PURPOSE_SELECT ───────────────────────────────────────────────────────────
+  if (state === 'PURPOSE_SELECT') {
+    const lang = session.language || 'en';
+    const raw = (message.interactive?.id || extractText(message) || '').toLowerCase().trim();
+    let purpose = null;
+    if (raw === 'purpose:consult' || raw.includes('consult') || raw.includes('doctor')) purpose = 'consult';
+    else if (raw === 'purpose:explore' || raw.includes('explore') || raw.includes('astro')) purpose = 'explore';
+
+    if (!purpose) {
+      await sendButtons(
+        whatsappId,
+        t('purposeRetry', lang),
+        [
+          { id: 'purpose:consult', title: t('purposeConsult', lang) },
+          { id: 'purpose:explore', title: t('purposeExplore', lang) },
+        ]
+      );
+      return;
+    }
+
+    // "Consult a doctor" → hand off to the doctor-consult flow. We keep the user
+    // unregistered (IDLE) so a later "hi" can restart and explore if they wish.
+    if (purpose === 'consult') {
+      await saveSession(whatsappId, { state: 'IDLE', registrationBuffer: {} });
+      await sendText(whatsappId, t('consultDirect', lang));
+      return;
+    }
+
+    // "Explore Astro Vaidhya" → continue the normal registration journey.
+    await saveSession(whatsappId, { state: 'REGISTERING_NAME' });
+    await sendText(whatsappId, t('askName', lang));
     return;
   }
 
@@ -126,27 +169,8 @@ async function handle(whatsappId, message, session) {
       return;
     }
 
+    // Email collection is paused for now — go straight to the palm photo.
     const buffer = { ...(session.registrationBuffer || {}), gender: text };
-    await saveSession(whatsappId, {
-      state: 'REGISTERING_EMAIL',
-      registrationBuffer: buffer,
-    });
-    await sendText(whatsappId, t('askEmail', lang));
-    return;
-  }
-
-  // ── REGISTERING_EMAIL ────────────────────────────────────────────────────────
-  if (state === 'REGISTERING_EMAIL') {
-    const lang = session.language || 'en';
-    const text = extractText(message)?.trim().toLowerCase();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!text || !emailRegex.test(text)) {
-      await sendText(whatsappId, t('invalidEmail', lang));
-      return;
-    }
-
-    const buffer = { ...(session.registrationBuffer || {}), email: text };
     await saveSession(whatsappId, {
       state: 'REGISTERING_IMAGE',
       registrationBuffer: buffer,
@@ -210,10 +234,34 @@ async function handle(whatsappId, message, session) {
     const dob = formatDob(dobInput); // normalized to dd-mm-yyyy
     const buffer = { ...(session.registrationBuffer || {}), dob };
     await saveSession(whatsappId, {
+      state: 'REGISTERING_BIRTH_TIME',
+      registrationBuffer: buffer,
+    });
+    await sendText(whatsappId, t('askBirthTime', lang));
+    return;
+  }
+
+  // ── REGISTERING_BIRTH_TIME ────────────────────────────────────────────────────
+  if (state === 'REGISTERING_BIRTH_TIME') {
+    const lang = session.language || 'en';
+    const raw = extractText(message)?.trim();
+    let birthTime = null;
+
+    if (raw && raw.toLowerCase() !== 'skip') {
+      const parsed = parseBirthTime(raw);
+      if (!parsed) {
+        await sendText(whatsappId, t('invalidBirthTime', lang));
+        return;
+      }
+      birthTime = parsed;
+    }
+
+    const buffer = { ...(session.registrationBuffer || {}), birthTime };
+    await saveSession(whatsappId, {
       state: 'REGISTERING_ADDRESS',
       registrationBuffer: buffer,
     });
-    await sendText(whatsappId, t('askAddress', lang, { dob }));
+    await sendText(whatsappId, t('askAddress', lang, { dob: buffer.dob }));
     return;
   }
 
@@ -238,10 +286,10 @@ async function handle(whatsappId, message, session) {
           name: buffer.name,
           age: buffer.age,
           gender: buffer.gender,
-          email: buffer.email,
           imageUrl: buffer.imageUrl || null,
           language: buffer.language || 'en',
           dob: buffer.dob,
+          birthTime: buffer.birthTime || null,
           address: buffer.address,
           createdAt: new Date(),
         },
@@ -272,6 +320,41 @@ async function handle(whatsappId, message, session) {
 function extractText(message) {
   if (message.type === 'text') return message.text?.body || '';
   return null;
+}
+
+/**
+ * Parse and normalise a free-text birth time into 24-hour "HH:MM".
+ * Accepts "14:30", "9:05", "9.05", "0930", and 12-hour forms like "2:30 pm" /
+ * "9 am". Returns the normalised string, or null if it can't be understood.
+ */
+function parseBirthTime(input) {
+  const s = input.toLowerCase().trim();
+  const ampm = /(am|pm)/.exec(s)?.[1] || null;
+  const cleaned = s.replace(/(am|pm)/g, '').replace(/\./g, ':').trim();
+
+  let hh;
+  let mm;
+  let m = /^(\d{1,2}):(\d{2})$/.exec(cleaned);
+  if (m) {
+    hh = parseInt(m[1], 10);
+    mm = parseInt(m[2], 10);
+  } else if ((m = /^(\d{1,2})$/.exec(cleaned)) && ampm) {
+    // bare hour with am/pm, e.g. "9 am"
+    hh = parseInt(m[1], 10);
+    mm = 0;
+  } else if ((m = /^(\d{2})(\d{2})$/.exec(cleaned))) {
+    // compact "0930"
+    hh = parseInt(m[1], 10);
+    mm = parseInt(m[2], 10);
+  } else {
+    return null;
+  }
+
+  if (ampm === 'pm' && hh < 12) hh += 12;
+  if (ampm === 'am' && hh === 12) hh = 0;
+
+  if (isNaN(hh) || isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) return null;
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
 }
 
 module.exports = { handle };
