@@ -169,54 +169,12 @@ async function handle(whatsappId, message, session) {
       return;
     }
 
-    // Email collection is paused for now — go straight to the palm photo.
+    // Email collection is paused for now — go straight to the birth details.
+    // The palm photo is collected last, just before the astrology reading.
     const buffer = { ...(session.registrationBuffer || {}), gender: text };
     await saveSession(whatsappId, {
-      state: 'REGISTERING_IMAGE',
-      registrationBuffer: buffer,
-    });
-    await sendText(whatsappId, t('askImage', lang));
-    return;
-  }
-
-  // ── REGISTERING_IMAGE ────────────────────────────────────────────────────────
-  if (state === 'REGISTERING_IMAGE') {
-    const lang = session.language || 'en';
-    const buffer = session.registrationBuffer || {};
-    let imageUrl = null;
-
-    const textInput = extractText(message)?.toLowerCase().trim();
-
-    if (textInput === 'skip') {
-      // User chose to skip photo
-      imageUrl = null;
-    } else if (message.type === 'image') {
-      try {
-        const mediaId = message.image?.id;
-        if (!mediaId) {
-          await sendText(whatsappId, t('imageReadError', lang));
-          return;
-        }
-
-        await sendText(whatsappId, t('imageUploading', lang));
-        const mediaBuffer = await downloadMedia(mediaId);
-        const filename = `user_${whatsappId}_palm.jpg`;
-        imageUrl = await uploadFromUrl(null, filename, mediaBuffer);
-      } catch (err) {
-        console.error('[Registration] Image upload error:', err.message);
-        await sendText(whatsappId, t('imageUploadError', lang, { msg: err.message }));
-        return;
-      }
-    } else {
-      await sendText(whatsappId, t('imageSendPrompt', lang));
-      return;
-    }
-
-    // Defer the save — we still need dob and city for the profile reading.
-    const updatedBuffer = { ...buffer, imageUrl };
-    await saveSession(whatsappId, {
       state: 'REGISTERING_DOB',
-      registrationBuffer: updatedBuffer,
+      registrationBuffer: buffer,
     });
     await sendText(whatsappId, t('askDob', lang));
     return;
@@ -265,7 +223,7 @@ async function handle(whatsappId, message, session) {
     return;
   }
 
-  // ── REGISTERING_ADDRESS (final step → save + start astrology) ─────────────────
+  // ── REGISTERING_ADDRESS → ask for the palm photo (last question) ──────────────
   if (state === 'REGISTERING_ADDRESS') {
     const lang = session.language || 'en';
     const address = extractText(message)?.trim();
@@ -275,6 +233,48 @@ async function handle(whatsappId, message, session) {
     }
 
     const buffer = { ...(session.registrationBuffer || {}), address };
+    await saveSession(whatsappId, {
+      state: 'REGISTERING_IMAGE',
+      registrationBuffer: buffer,
+    });
+    await sendText(whatsappId, t('askImage', lang));
+    return;
+  }
+
+  // ── REGISTERING_IMAGE (final step → save + start astrology) ───────────────────
+  if (state === 'REGISTERING_IMAGE') {
+    const lang = session.language || 'en';
+    const buffer = session.registrationBuffer || {};
+    let imageUrl = null;
+
+    const textInput = extractText(message)?.toLowerCase().trim();
+
+    if (textInput === 'skip') {
+      // User chose to skip photo
+      imageUrl = null;
+    } else if (message.type === 'image') {
+      try {
+        const mediaId = message.image?.id;
+        if (!mediaId) {
+          await sendText(whatsappId, t('imageReadError', lang));
+          return;
+        }
+
+        await sendText(whatsappId, t('imageUploading', lang));
+        const mediaBuffer = await downloadMedia(mediaId);
+        const filename = `user_${whatsappId}_palm.jpg`;
+        imageUrl = await uploadFromUrl(null, filename, mediaBuffer);
+      } catch (err) {
+        console.error('[Registration] Image upload error:', err.message);
+        await sendText(whatsappId, t('imageUploadError', lang, { msg: err.message }));
+        return;
+      }
+    } else {
+      await sendText(whatsappId, t('imageSendPrompt', lang));
+      return;
+    }
+
+    buffer.imageUrl = imageUrl;
 
     // Save the complete user profile to MongoDB
     let user;
