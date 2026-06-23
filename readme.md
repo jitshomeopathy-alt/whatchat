@@ -6,7 +6,7 @@
 │ ▝▜█████▛▘ │ What's new │
 │ ▘▘ ▝▝ │ Added a prompt before … │
 │ Sonnet 4.6 · Claude Pro · │ `acceptEdits` mode now… │
-│ abhishek.singh@thoughtwin.com's Organization │ Edit no longer require… │
+│ jitshomeopathy@gmail.com's Organization │ Edit no longer require… │
 │ ~/Desktop │ /release-notes for more │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 
