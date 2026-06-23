@@ -3,84 +3,124 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>About Us — WhatChat</title>
+    <title>About Us — Astro Vaidhya</title>
+    <meta
+      name="description"
+      content="Astro Vaidhya pairs classical homeopathic case-taking with AI, delivered entirely through a private WhatsApp conversation — clinically directed by a practising homeopathic physician."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/site.css" />
   </head>
   <body>
-    <header class="site-header">
-      <div class="inner">
+    <!-- NAV ─────────────────────────────────────────────────────────────────── -->
+    <nav class="nav">
+      <div class="wrap nav-row">
         <a class="brand" href="/">
-          <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.67 4.8 1.84 6.8L2 30l7.4-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.33 11.33 0 01-5.76-1.57l-.41-.25-4.39 1.08 1.12-4.29-.27-.43A11.34 11.34 0 014.6 16C4.6 9.7 9.7 4.6 16 4.6S27.4 9.7 27.4 16 22.3 27.4 16 27.4z" />
+          <svg class="brand-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" fill="none" stroke="#c99a4b" stroke-width="1" opacity="0.55" />
+            <g stroke="#e8c57e" stroke-width="1.4" stroke-linecap="round">
+              <line x1="20" y1="20" x2="20" y2="6" />
+              <line x1="20" y1="20" x2="31.3" y2="13" />
+              <line x1="20" y1="20" x2="31.3" y2="27" />
+              <line x1="20" y1="20" x2="20" y2="34" />
+              <line x1="20" y1="20" x2="8.7" y2="27" />
+              <line x1="20" y1="20" x2="8.7" y2="13" />
+            </g>
+            <circle cx="20" cy="20" r="3.4" fill="#e8c57e" />
           </svg>
-          What<span>Chat</span>
+          <span class="brand-text">
+            <span class="brand-word">Astro&nbsp;Vaidhya</span>
+            <span class="brand-tag">AI Homeopathic Wellness</span>
+          </span>
         </a>
-        <nav class="site-nav">
+        <div class="nav-links">
           <a href="/">Home</a>
           <a href="/about" class="active">About</a>
           <a href="/contact">Contact</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
-        </nav>
+        </div>
       </div>
-    </header>
+    </nav>
 
+    <!-- HERO ────────────────────────────────────────────────────────────────── -->
     <section class="page-hero">
-      <h1>About WhatChat</h1>
-      <p>Your AI-powered wellness companion on WhatsApp.</p>
+      <div class="wrap">
+        <p class="eyebrow on-dark">About Astro Vaidhya</p>
+        <h1>Classical homeopathy, guided by AI.</h1>
+        <p>
+          A private WhatsApp conversation that reads the sensation you're carrying
+          today and points toward the constitutional remedy it suggests.
+        </p>
+      </div>
     </section>
 
     <main class="page">
       <div class="card">
         <h2>Who we are</h2>
         <p>
-          WhatChat is an AI-powered health and wellness assistant that lives
-          inside WhatsApp. We built it to make supportive, judgement-free
-          wellness guidance available to anyone with a phone — no apps to
-          download, no accounts to create, no waiting rooms.
+          Astro Vaidhya is an AI-guided homeopathic wellness service that lives
+          inside WhatsApp. We built it to make thoughtful, judgement-free
+          case-taking available to anyone with a phone — no apps to download, no
+          accounts to create, no waiting rooms.
         </p>
 
         <h2>What we do</h2>
         <p>
-          Through a simple WhatsApp conversation, WhatChat helps users reflect
-          on their wellbeing across areas such as de-addiction and recovery,
-          mental and emotional wellness, and sexual health. It listens to your
-          responses, offers general informational insights, and points you
-          toward the kind of support that may help.
+          Through a single WhatsApp conversation, Astro Vaidhya guides you from the
+          sensation that's actually present toward a constitutional reading suited
+          to what you've described. It works across three wellness verticals, each
+          with its own adaptive line of questions.
         </p>
         <ul>
-          <li>Friendly, 24/7 conversational guidance</li>
-          <li>Personalised wellness assessments from your answers</li>
-          <li>Private, secure, and always available on a platform you already use</li>
+          <li><strong>Mental wellness</strong> — grief, anxiety, burnout, loneliness and the quieter, newer states.</li>
+          <li><strong>Addiction recovery</strong> — substance patterns and behavioural ones alike, built around the person, not the habit.</li>
+          <li><strong>Intimate wellness</strong> — concerns rarely spoken aloud, handled with the same clinical care as everything else (18+).</li>
         </ul>
 
-        <h2>Our mission</h2>
+        <h2>Clinically directed, not just AI-assisted</h2>
         <p>
-          We believe the first step toward feeling better should be easy to
-          take. Our mission is to lower the barrier to wellness support by
-          meeting people where they already are — in a familiar chat.
+          Astro Vaidhya is built and clinically directed by Dr. Jitendra Pal
+          (BHMS, MD Homeopathy). Every branch — from the first question to the
+          final remedy — has been written and audited against classical repertories
+          and current Indian and global research, not generated from a generic
+          model and left unchecked.
+        </p>
+
+        <h2>Known limits, on purpose</h2>
+        <p>
+          When a conversation moves into territory that needs a human — a sign of
+          crisis, a case too complex for an automated remedy, a question of
+          fertility or trauma, or anyone under 18 — it's routed to a licensed
+          physician directly, with the full context already in hand. The platform
+          is strongest when it knows where it ends.
         </p>
 
         <h2>Important note</h2>
         <p class="muted">
-          WhatChat provides general wellness information only. It is not a
-          medical service and is not a substitute for professional medical
-          advice, diagnosis, or treatment. Always consult a qualified
-          healthcare professional for medical concerns.
+          Astro Vaidhya is an AI-powered wellness information tool and is not a
+          substitute for professional medical, psychiatric or psychological care.
+          Always consult a qualified healthcare professional for diagnosis and
+          treatment.
         </p>
       </div>
     </main>
 
+    <!-- FOOTER ──────────────────────────────────────────────────────────────── -->
     <footer class="site-footer">
-      <div class="inner">
-        <nav>
-          <a href="/">Home</a>
-          <a href="/about">About Us</a>
-          <a href="/contact">Contact Us</a>
+      <div class="footer-row">
+        <span>&copy; 2026 Astro Vaidhya.</span>
+        <div class="footer-links">
+          <a href="/about">About</a>
+          <a href="/contact">Contact</a>
           <a href="/privacy">Privacy Policy</a>
           <a href="/terms">Terms of Service</a>
-        </nav>
-        <p class="copy">&copy; 2026 WhatChat. AI-powered wellness information on WhatsApp.</p>
+        </div>
       </div>
     </footer>
   </body>
