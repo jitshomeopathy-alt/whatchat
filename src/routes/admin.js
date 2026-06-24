@@ -1,13 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
 const { randomUUID: uuidv4 } = require('crypto');
 const adminAuth = require('../middleware/adminAuth');
 const Medicine = require('../models/Medicine');
 const User = require('../models/User');
 const AnalysisHistory = require('../models/AnalysisHistory');
+const Story = require('../models/Story');
 const { upsertMedicine, deleteMedicine } = require('../services/qdrant');
+const { uploadImage } = require('../services/imagekit');
 const { sendText } = require('../services/whatsapp');
+
+// In-memory upload handling for story photos (5MB cap, images only).
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\//.test(file.mimetype)) return cb(null, true);
+    cb(new Error('Only image files are allowed'));
+  },
+});
 
 const path = require('path');
 const fs = require('fs');
@@ -367,6 +380,142 @@ router.delete('/medicines/:id', adminAuth, async (req, res) => {
     await Medicine.deleteOne({ _id: id });
 
     return res.json({ message: 'Medicine deleted successfully', qdrantId });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Success stories ───────────────────────────────────────────────────────────
+
+/**
+ * POST /admin/uploads
+ * Upload a single image (multipart field "file") to ImageKit.
+ * Returns { url }. Used by the success-story editor for the user photo.
+ */
+router.post('/uploads', adminAuth, (req, res) => {
+  upload.single('file')(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded (field "file")' });
+    }
+    try {
+      const safe = (req.file.originalname || 'story').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const url = await uploadImage(req.file.buffer, `story_${Date.now()}_${safe}`);
+      return res.json({ url });
+    } catch (e) {
+      console.error('[Admin] Story image upload failed:', e.message);
+      return res.status(500).json({ error: e.message });
+    }
+  });
+});
+
+/**
+ * GET /admin/stories
+ * List all success stories (newest first), including unpublished ones.
+ */
+router.get('/stories', adminAuth, async (req, res) => {
+  try {
+    const stories = await Story.find().sort({ createdAt: -1 }).lean();
+    return res.json({ total: stories.length, data: stories });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+function parseRating(value) {
+  const rating = Number(value);
+  if (!Number.isFinite(rating)) return null;
+  const rounded = Math.round(rating);
+  if (rounded < 1 || rounded > 10) return null;
+  return rounded;
+}
+
+/**
+ * POST /admin/stories
+ * Create a success story.
+ * Body: { name, description, rating (1-10), photoUrl?, published? }
+ */
+router.post('/stories', adminAuth, async (req, res) => {
+  try {
+    const { name, description, rating, photoUrl, published } = req.body || {};
+
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ error: 'name is required' });
+    }
+    if (!description || !String(description).trim()) {
+      return res.status(400).json({ error: 'description is required' });
+    }
+    const parsedRating = parseRating(rating);
+    if (parsedRating === null) {
+      return res.status(400).json({ error: 'rating must be a whole number between 1 and 10' });
+    }
+
+    const story = await Story.create({
+      name: String(name).trim(),
+      description: String(description).trim(),
+      rating: parsedRating,
+      photoUrl: photoUrl ? String(photoUrl).trim() : '',
+      published: published === undefined ? true : !!published,
+    });
+
+    return res.status(201).json(story);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * PUT /admin/stories/:id
+ * Update a success story. Body: partial { name, description, rating, photoUrl, published }
+ */
+router.put('/stories/:id', adminAuth, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+
+    const { name, description, rating, photoUrl, published } = req.body || {};
+
+    if (name !== undefined) {
+      if (!String(name).trim()) return res.status(400).json({ error: 'name cannot be empty' });
+      story.name = String(name).trim();
+    }
+    if (description !== undefined) {
+      if (!String(description).trim()) return res.status(400).json({ error: 'description cannot be empty' });
+      story.description = String(description).trim();
+    }
+    if (rating !== undefined) {
+      const parsedRating = parseRating(rating);
+      if (parsedRating === null) {
+        return res.status(400).json({ error: 'rating must be a whole number between 1 and 10' });
+      }
+      story.rating = parsedRating;
+    }
+    if (photoUrl !== undefined) story.photoUrl = photoUrl ? String(photoUrl).trim() : '';
+    if (published !== undefined) story.published = !!published;
+    story.updatedAt = new Date();
+
+    await story.save();
+    return res.json(story);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * DELETE /admin/stories/:id
+ */
+router.delete('/stories/:id', adminAuth, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+    await Story.deleteOne({ _id: req.params.id });
+    return res.json({ message: 'Story deleted successfully' });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

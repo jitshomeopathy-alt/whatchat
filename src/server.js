@@ -6,6 +6,7 @@ const path = require('path');
 
 const webhookRouter = require('./routes/webhook');
 const adminRouter = require('./routes/admin');
+const publicRouter = require('./routes/public');
 const { initCollection } = require('./services/qdrant');
 
 const app = express();
@@ -33,6 +34,7 @@ app.get('/admin', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/index
 app.get('/admin/login', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/login.html')));
 app.get('/admin/user', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/user.html')));
 app.get('/admin/messages', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/messages.html')));
+app.get('/admin/stories', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/stories.html')));
 
 // Serve static files from /public (assets, if any)
 app.use(express.static(path.join(__dirname, '../public')));
@@ -85,6 +87,7 @@ async function requireDB(req, res, next) {
 
 app.use('/webhook', requireDB, webhookRouter);
 app.use('/admin', requireDB, adminRouter);
+app.use('/api', requireDB, publicRouter);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -103,6 +106,7 @@ const pages = {
   '/contact': 'contact.html',
   '/privacy': 'privacy.html',
   '/terms': 'terms.html',
+  '/stories': 'stories.html',
 };
 
 for (const [route, file] of Object.entries(pages)) {

@@ -65,4 +65,37 @@ async function uploadFromUrl(mediaUrl, filename, buffer) {
   });
 }
 
-module.exports = { uploadFromUrl };
+/**
+ * Upload an in-memory image buffer to ImageKit (used by the admin UI for
+ * success-story photos).
+ * @param {Buffer} buffer    - Raw image bytes
+ * @param {string} filename  - Destination filename in ImageKit
+ * @param {string} [folder]  - Destination folder (defaults to success stories)
+ * @returns {Promise<string>} - Public ImageKit URL of the uploaded file
+ */
+async function uploadImage(buffer, filename, folder = '/whatchat/stories') {
+  const imagekit = getClient();
+  const base64Data = Buffer.from(buffer).toString('base64');
+
+  return new Promise((resolve, reject) => {
+    imagekit.upload(
+      {
+        file: base64Data,
+        fileName: filename,
+        folder,
+        useUniqueFileName: true,
+        tags: ['whatchat', 'story'],
+      },
+      (err, result) => {
+        if (err) {
+          console.error('[ImageKit] Upload error:', err);
+          return reject(new Error(`ImageKit upload failed: ${err.message || JSON.stringify(err)}`));
+        }
+        console.log(`[ImageKit] Uploaded: ${result.url}`);
+        resolve(result.url);
+      }
+    );
+  });
+}
+
+module.exports = { uploadFromUrl, uploadImage };
