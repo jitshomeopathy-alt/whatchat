@@ -1,8 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const { dispatch } = require('../conversation/dispatcher');
+const { sendTyping } = require('../services/whatsapp');
 const razorpay = require('../services/razorpay');
 const { completePayment } = require('../conversation/flows/consult');
+
+// How long to show the "typing…" indicator before our reply, for a human feel.
+// Randomised within a small range so it never feels mechanically uniform.
+const TYPING_MIN_MS = parseInt(process.env.TYPING_MIN_MS, 10) || 5000;
+const TYPING_MAX_MS = parseInt(process.env.TYPING_MAX_MS, 10) || 5000;
+
+function humanTypingDelay() {
+  const lo = Math.min(TYPING_MIN_MS, TYPING_MAX_MS);
+  const hi = Math.max(TYPING_MIN_MS, TYPING_MAX_MS);
+  const ms = lo + Math.floor(Math.random() * (hi - lo + 1));
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * GET /webhook
@@ -71,6 +84,12 @@ router.post('/', async (req, res) => {
           }
 
           console.log(`[Webhook] Incoming ${normalized.type} from ${whatsappId}`);
+
+          // Give a human touch: show a "typing…" indicator and pause briefly
+          // before replying. The indicator clears automatically when dispatch
+          // sends its first message. Best-effort — never block the reply.
+          await sendTyping(message.id);
+          await humanTypingDelay();
 
           // Process fully BEFORE responding so serverless does not freeze the
           // function mid-reply. Swallow per-message errors so one bad message

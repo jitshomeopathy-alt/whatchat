@@ -186,7 +186,7 @@
       grid.innerHTML = '<div class="loading">Loading stories…</div>';
       let res;
       try {
-        res = await fetch('/admin/stories', { headers: authHeaders() });
+        res = await fetch('/admin/stories', { headers: authHeaders(), cache: 'no-store' });
       } catch (e) {
         grid.innerHTML = '<div class="empty">Network error. Please retry.</div>';
         return;

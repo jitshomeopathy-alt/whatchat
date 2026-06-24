@@ -417,6 +417,9 @@ router.post('/uploads', adminAuth, (req, res) => {
  */
 router.get('/stories', adminAuth, async (req, res) => {
   try {
+    // Disable conditional caching: the request carries an Authorization header,
+    // so a revalidated 304 would arrive bodyless and break the admin fetch.
+    res.set('Cache-Control', 'no-store');
     const stories = await Story.find().sort({ createdAt: -1 }).lean();
     return res.json({ total: stories.length, data: stories });
   } catch (err) {

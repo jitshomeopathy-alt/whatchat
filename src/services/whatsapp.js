@@ -212,6 +212,39 @@ function truncate(str, max) {
 }
 
 /**
+ * Show a "typing…" indicator to the user (and mark their message as read).
+ * The indicator is dismissed automatically once we send our reply, or after
+ * ~25s. Best-effort: never throw, so a failure here can't block a reply.
+ * @param {string} messageId - The incoming message's `id` (wamid…) to ack.
+ */
+async function sendTyping(messageId) {
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const token = process.env.WHATSAPP_TOKEN;
+
+  if (!phoneNumberId || !token || !messageId) return;
+
+  const url = `${BASE_URL}/${phoneNumberId}/messages`;
+  const payload = {
+    messaging_product: 'whatsapp',
+    status: 'read',
+    message_id: messageId,
+    typing_indicator: { type: 'text' },
+  };
+
+  try {
+    await axios.post(url, payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (err) {
+    const detail = err.response?.data || err.message;
+    console.warn('[WhatsApp] sendTyping warning:', JSON.stringify(detail));
+  }
+}
+
+/**
  * Download media from WhatsApp by media ID.
  * Returns a Buffer containing the binary content.
  * @param {string} mediaId - The media_id from the incoming message object
@@ -252,4 +285,4 @@ async function downloadMedia(mediaId) {
   }
 }
 
-module.exports = { sendText, sendButtons, sendList, downloadMedia };
+module.exports = { sendText, sendButtons, sendList, sendTyping, downloadMedia };
