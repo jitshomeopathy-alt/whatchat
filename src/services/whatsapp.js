@@ -232,15 +232,16 @@ async function sendTyping(messageId) {
   };
 
   try {
-    await axios.post(url, payload, {
+    const res = await axios.post(url, payload, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
+    console.log(`[WhatsApp] sendTyping OK for ${messageId}:`, JSON.stringify(res.data));
   } catch (err) {
     const detail = err.response?.data || err.message;
-    console.warn('[WhatsApp] sendTyping warning:', JSON.stringify(detail));
+    console.warn(`[WhatsApp] sendTyping FAILED for ${messageId}:`, JSON.stringify(detail));
   }
 }
 

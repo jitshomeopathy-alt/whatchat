@@ -127,6 +127,10 @@ const STRINGS = {
   genderOther: { en: 'Other', hi: 'अन्य' },
 
   // ── Consult: astrology + satisfaction ────────────────────────────────────────
+  welcomeBack: {
+    en: ({ name }) => `👋 Welcome back, *${name}*! 💛\n\nLooks like you’ve chatted with us before — no need to register again. We’ll just refresh your details as we go. 🔄`,
+    hi: ({ name }) => `👋 वापस स्वागत है, *${name}*! 💛\n\nलगता है आप पहले हमसे बात कर चुके हैं — दोबारा रजिस्टर करने की ज़रूरत नहीं। हम आगे बढ़ते हुए आपकी जानकारी अपडेट कर देंगे। 🔄`,
+  },
   readingPalm: {
     en: ({ name }) => `🔮 Reading your details, *${name}*... take a deep breath, this’ll be just a moment. 🌬️✨`,
     hi: ({ name }) => `🔮 आपकी जानकारी देख रहा हूँ, *${name}*... एक गहरी साँस लीजिए, बस एक पल में। 🌬️✨`,

@@ -3,6 +3,7 @@ const { loadSession, saveSession, resetSession } = require('./stateManager');
 const registrationFlow = require('./flows/registration');
 const consultFlow = require('./flows/consult');
 const User = require('../models/User');
+const { t } = require('./i18n');
 
 /**
  * Main dispatcher. Receives a parsed message and routes it to the correct flow.
@@ -63,14 +64,20 @@ async function dispatch(whatsappId, message) {
   const consultStates = ['ASTRO_SATISFACTION', 'ASTRO_FEEDBACK', 'CATEGORY_SELECT', 'CONSULT_OTHER', 'CONSULT_Q', 'PAYMENT_PENDING', 'CONSULT_ACTION'];
 
   if (registrationStates.includes(state)) {
-    // Allow "register" / "hi" / "hello" / "start" to kick off registration
-    if (state === 'IDLE' && ['hi', 'hello', 'start', 'register', 'hey'].includes(lowerText)) {
-      await registrationFlow.handle(whatsappId, message, session);
-      return;
-    }
-
     if (state === 'IDLE') {
-      // First contact — start registration regardless of what they said
+      // Returning contact: if this number already exists in our DB, skip
+      // registration. Greet them and continue the normal journey — their
+      // answers are refreshed (not duplicated) as they go.
+      const existingUser = await User.findOne({ whatsappId });
+      if (existingUser) {
+        const lang = existingUser.language || 'en';
+        await saveSession(whatsappId, { state: 'REGISTERED', language: lang });
+        await sendText(whatsappId, t('welcomeBack', lang, { name: existingUser.name }));
+        await consultFlow.startAstrology(whatsappId, existingUser);
+        return;
+      }
+
+      // Brand-new contact — start registration regardless of what they said.
       await registrationFlow.handle(whatsappId, message, session);
       return;
     }
@@ -88,6 +95,9 @@ async function dispatch(whatsappId, message) {
       await registrationFlow.handle(whatsappId, message, { ...session.toObject(), state: 'IDLE' });
       return;
     }
+    // Returning, already-registered user — greet them, then refresh their
+    // details through the normal journey (answers are updated, not duplicated).
+    await sendText(whatsappId, t('welcomeBack', user.language || 'en', { name: user.name }));
     await consultFlow.startAstrology(whatsappId, user);
     return;
   }
