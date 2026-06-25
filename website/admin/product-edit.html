@@ -122,8 +122,16 @@
       localStorage.removeItem('wc_admin_token'); location.replace('/admin/login');
     });
 
-    // Demo categories for now — the client will provide the real list later.
-    const DEMO_CATEGORIES = ['Supplements', 'Ayurvedic', 'Wellness', 'Skincare', 'Devotional'];
+    // Product categories provided by the client.
+    const PRODUCT_CATEGORIES = [
+      'Homeopathic Wellness',
+      'Digital Protocols & Programs',
+      'Guided Audio Library',
+      'Journals & Planners',
+      'Astrology Wellness',
+      'Ritual & Symbolic Products',
+      'Mind-Body Wellness',
+    ];
 
     const editingId = new URLSearchParams(location.search).get('id');
     let currentImageUrl = '';
@@ -138,7 +146,7 @@
 
     const categorySel = document.getElementById('category');
     function populateCategories(selected) {
-      const set = new Set(DEMO_CATEGORIES);
+      const set = new Set(PRODUCT_CATEGORIES);
       if (selected) set.add(selected);
       categorySel.innerHTML = [...set].map((c) => `<option value="${c}">${c}</option>`).join('');
       if (selected) categorySel.value = selected;
