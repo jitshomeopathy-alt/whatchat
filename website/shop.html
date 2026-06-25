@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shop — Astro Vaidhya</title>
+    <meta name="description" content="Shop wellness, Ayurvedic and homeopathic products from Astro Vaidhya." />
+    <meta name="robots" content="index, follow" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b0e1a'/%3E%3Ctext x='32' y='44' font-size='38' text-anchor='middle' fill='%23c99a4b' font-family='Georgia,serif'%3EA%3C/text%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/site.css" />
+    <link rel="stylesheet" href="/shop.css" />
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="wrap nav-row">
+        <a class="brand" href="/">
+          <svg class="brand-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" fill="none" stroke="#c99a4b" stroke-width="1" opacity="0.55" />
+            <g stroke="#e8c57e" stroke-width="1.4" stroke-linecap="round">
+              <line x1="20" y1="20" x2="20" y2="6" /><line x1="20" y1="20" x2="31.3" y2="13" />
+              <line x1="20" y1="20" x2="31.3" y2="27" /><line x1="20" y1="20" x2="20" y2="34" />
+              <line x1="20" y1="20" x2="8.7" y2="27" /><line x1="20" y1="20" x2="8.7" y2="13" />
+            </g>
+            <circle cx="20" cy="20" r="3.4" fill="#e8c57e" />
+          </svg>
+          <span class="brand-text"><span class="brand-word">Astro&nbsp;Vaidhya</span><span class="brand-tag">AI Homeopathic Wellness</span></span>
+        </a>
+        <div class="nav-links">
+          <a href="/">Home</a>
+          <a href="/shop" class="active">Shop</a>
+          <a href="/about">About</a>
+          <a href="/contact">Contact</a>
+          <span id="navAuth"></span>
+        </div>
+      </div>
+    </nav>
+
+    <main class="shop-page">
+      <div class="shop-head"><h1>Shop</h1></div>
+      <div class="filters" id="filters"></div>
+      <div id="grid"><div class="loading-state">Loading products…</div></div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-row">
+        <span>&copy; 2026 Astro Vaidhya.</span>
+        <div class="footer-links">
+          <a href="/about">About</a><a href="/contact">Contact</a>
+          <a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/storefront.js"></script>
+    <script>
+      let allProducts = [];
+      let activeCategory = '';
+
+      const STOCK = {
+        in_stock: ['In stock', 'stock-in'],
+        few_left: ['Few left', 'stock-few'],
+        sold_out: ['Sold out', 'stock-out'],
+      };
+
+      async function load() {
+        const grid = document.getElementById('grid');
+        try {
+          const res = await fetch('/api/shop/products', { cache: 'no-store' });
+          if (!res.ok) throw new Error();
+          allProducts = (await res.json()).data || [];
+        } catch (e) {
+          grid.innerHTML = '<div class="empty-state">Couldn’t load products. Please refresh.</div>';
+          return;
+        }
+        renderFilters();
+        render();
+      }
+
+      function renderFilters() {
+        const cats = [...new Set(allProducts.map((p) => p.category).filter(Boolean))].sort();
+        const el = document.getElementById('filters');
+        if (!cats.length) { el.innerHTML = ''; return; }
+        el.innerHTML = `<button class="chip ${activeCategory === '' ? 'active' : ''}" data-cat="">All</button>` +
+          cats.map((c) => `<button class="chip ${activeCategory === c ? 'active' : ''}" data-cat="${Store.esc(c)}">${Store.esc(c)}</button>`).join('');
+        el.querySelectorAll('[data-cat]').forEach((b) =>
+          b.addEventListener('click', () => { activeCategory = b.dataset.cat; renderFilters(); render(); }));
+      }
+
+      function render() {
+        const grid = document.getElementById('grid');
+        const list = activeCategory ? allProducts.filter((p) => p.category === activeCategory) : allProducts;
+        if (!list.length) { grid.innerHTML = '<div class="empty-state">No products here yet. Check back soon.</div>'; return; }
+        grid.innerHTML = '<div class="product-grid">' + list.map((p) => {
+          const [label, cls] = STOCK[p.status] || STOCK.in_stock;
+          return `<a class="product-card" href="/product?id=${p.id}">
+            <div class="product-media">${p.imageUrl ? `<img src="${Store.esc(p.imageUrl)}" alt="${Store.esc(p.name)}" />` : '<span class="ph">🌿</span>'}</div>
+            <div class="product-body">
+              <span class="product-cat">${Store.esc(p.category)}</span>
+              <span class="product-name">${Store.esc(p.name)}</span>
+              <div class="product-foot">
+                <span class="product-price">${Store.inr(p.price)}</span>
+                <span class="stock-tag ${cls}">${label}</span>
+              </div>
+            </div>
+          </a>`;
+        }).join('') + '</div>';
+      }
+
+      load();
+    </script>
+  </body>
+</html>

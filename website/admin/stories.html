@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/admin/admin.css" />
   <style>
     .toolbar { display: flex; justify-content: flex-end; margin-bottom: 18px; }
-    .btn-inline { width: auto; margin: 0; padding: 10px 18px; }
+    .btn-inline { width: auto; margin: 0; padding: 10px 18px; text-decoration: none; }
 
     .story-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
     .story-card {
@@ -30,40 +30,9 @@
     .story-desc { color: var(--text-light); font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
     .story-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
     .story-actions { display: flex; gap: 8px; }
-    .btn-sm { width: auto; margin: 0; padding: 7px 14px; font-size: 13px; }
+    .btn-sm { width: auto; margin: 0; padding: 7px 14px; font-size: 13px; text-decoration: none; }
     .btn-danger { background: var(--danger); }
     .btn-danger:hover { background: #c42f2f; }
-
-    /* Modal */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,.45);
-      display: none; align-items: center; justify-content: center; padding: 20px; z-index: 50;
-    }
-    .modal-backdrop.show { display: flex; }
-    .modal {
-      background: var(--white); border-radius: var(--radius); width: 100%; max-width: 520px;
-      max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.25);
-    }
-    .modal-head { padding: 18px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 16px; }
-    .modal-body { padding: 18px; }
-    .modal-body .field { margin-bottom: 16px; }
-    .modal-body textarea {
-      width: 100%; min-height: 120px; resize: vertical; padding: 11px 13px;
-      border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; outline: none;
-    }
-    .modal-body textarea:focus { border-color: var(--green); }
-    .modal-body select { width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; }
-    .modal-body select:focus { border-color: var(--green); }
-    .preview-row { display: flex; align-items: center; gap: 14px; }
-    .preview-pic { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); background: var(--bg); flex: none; }
-    .checkbox-row { display: flex; align-items: center; gap: 8px; }
-    .checkbox-row input { width: 17px; height: 17px; accent-color: var(--green); }
-    .checkbox-row label { margin: 0; }
-    .modal-foot { padding: 16px 18px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
-    .modal-foot .btn { width: auto; margin: 0; padding: 10px 18px; }
-    .modal-err { background: #fdecec; color: var(--danger); border-radius: 8px; padding: 9px 12px; font-size: 13px; display: none; margin-bottom: 12px; }
-    .modal-err.show { display: block; }
-    .upload-hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -73,6 +42,8 @@
       <a href="/admin" class="nav-item"><span class="ico">👥</span> Users</a>
       <a href="/admin/messages" class="nav-item"><span class="ico">✉️</span> Send Message</a>
       <a href="/admin/stories" class="nav-item active"><span class="ico">⭐</span> Success Stories</a>
+      <a href="/admin/products" class="nav-item"><span class="ico">📦</span> Products</a>
+      <a href="/admin/orders" class="nav-item"><span class="ico">🧾</span> Orders</a>
       <div class="spacer"></div>
       <div class="nav-item signout" id="signout"><span class="ico">↩︎</span> Sign out</div>
     </aside>
@@ -88,56 +59,11 @@
 
       <div class="content">
         <div class="toolbar">
-          <button class="btn btn-inline" id="addBtn">＋ Add story</button>
+          <a class="btn btn-inline" href="/admin/story-edit">＋ Add story</a>
         </div>
         <div id="grid">
           <div class="loading">Loading stories…</div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Editor modal -->
-  <div class="modal-backdrop" id="modal">
-    <div class="modal">
-      <div class="modal-head" id="modalTitle">Add story</div>
-      <div class="modal-body">
-        <div class="modal-err" id="modalErr"></div>
-
-        <div class="field">
-          <label>User photo</label>
-          <div class="preview-row">
-            <img class="preview-pic" id="previewPic" alt="" />
-            <div>
-              <input type="file" id="fileInput" accept="image/*" />
-              <div class="upload-hint">JPG or PNG, up to 5MB. Optional.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="name">User name</label>
-          <input type="text" id="name" placeholder="e.g. Priya S." />
-        </div>
-
-        <div class="field">
-          <label for="description">Their story</label>
-          <textarea id="description" placeholder="What did they experience?"></textarea>
-        </div>
-
-        <div class="field">
-          <label for="rating">Rating (out of 10)</label>
-          <select id="rating"></select>
-        </div>
-
-        <div class="field checkbox-row">
-          <input type="checkbox" id="published" checked />
-          <label for="published">Published (visible on the website)</label>
-        </div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
-        <button class="btn" id="saveBtn">Save</button>
       </div>
     </div>
   </div>
@@ -178,7 +104,6 @@
       return String(name || '?').trim().charAt(0).toUpperCase() || '?';
     }
 
-    // ── Listing ──────────────────────────────────────────────────────────────
     let stories = [];
 
     async function load() {
@@ -219,117 +144,15 @@
           <div class="story-foot">
             <span></span>
             <div class="story-actions">
-              <button class="btn btn-ghost btn-sm" data-edit="${s._id}">Edit</button>
+              <a class="btn btn-ghost btn-sm" href="/admin/story-edit?id=${s._id}">Edit</a>
               <button class="btn btn-danger btn-sm" data-del="${s._id}">Delete</button>
             </div>
           </div>
         </div>`).join('') + '</div>';
 
-      grid.querySelectorAll('[data-edit]').forEach((b) =>
-        b.addEventListener('click', () => openModal(b.dataset.edit)));
       grid.querySelectorAll('[data-del]').forEach((b) =>
         b.addEventListener('click', () => remove(b.dataset.del)));
     }
-
-    // ── Modal ────────────────────────────────────────────────────────────────
-    const modal = document.getElementById('modal');
-    const ratingSel = document.getElementById('rating');
-    for (let i = 10; i >= 1; i--) {
-      const o = document.createElement('option');
-      o.value = i; o.textContent = i + ' / 10';
-      ratingSel.appendChild(o);
-    }
-
-    let editingId = null;
-    let currentPhotoUrl = '';
-
-    function setPreview(url) {
-      currentPhotoUrl = url || '';
-      const img = document.getElementById('previewPic');
-      if (currentPhotoUrl) { img.src = currentPhotoUrl; img.style.display = 'block'; }
-      else { img.removeAttribute('src'); img.style.display = 'none'; }
-    }
-
-    function openModal(id) {
-      editingId = id || null;
-      document.getElementById('modalErr').classList.remove('show');
-      document.getElementById('fileInput').value = '';
-      if (id) {
-        const s = stories.find((x) => x._id === id);
-        document.getElementById('modalTitle').textContent = 'Edit story';
-        document.getElementById('name').value = s.name || '';
-        document.getElementById('description').value = s.description || '';
-        ratingSel.value = s.rating || 10;
-        document.getElementById('published').checked = !!s.published;
-        setPreview(s.photoUrl);
-      } else {
-        document.getElementById('modalTitle').textContent = 'Add story';
-        document.getElementById('name').value = '';
-        document.getElementById('description').value = '';
-        ratingSel.value = 10;
-        document.getElementById('published').checked = true;
-        setPreview('');
-      }
-      modal.classList.add('show');
-    }
-    function closeModal() { modal.classList.remove('show'); }
-
-    document.getElementById('addBtn').addEventListener('click', () => openModal(null));
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-
-    // Live local preview when a file is picked (actual upload happens on save).
-    document.getElementById('fileInput').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const img = document.getElementById('previewPic');
-      img.src = URL.createObjectURL(file);
-      img.style.display = 'block';
-    });
-
-    async function uploadPhoto() {
-      const file = document.getElementById('fileInput').files[0];
-      if (!file) return currentPhotoUrl; // keep existing / none
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/admin/uploads', { method: 'POST', headers: authHeaders(), body: fd });
-      if (handleAuth(res)) throw new Error('Session expired');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Image upload failed');
-      return data.url;
-    }
-
-    document.getElementById('saveBtn').addEventListener('click', async () => {
-      const errEl = document.getElementById('modalErr');
-      errEl.classList.remove('show');
-      const name = document.getElementById('name').value.trim();
-      const description = document.getElementById('description').value.trim();
-      const rating = parseInt(ratingSel.value, 10);
-      const published = document.getElementById('published').checked;
-
-      if (!name) { errEl.textContent = 'User name is required.'; errEl.classList.add('show'); return; }
-      if (!description) { errEl.textContent = 'A story description is required.'; errEl.classList.add('show'); return; }
-
-      const saveBtn = document.getElementById('saveBtn');
-      saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
-      try {
-        const photoUrl = await uploadPhoto();
-        const body = JSON.stringify({ name, description, rating, photoUrl, published });
-        const url = editingId ? '/admin/stories/' + editingId : '/admin/stories';
-        const method = editingId ? 'PUT' : 'POST';
-        const res = await fetch(url, { method, headers: authHeaders({ 'Content-Type': 'application/json' }), body });
-        if (handleAuth(res)) return;
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Save failed');
-        closeModal();
-        load();
-      } catch (e) {
-        errEl.textContent = e.message;
-        errEl.classList.add('show');
-      } finally {
-        saveBtn.disabled = false; saveBtn.textContent = 'Save';
-      }
-    });
 
     async function remove(id) {
       const s = stories.find((x) => x._id === id);

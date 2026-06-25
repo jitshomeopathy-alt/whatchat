@@ -8,6 +8,8 @@ const Medicine = require('../models/Medicine');
 const User = require('../models/User');
 const AnalysisHistory = require('../models/AnalysisHistory');
 const Story = require('../models/Story');
+const Product = require('../models/Product');
+const Order = require('../models/Order');
 const { upsertMedicine, deleteMedicine } = require('../services/qdrant');
 const { uploadImage } = require('../services/imagekit');
 const { sendText } = require('../services/whatsapp');
@@ -519,6 +521,213 @@ router.delete('/stories/:id', adminAuth, async (req, res) => {
     }
     await Story.deleteOne({ _id: req.params.id });
     return res.json({ message: 'Story deleted successfully' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Products ────────────────────────────────────────────────────────────────
+
+const PRODUCT_STATUSES = Product.STATUSES;
+
+function parsePrice(value) {
+  const price = Number(value);
+  if (!Number.isFinite(price) || price < 0) return null;
+  return price;
+}
+
+function parseStock(value) {
+  const stock = parseInt(value, 10);
+  if (!Number.isFinite(stock) || stock < 0) return null;
+  return stock;
+}
+
+/**
+ * GET /admin/products
+ * List all products (newest first), including hidden ones.
+ */
+router.get('/products', adminAuth, async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const products = await Product.find().sort({ createdAt: -1 }).lean();
+    return res.json({ total: products.length, data: products });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /admin/products/:id
+ */
+router.get('/products/:id', adminAuth, async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const product = await Product.findById(req.params.id).lean();
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    return res.json(product);
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Product not found' });
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /admin/products
+ * Body: { name, category, imageUrl?, description?, price, stock, status?, active? }
+ */
+router.post('/products', adminAuth, async (req, res) => {
+  try {
+    const { name, category, imageUrl, description, price, stock, status, active } = req.body || {};
+
+    if (!name || !String(name).trim()) return res.status(400).json({ error: 'name is required' });
+    if (!category || !String(category).trim()) return res.status(400).json({ error: 'category is required' });
+
+    const parsedPrice = parsePrice(price);
+    if (parsedPrice === null) return res.status(400).json({ error: 'price must be a number ≥ 0' });
+
+    const parsedStock = parseStock(stock);
+    if (parsedStock === null) return res.status(400).json({ error: 'stock must be a whole number ≥ 0' });
+
+    if (status !== undefined && !PRODUCT_STATUSES.includes(status)) {
+      return res.status(400).json({ error: `status must be one of: ${PRODUCT_STATUSES.join(', ')}` });
+    }
+
+    const product = await Product.create({
+      name: String(name).trim(),
+      category: String(category).trim(),
+      imageUrl: imageUrl ? String(imageUrl).trim() : '',
+      description: description ? String(description).trim() : '',
+      price: parsedPrice,
+      stock: parsedStock,
+      status: status || 'in_stock',
+      active: active === undefined ? true : !!active,
+    });
+
+    return res.status(201).json(product);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * PUT /admin/products/:id
+ * Body: partial { name, category, imageUrl, description, price, stock, status, active }
+ */
+router.put('/products/:id', adminAuth, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    const { name, category, imageUrl, description, price, stock, status, active } = req.body || {};
+
+    if (name !== undefined) {
+      if (!String(name).trim()) return res.status(400).json({ error: 'name cannot be empty' });
+      product.name = String(name).trim();
+    }
+    if (category !== undefined) {
+      if (!String(category).trim()) return res.status(400).json({ error: 'category cannot be empty' });
+      product.category = String(category).trim();
+    }
+    if (imageUrl !== undefined) product.imageUrl = imageUrl ? String(imageUrl).trim() : '';
+    if (description !== undefined) product.description = description ? String(description).trim() : '';
+    if (price !== undefined) {
+      const parsedPrice = parsePrice(price);
+      if (parsedPrice === null) return res.status(400).json({ error: 'price must be a number ≥ 0' });
+      product.price = parsedPrice;
+    }
+    if (stock !== undefined) {
+      const parsedStock = parseStock(stock);
+      if (parsedStock === null) return res.status(400).json({ error: 'stock must be a whole number ≥ 0' });
+      product.stock = parsedStock;
+    }
+    if (status !== undefined) {
+      if (!PRODUCT_STATUSES.includes(status)) {
+        return res.status(400).json({ error: `status must be one of: ${PRODUCT_STATUSES.join(', ')}` });
+      }
+      product.status = status;
+    }
+    if (active !== undefined) product.active = !!active;
+    product.updatedAt = new Date();
+
+    await product.save();
+    return res.json(product);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * DELETE /admin/products/:id
+ */
+router.delete('/products/:id', adminAuth, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    await Product.deleteOne({ _id: req.params.id });
+    return res.json({ message: 'Product deleted successfully' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Orders ──────────────────────────────────────────────────────────────────
+
+/**
+ * GET /admin/orders
+ * List orders (newest first), with the customer's name/email joined. Optional
+ * ?status= filter.
+ */
+router.get('/orders', adminAuth, async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const filter = {};
+    if (req.query.status) filter.status = req.query.status;
+
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .populate('customerId', 'name email phone')
+      .lean();
+
+    return res.json({ total: orders.length, data: orders });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /admin/orders/:id
+ */
+router.get('/orders/:id', adminAuth, async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const order = await Order.findById(req.params.id)
+      .populate('customerId', 'name email phone address')
+      .lean();
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    return res.json({ order });
+  } catch (err) {
+    if (err.name === 'CastError') return res.status(404).json({ error: 'Order not found' });
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * PUT /admin/orders/:id/status
+ * Body: { status }
+ */
+router.put('/orders/:id/status', adminAuth, async (req, res) => {
+  try {
+    const { status } = req.body || {};
+    if (!Order.ORDER_STATUSES.includes(status)) {
+      return res.status(400).json({ error: `status must be one of: ${Order.ORDER_STATUSES.join(', ')}` });
+    }
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    order.status = status;
+    order.updatedAt = new Date();
+    await order.save();
+    return res.json(order);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Products · WhatChat Admin</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <style>
+    .toolbar { display: flex; justify-content: flex-end; margin-bottom: 18px; }
+    .btn-inline { width: auto; margin: 0; padding: 10px 18px; text-decoration: none; }
+    .p-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); background: var(--bg); }
+    .p-thumb.ph { display: grid; place-items: center; color: var(--muted); font-size: 18px; }
+    .btn-sm { width: auto; margin: 0; padding: 6px 12px; font-size: 13px; text-decoration: none; }
+    .btn-danger { background: var(--danger); } .btn-danger:hover { background: #c42f2f; }
+    .row-actions { display: flex; gap: 8px; }
+    .badge.warn { background: #fdf2d8; color: #9a6a00; }
+    .badge.red { background: #fdecec; color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="dot">💬</span> WhatChat</div>
+      <a href="/admin" class="nav-item"><span class="ico">👥</span> Users</a>
+      <a href="/admin/messages" class="nav-item"><span class="ico">✉️</span> Send Message</a>
+      <a href="/admin/stories" class="nav-item"><span class="ico">⭐</span> Success Stories</a>
+      <a href="/admin/products" class="nav-item active"><span class="ico">📦</span> Products</a>
+      <a href="/admin/orders" class="nav-item"><span class="ico">🧾</span> Orders</a>
+      <div class="spacer"></div>
+      <div class="nav-item signout" id="signout"><span class="ico">↩︎</span> Sign out</div>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <h1>Products</h1>
+        <div class="who"><span>Administrator</span><div class="avatar">A</div></div>
+      </header>
+
+      <div class="content">
+        <div class="toolbar">
+          <a class="btn btn-inline" href="/admin/product-edit">＋ Add product</a>
+        </div>
+        <div class="card">
+          <div id="list"><div class="loading">Loading products…</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('wc_admin_token');
+    if (!token) location.replace('/admin/login');
+    document.getElementById('signout').addEventListener('click', () => {
+      localStorage.removeItem('wc_admin_token'); location.replace('/admin/login');
+    });
+
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+    function authHeaders(extra) { return Object.assign({ Authorization: 'Bearer ' + token }, extra || {}); }
+    function handleAuth(res) {
+      if (res.status === 401 || res.status === 403) { localStorage.removeItem('wc_admin_token'); location.replace('/admin/login'); return true; }
+      return false;
+    }
+    function inr(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
+    const STATUS_LABEL = { in_stock: ['In stock', ''], few_left: ['Few left', 'warn'], sold_out: ['Sold out', 'red'] };
+
+    let products = [];
+
+    async function load() {
+      const list = document.getElementById('list');
+      list.innerHTML = '<div class="loading">Loading products…</div>';
+      let res;
+      try { res = await fetch('/admin/products', { headers: authHeaders(), cache: 'no-store' }); }
+      catch (e) { list.innerHTML = '<div class="empty">Network error. Please retry.</div>'; return; }
+      if (handleAuth(res)) return;
+      if (!res.ok) { list.innerHTML = '<div class="empty">Failed to load products.</div>'; return; }
+      products = (await res.json()).data || [];
+      render();
+    }
+
+    function render() {
+      const list = document.getElementById('list');
+      if (!products.length) {
+        list.innerHTML = '<div class="empty">No products yet. Click “Add product” to create the first one.</div>';
+        return;
+      }
+      list.innerHTML = `
+        <table>
+          <thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Visibility</th><th></th></tr></thead>
+          <tbody>${products.map((p) => {
+            const [label, cls] = STATUS_LABEL[p.status] || ['', ''];
+            return `<tr>
+              <td>${p.imageUrl ? `<img class="p-thumb" src="${esc(p.imageUrl)}" alt="" />` : '<div class="p-thumb ph">📦</div>'}</td>
+              <td><span class="name">${esc(p.name)}</span></td>
+              <td>${esc(p.category)}</td>
+              <td>${inr(p.price)}</td>
+              <td>${p.stock}</td>
+              <td><span class="badge ${cls}">${label}</span></td>
+              <td>${p.active ? '<span class="badge">Live</span>' : '<span class="badge gray">Hidden</span>'}</td>
+              <td><div class="row-actions">
+                <a class="btn btn-ghost btn-sm" href="/admin/product-edit?id=${p._id}">Edit</a>
+                <button class="btn btn-danger btn-sm" data-del="${p._id}">Delete</button>
+              </div></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`;
+      list.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => remove(b.dataset.del)));
+    }
+
+    async function remove(id) {
+      const p = products.find((x) => x._id === id);
+      if (!confirm(`Delete “${p ? p.name : 'this product'}”? This cannot be undone.`)) return;
+      const res = await fetch('/admin/products/' + id, { method: 'DELETE', headers: authHeaders() });
+      if (handleAuth(res)) return;
+      if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error || 'Delete failed'); return; }
+      load();
+    }
+
+    load();
+  </script>
+</body>
+</html>

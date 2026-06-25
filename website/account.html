@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My account — Astro Vaidhya</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b0e1a'/%3E%3Ctext x='32' y='44' font-size='38' text-anchor='middle' fill='%23c99a4b' font-family='Georgia,serif'%3EA%3C/text%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/site.css" />
+    <link rel="stylesheet" href="/shop.css" />
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="wrap nav-row">
+        <a class="brand" href="/">
+          <svg class="brand-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" fill="none" stroke="#c99a4b" stroke-width="1" opacity="0.55" />
+            <g stroke="#e8c57e" stroke-width="1.4" stroke-linecap="round">
+              <line x1="20" y1="20" x2="20" y2="6" /><line x1="20" y1="20" x2="31.3" y2="13" />
+              <line x1="20" y1="20" x2="31.3" y2="27" /><line x1="20" y1="20" x2="20" y2="34" />
+              <line x1="20" y1="20" x2="8.7" y2="27" /><line x1="20" y1="20" x2="8.7" y2="13" />
+            </g>
+            <circle cx="20" cy="20" r="3.4" fill="#e8c57e" />
+          </svg>
+          <span class="brand-text"><span class="brand-word">Astro&nbsp;Vaidhya</span><span class="brand-tag">AI Homeopathic Wellness</span></span>
+        </a>
+        <div class="nav-links">
+          <a href="/">Home</a><a href="/shop">Shop</a><a href="/about">About</a><a href="/contact">Contact</a>
+          <span id="navAuth"></span>
+        </div>
+      </div>
+    </nav>
+
+    <main class="shop-page">
+      <div class="shop-head">
+        <h1>My account</h1>
+        <button class="btn btn-outline" id="logoutBtn">Sign out</button>
+      </div>
+
+      <div class="dash-grid">
+        <nav class="dash-nav">
+          <button data-tab="profile" class="active">Profile</button>
+          <button data-tab="orders">Orders</button>
+        </nav>
+
+        <div>
+          <!-- Profile -->
+          <section class="dash-panel" id="panel-profile">
+            <h2>Profile</h2>
+            <div class="form-msg" id="profileMsg"></div>
+            <div class="row2">
+              <div class="field"><label>Full name</label><input type="text" id="name" /></div>
+              <div class="field"><label>Phone</label><input type="tel" id="phone" /></div>
+            </div>
+            <div class="field"><label>Email</label><input type="email" id="email" disabled /></div>
+            <h2 style="font-size:1.05rem;margin-top:14px">Shipping address</h2>
+            <div class="field"><label>Address line 1</label><input type="text" id="line1" /></div>
+            <div class="field"><label>Address line 2</label><input type="text" id="line2" /></div>
+            <div class="row2">
+              <div class="field"><label>City</label><input type="text" id="city" /></div>
+              <div class="field"><label>State</label><input type="text" id="state" /></div>
+            </div>
+            <div class="field" style="max-width:220px"><label>Pincode</label><input type="text" id="pincode" /></div>
+            <button class="btn btn-dark" id="saveProfile">Save changes</button>
+          </section>
+
+          <!-- Orders -->
+          <section class="dash-panel" id="panel-orders" style="display:none">
+            <h2>Your orders</h2>
+            <div id="ordersList"><div class="loading-state">Loading…</div></div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-row">
+        <span>&copy; 2026 Astro Vaidhya.</span>
+        <div class="footer-links">
+          <a href="/about">About</a><a href="/contact">Contact</a>
+          <a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/storefront.js"></script>
+    <script>
+      if (!Store.requireAuth()) { /* redirected */ }
+
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        Store.clearAuth();
+        location.href = '/';
+      });
+
+      // Tabs
+      document.querySelectorAll('.dash-nav button').forEach((b) =>
+        b.addEventListener('click', () => {
+          document.querySelectorAll('.dash-nav button').forEach((x) => x.classList.toggle('active', x === b));
+          document.getElementById('panel-profile').style.display = b.dataset.tab === 'profile' ? '' : 'none';
+          document.getElementById('panel-orders').style.display = b.dataset.tab === 'orders' ? '' : 'none';
+          if (b.dataset.tab === 'orders') loadOrders();
+        }));
+
+      // ── Profile ───────────────────────────────────────────────────────────
+      const profileMsg = document.getElementById('profileMsg');
+      async function loadProfile() {
+        try {
+          const res = await Store.api('/api/account/me');
+          const { customer } = await res.json();
+          document.getElementById('name').value = customer.name || '';
+          document.getElementById('email').value = customer.email || '';
+          document.getElementById('phone').value = customer.phone || '';
+          const a = customer.address || {};
+          document.getElementById('line1').value = a.line1 || '';
+          document.getElementById('line2').value = a.line2 || '';
+          document.getElementById('city').value = a.city || '';
+          document.getElementById('state').value = a.state || '';
+          document.getElementById('pincode').value = a.pincode || '';
+        } catch (e) { /* api() handles auth redirects */ }
+      }
+
+      document.getElementById('saveProfile').addEventListener('click', async () => {
+        profileMsg.className = 'form-msg';
+        const btn = document.getElementById('saveProfile');
+        btn.disabled = true; btn.textContent = 'Saving…';
+        try {
+          const res = await Store.api('/api/account/me', {
+            method: 'PUT',
+            body: JSON.stringify({
+              name: document.getElementById('name').value.trim(),
+              phone: document.getElementById('phone').value.trim(),
+              address: {
+                line1: document.getElementById('line1').value.trim(),
+                line2: document.getElementById('line2').value.trim(),
+                city: document.getElementById('city').value.trim(),
+                state: document.getElementById('state').value.trim(),
+                pincode: document.getElementById('pincode').value.trim(),
+              },
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Save failed');
+          Store.setAuth(Store.getToken(), data.customer);
+          profileMsg.textContent = 'Profile updated.'; profileMsg.className = 'form-msg ok';
+        } catch (e) {
+          profileMsg.textContent = e.message; profileMsg.className = 'form-msg err';
+        } finally {
+          btn.disabled = false; btn.textContent = 'Save changes';
+        }
+      });
+
+      // ── Orders ────────────────────────────────────────────────────────────
+      let ordersLoaded = false;
+      async function loadOrders() {
+        if (ordersLoaded) return;
+        ordersLoaded = true;
+        const el = document.getElementById('ordersList');
+        try {
+          const res = await Store.api('/api/account/orders');
+          const orders = (await res.json()).data || [];
+          if (!orders.length) { el.innerHTML = '<div class="empty-state">No orders yet. <a href="/shop" style="color:var(--brass)">Start shopping</a></div>'; return; }
+          el.innerHTML = orders.map((o) => {
+            const items = (o.items || []).reduce((n, it) => n + it.quantity, 0);
+            const when = new Date(o.createdAt).toLocaleDateString('en-IN', { dateStyle: 'medium' });
+            return `<a class="order-row" href="/order?id=${o._id}">
+              <div><div class="oid">Order #${String(o._id).slice(-6)}</div><div class="lmeta">${when} · ${items} item(s)</div></div>
+              <div style="text-align:right"><div style="font-weight:600">${Store.inr(o.total)}</div><span class="ostatus ${Store.esc(o.status)}">${Store.esc(o.status)}</span></div>
+            </a>`;
+          }).join('');
+        } catch (e) {
+          ordersLoaded = false;
+          el.innerHTML = '<div class="empty-state">Couldn’t load orders.</div>';
+        }
+      }
+
+      if (new URLSearchParams(location.search).get('tab') === 'orders') {
+        document.querySelector('.dash-nav button[data-tab="orders"]').click();
+      }
+      loadProfile();
+    </script>
+  </body>
+</html>

@@ -7,6 +7,8 @@ const path = require('path');
 const webhookRouter = require('./routes/webhook');
 const adminRouter = require('./routes/admin');
 const publicRouter = require('./routes/public');
+const shopRouter = require('./routes/shop');
+const accountRouter = require('./routes/account');
 const { initCollection } = require('./services/qdrant');
 
 const app = express();
@@ -30,11 +32,28 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Registered before the static + API middleware so the clean URLs resolve to the
 // pages with a 200, while the data endpoints (/admin/token, /admin/users,
 // /admin/medicines, ...) still fall through to the API router below.
-app.get('/admin', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/index.html')));
-app.get('/admin/login', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/login.html')));
-app.get('/admin/user', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/user.html')));
-app.get('/admin/messages', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/messages.html')));
-app.get('/admin/stories', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'admin/stories.html')));
+//
+// Some page URLs collide with a data endpoint of the same path (e.g. the page
+// /admin/stories and the API GET /admin/stories). `adminPage` disambiguates:
+// authenticated fetches carry a Bearer token → fall through to the API router;
+// plain browser navigation has no Authorization header → serve the HTML page.
+function adminPage(file) {
+  return (req, res, next) => {
+    if (req.headers.authorization) return next();
+    res.sendFile(path.join(WEBSITE_DIR, file));
+  };
+}
+
+app.get('/admin', adminPage('admin/index.html'));
+app.get('/admin/login', adminPage('admin/login.html'));
+app.get('/admin/user', adminPage('admin/user.html'));
+app.get('/admin/messages', adminPage('admin/messages.html'));
+app.get('/admin/stories', adminPage('admin/stories.html'));
+app.get('/admin/story-edit', adminPage('admin/story-edit.html'));
+app.get('/admin/products', adminPage('admin/products.html'));
+app.get('/admin/product-edit', adminPage('admin/product-edit.html'));
+app.get('/admin/orders', adminPage('admin/orders.html'));
+app.get('/admin/order', adminPage('admin/order.html'));
 
 // Serve static files from /public (assets, if any)
 app.use(express.static(path.join(__dirname, '../public')));
@@ -87,6 +106,8 @@ async function requireDB(req, res, next) {
 
 app.use('/webhook', requireDB, webhookRouter);
 app.use('/admin', requireDB, adminRouter);
+app.use('/api/shop', requireDB, shopRouter);
+app.use('/api/account', requireDB, accountRouter);
 app.use('/api', requireDB, publicRouter);
 
 // Health check
@@ -107,6 +128,13 @@ const pages = {
   '/privacy': 'privacy.html',
   '/terms': 'terms.html',
   '/stories': 'stories.html',
+  '/shop': 'shop.html',
+  '/product': 'product.html',
+  '/cart': 'cart.html',
+  '/login': 'login.html',
+  '/register': 'register.html',
+  '/account': 'account.html',
+  '/order': 'order.html',
 };
 
 for (const [route, file] of Object.entries(pages)) {

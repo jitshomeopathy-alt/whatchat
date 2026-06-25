@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in — Astro Vaidhya</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b0e1a'/%3E%3Ctext x='32' y='44' font-size='38' text-anchor='middle' fill='%23c99a4b' font-family='Georgia,serif'%3EA%3C/text%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/site.css" />
+    <link rel="stylesheet" href="/shop.css" />
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="wrap nav-row">
+        <a class="brand" href="/">
+          <svg class="brand-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" fill="none" stroke="#c99a4b" stroke-width="1" opacity="0.55" />
+            <g stroke="#e8c57e" stroke-width="1.4" stroke-linecap="round">
+              <line x1="20" y1="20" x2="20" y2="6" /><line x1="20" y1="20" x2="31.3" y2="13" />
+              <line x1="20" y1="20" x2="31.3" y2="27" /><line x1="20" y1="20" x2="20" y2="34" />
+              <line x1="20" y1="20" x2="8.7" y2="27" /><line x1="20" y1="20" x2="8.7" y2="13" />
+            </g>
+            <circle cx="20" cy="20" r="3.4" fill="#e8c57e" />
+          </svg>
+          <span class="brand-text"><span class="brand-word">Astro&nbsp;Vaidhya</span><span class="brand-tag">AI Homeopathic Wellness</span></span>
+        </a>
+        <div class="nav-links">
+          <a href="/">Home</a><a href="/shop">Shop</a><a href="/about">About</a><a href="/contact">Contact</a>
+          <span id="navAuth"></span>
+        </div>
+      </div>
+    </nav>
+
+    <main class="auth-wrap">
+      <form class="auth-card" id="form">
+        <h1>Welcome back</h1>
+        <p class="sub">Sign in to view your orders and check out faster.</p>
+        <div class="form-msg" id="msg"></div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-dark btn-block" id="submitBtn">Sign in</button>
+        <p class="switch">New here? <a id="regLink" href="/register">Create an account</a></p>
+      </form>
+    </main>
+
+    <script src="/storefront.js"></script>
+    <script>
+      const next = new URLSearchParams(location.search).get('next') || '/account';
+      if (Store.isLoggedIn()) location.replace(next);
+      document.getElementById('regLink').href = '/register?next=' + encodeURIComponent(next);
+
+      const msg = document.getElementById('msg');
+      document.getElementById('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        msg.className = 'form-msg';
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true; btn.textContent = 'Signing in…';
+        try {
+          const res = await fetch('/api/account/login', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: document.getElementById('email').value.trim(),
+              password: document.getElementById('password').value,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Login failed');
+          Store.setAuth(data.token, data.customer);
+          location.replace(next);
+        } catch (err) {
+          msg.textContent = err.message; msg.className = 'form-msg err';
+          btn.disabled = false; btn.textContent = 'Sign in';
+        }
+      });
+    </script>
+  </body>
+</html>

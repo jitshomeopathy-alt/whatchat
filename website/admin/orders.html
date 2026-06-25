@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orders · WhatChat Admin</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <style>
+    .badge.blue { background: #e4eefb; color: #2563c9; }
+    .badge.warn { background: #fdf2d8; color: #9a6a00; }
+    .badge.red { background: #fdecec; color: var(--danger); }
+    .badge.purple { background: #efe7fb; color: #6b3fc9; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="dot">💬</span> WhatChat</div>
+      <a href="/admin" class="nav-item"><span class="ico">👥</span> Users</a>
+      <a href="/admin/messages" class="nav-item"><span class="ico">✉️</span> Send Message</a>
+      <a href="/admin/stories" class="nav-item"><span class="ico">⭐</span> Success Stories</a>
+      <a href="/admin/products" class="nav-item"><span class="ico">📦</span> Products</a>
+      <a href="/admin/orders" class="nav-item active"><span class="ico">🧾</span> Orders</a>
+      <div class="spacer"></div>
+      <div class="nav-item signout" id="signout"><span class="ico">↩︎</span> Sign out</div>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <h1>Orders</h1>
+        <div class="who"><span>Administrator</span><div class="avatar">A</div></div>
+      </header>
+
+      <div class="content">
+        <div class="card">
+          <div id="list"><div class="loading">Loading orders…</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('wc_admin_token');
+    if (!token) location.replace('/admin/login');
+    document.getElementById('signout').addEventListener('click', () => {
+      localStorage.removeItem('wc_admin_token'); location.replace('/admin/login');
+    });
+
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+    function authHeaders(extra) { return Object.assign({ Authorization: 'Bearer ' + token }, extra || {}); }
+    function handleAuth(res) {
+      if (res.status === 401 || res.status === 403) { localStorage.removeItem('wc_admin_token'); location.replace('/admin/login'); return true; }
+      return false;
+    }
+    function inr(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
+    function fmtDate(d) { return new Date(d).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }); }
+    const STATUS_CLS = { pending: 'gray', paid: '', processing: 'blue', shipped: 'purple', delivered: '', cancelled: 'red' };
+    function statusBadge(s) { return `<span class="badge ${STATUS_CLS[s] || 'gray'}">${esc(s)}</span>`; }
+
+    async function load() {
+      const list = document.getElementById('list');
+      list.innerHTML = '<div class="loading">Loading orders…</div>';
+      let res;
+      try { res = await fetch('/admin/orders', { headers: authHeaders(), cache: 'no-store' }); }
+      catch (e) { list.innerHTML = '<div class="empty">Network error. Please retry.</div>'; return; }
+      if (handleAuth(res)) return;
+      if (!res.ok) { list.innerHTML = '<div class="empty">Failed to load orders.</div>'; return; }
+      const orders = (await res.json()).data || [];
+      if (!orders.length) { list.innerHTML = '<div class="empty">No orders yet.</div>'; return; }
+      list.innerHTML = `
+        <table>
+          <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Placed</th></tr></thead>
+          <tbody>${orders.map((o) => {
+            const c = o.customerId || {};
+            const itemCount = (o.items || []).reduce((n, it) => n + it.quantity, 0);
+            return `<tr class="clickable" data-id="${o._id}">
+              <td><span class="name">#${String(o._id).slice(-6)}</span></td>
+              <td>${esc(c.name || '—')}<div class="muted">${esc(c.email || '')}</div></td>
+              <td>${itemCount}</td>
+              <td>${inr(o.total)}</td>
+              <td>${statusBadge(o.status)}</td>
+              <td class="muted">${fmtDate(o.createdAt)}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`;
+      list.querySelectorAll('[data-id]').forEach((tr) =>
+        tr.addEventListener('click', () => { location.href = '/admin/order?id=' + tr.dataset.id; }));
+    }
+
+    load();
+  </script>
+</body>
+</html>

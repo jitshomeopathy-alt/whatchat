@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Story · WhatChat Admin</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <style>
+    .form-card { max-width: 640px; padding: 26px; }
+    .field { margin-bottom: 18px; }
+    .field textarea {
+      width: 100%; min-height: 130px; resize: vertical; padding: 11px 13px;
+      border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; outline: none;
+    }
+    .field textarea:focus { border-color: var(--green); }
+    .field select { width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; }
+    .field select:focus { border-color: var(--green); }
+    .preview-row { display: flex; align-items: center; gap: 14px; }
+    .preview-pic { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); background: var(--bg); flex: none; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; }
+    .checkbox-row input { width: 17px; height: 17px; accent-color: var(--green); }
+    .checkbox-row label { margin: 0; }
+    .upload-hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .form-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .form-actions .btn { width: auto; margin: 0; padding: 11px 22px; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="dot">💬</span> WhatChat</div>
+      <a href="/admin" class="nav-item"><span class="ico">👥</span> Users</a>
+      <a href="/admin/messages" class="nav-item"><span class="ico">✉️</span> Send Message</a>
+      <a href="/admin/stories" class="nav-item active"><span class="ico">⭐</span> Success Stories</a>
+      <a href="/admin/products" class="nav-item"><span class="ico">📦</span> Products</a>
+      <a href="/admin/orders" class="nav-item"><span class="ico">🧾</span> Orders</a>
+      <div class="spacer"></div>
+      <div class="nav-item signout" id="signout"><span class="ico">↩︎</span> Sign out</div>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <h1 id="pageTitle">Add story</h1>
+        <div class="who"><span>Administrator</span><div class="avatar">A</div></div>
+      </header>
+
+      <div class="content">
+        <a href="/admin/stories" class="back-link">← Back to stories</a>
+        <div class="card form-card">
+          <div class="error-msg" id="err"></div>
+
+          <div class="field">
+            <label>User photo</label>
+            <div class="preview-row">
+              <img class="preview-pic" id="previewPic" alt="" style="display:none" />
+              <div>
+                <input type="file" id="fileInput" accept="image/*" />
+                <div class="upload-hint">JPG or PNG, up to 5MB. Optional.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="name">User name</label>
+            <input type="text" id="name" placeholder="e.g. Priya S." />
+          </div>
+
+          <div class="field">
+            <label for="description">Their story</label>
+            <textarea id="description" placeholder="What did they experience?"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="rating">Rating (out of 10)</label>
+            <select id="rating"></select>
+          </div>
+
+          <div class="field checkbox-row">
+            <input type="checkbox" id="published" checked />
+            <label for="published">Published (visible on the website)</label>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn" id="saveBtn">Save story</button>
+            <a class="btn btn-ghost" href="/admin/stories">Cancel</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('wc_admin_token');
+    if (!token) location.replace('/admin/login');
+
+    document.getElementById('signout').addEventListener('click', () => {
+      localStorage.removeItem('wc_admin_token');
+      location.replace('/admin/login');
+    });
+
+    const editingId = new URLSearchParams(location.search).get('id');
+    let currentPhotoUrl = '';
+
+    function authHeaders(extra) { return Object.assign({ Authorization: 'Bearer ' + token }, extra || {}); }
+    function handleAuth(res) {
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('wc_admin_token');
+        location.replace('/admin/login');
+        return true;
+      }
+      return false;
+    }
+    const errEl = document.getElementById('err');
+    function showErr(msg) { errEl.textContent = msg; errEl.classList.add('show'); }
+
+    const ratingSel = document.getElementById('rating');
+    for (let i = 10; i >= 1; i--) {
+      const o = document.createElement('option');
+      o.value = i; o.textContent = i + ' / 10';
+      ratingSel.appendChild(o);
+    }
+
+    function setPreview(url) {
+      currentPhotoUrl = url || '';
+      const img = document.getElementById('previewPic');
+      if (currentPhotoUrl) { img.src = currentPhotoUrl; img.style.display = 'block'; }
+      else { img.removeAttribute('src'); img.style.display = 'none'; }
+    }
+
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const img = document.getElementById('previewPic');
+      img.src = URL.createObjectURL(file);
+      img.style.display = 'block';
+    });
+
+    async function loadExisting() {
+      if (!editingId) { ratingSel.value = 10; return; }
+      document.getElementById('pageTitle').textContent = 'Edit story';
+      document.title = 'Edit Story · WhatChat Admin';
+      const res = await fetch('/admin/stories', { headers: authHeaders(), cache: 'no-store' });
+      if (handleAuth(res)) return;
+      const data = await res.json();
+      const s = (data.data || []).find((x) => x._id === editingId);
+      if (!s) { showErr('Story not found.'); return; }
+      document.getElementById('name').value = s.name || '';
+      document.getElementById('description').value = s.description || '';
+      ratingSel.value = s.rating || 10;
+      document.getElementById('published').checked = !!s.published;
+      setPreview(s.photoUrl);
+    }
+
+    async function uploadPhoto() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) return currentPhotoUrl;
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/admin/uploads', { method: 'POST', headers: authHeaders(), body: fd });
+      if (handleAuth(res)) throw new Error('Session expired');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Image upload failed');
+      return data.url;
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      errEl.classList.remove('show');
+      const name = document.getElementById('name').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const rating = parseInt(ratingSel.value, 10);
+      const published = document.getElementById('published').checked;
+
+      if (!name) return showErr('User name is required.');
+      if (!description) return showErr('A story description is required.');
+
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+      try {
+        const photoUrl = await uploadPhoto();
+        const body = JSON.stringify({ name, description, rating, photoUrl, published });
+        const url = editingId ? '/admin/stories/' + editingId : '/admin/stories';
+        const method = editingId ? 'PUT' : 'POST';
+        const res = await fetch(url, { method, headers: authHeaders({ 'Content-Type': 'application/json' }), body });
+        if (handleAuth(res)) return;
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Save failed');
+        location.href = '/admin/stories';
+      } catch (e) {
+        showErr(e.message);
+        saveBtn.disabled = false; saveBtn.textContent = 'Save story';
+      }
+    });
+
+    loadExisting();
+  </script>
+</body>
+</html>

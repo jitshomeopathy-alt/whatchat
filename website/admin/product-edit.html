@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Product · WhatChat Admin</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <style>
+    .form-card { max-width: 680px; padding: 26px; }
+    .field { margin-bottom: 18px; }
+    .field textarea {
+      width: 100%; min-height: 110px; resize: vertical; padding: 11px 13px;
+      border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; outline: none;
+    }
+    .field textarea:focus { border-color: var(--green); }
+    .field select { width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; }
+    .field select:focus { border-color: var(--green); }
+    input[type="number"] { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 15px; outline: none; }
+    input[type="number"]:focus { border-color: var(--green); }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .preview-row { display: flex; align-items: center; gap: 14px; }
+    .preview-pic { width: 96px; height: 96px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); background: var(--bg); flex: none; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; }
+    .checkbox-row input { width: 17px; height: 17px; accent-color: var(--green); }
+    .checkbox-row label { margin: 0; }
+    .upload-hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .form-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .form-actions .btn { width: auto; margin: 0; padding: 11px 22px; }
+    @media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="dot">💬</span> WhatChat</div>
+      <a href="/admin" class="nav-item"><span class="ico">👥</span> Users</a>
+      <a href="/admin/messages" class="nav-item"><span class="ico">✉️</span> Send Message</a>
+      <a href="/admin/stories" class="nav-item"><span class="ico">⭐</span> Success Stories</a>
+      <a href="/admin/products" class="nav-item active"><span class="ico">📦</span> Products</a>
+      <a href="/admin/orders" class="nav-item"><span class="ico">🧾</span> Orders</a>
+      <div class="spacer"></div>
+      <div class="nav-item signout" id="signout"><span class="ico">↩︎</span> Sign out</div>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <h1 id="pageTitle">Add product</h1>
+        <div class="who"><span>Administrator</span><div class="avatar">A</div></div>
+      </header>
+
+      <div class="content">
+        <a href="/admin/products" class="back-link">← Back to products</a>
+        <div class="card form-card">
+          <div class="error-msg" id="err"></div>
+
+          <div class="field">
+            <label>Product image</label>
+            <div class="preview-row">
+              <img class="preview-pic" id="previewPic" alt="" style="display:none" />
+              <div>
+                <input type="file" id="fileInput" accept="image/*" />
+                <div class="upload-hint">JPG or PNG, up to 5MB. One image per product.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="name">Product name</label>
+            <input type="text" id="name" placeholder="e.g. Ashwagandha Capsules" />
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label for="category">Category</label>
+              <select id="category"></select>
+            </div>
+            <div class="field">
+              <label for="status">Stock status</label>
+              <select id="status">
+                <option value="in_stock">In stock</option>
+                <option value="few_left">Few left</option>
+                <option value="sold_out">Sold out</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label for="price">Price (₹)</label>
+              <input type="number" id="price" min="0" step="1" placeholder="e.g. 499" />
+            </div>
+            <div class="field">
+              <label for="stock">Quantity in stock</label>
+              <input type="number" id="stock" min="0" step="1" placeholder="e.g. 25" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="description">Description</label>
+            <textarea id="description" placeholder="Product details shown on the website"></textarea>
+          </div>
+
+          <div class="field checkbox-row">
+            <input type="checkbox" id="active" checked />
+            <label for="active">Visible on the website</label>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn" id="saveBtn">Save product</button>
+            <a class="btn btn-ghost" href="/admin/products">Cancel</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('wc_admin_token');
+    if (!token) location.replace('/admin/login');
+    document.getElementById('signout').addEventListener('click', () => {
+      localStorage.removeItem('wc_admin_token'); location.replace('/admin/login');
+    });
+
+    // Demo categories for now — the client will provide the real list later.
+    const DEMO_CATEGORIES = ['Supplements', 'Ayurvedic', 'Wellness', 'Skincare', 'Devotional'];
+
+    const editingId = new URLSearchParams(location.search).get('id');
+    let currentImageUrl = '';
+
+    function authHeaders(extra) { return Object.assign({ Authorization: 'Bearer ' + token }, extra || {}); }
+    function handleAuth(res) {
+      if (res.status === 401 || res.status === 403) { localStorage.removeItem('wc_admin_token'); location.replace('/admin/login'); return true; }
+      return false;
+    }
+    const errEl = document.getElementById('err');
+    function showErr(msg) { errEl.textContent = msg; errEl.classList.add('show'); }
+
+    const categorySel = document.getElementById('category');
+    function populateCategories(selected) {
+      const set = new Set(DEMO_CATEGORIES);
+      if (selected) set.add(selected);
+      categorySel.innerHTML = [...set].map((c) => `<option value="${c}">${c}</option>`).join('');
+      if (selected) categorySel.value = selected;
+    }
+    populateCategories();
+
+    function setPreview(url) {
+      currentImageUrl = url || '';
+      const img = document.getElementById('previewPic');
+      if (currentImageUrl) { img.src = currentImageUrl; img.style.display = 'block'; }
+      else { img.removeAttribute('src'); img.style.display = 'none'; }
+    }
+
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const img = document.getElementById('previewPic');
+      img.src = URL.createObjectURL(file);
+      img.style.display = 'block';
+    });
+
+    async function loadExisting() {
+      if (!editingId) return;
+      document.getElementById('pageTitle').textContent = 'Edit product';
+      document.title = 'Edit Product · WhatChat Admin';
+      const res = await fetch('/admin/products/' + editingId, { headers: authHeaders(), cache: 'no-store' });
+      if (handleAuth(res)) return;
+      if (!res.ok) { showErr('Product not found.'); return; }
+      const p = await res.json();
+      document.getElementById('name').value = p.name || '';
+      populateCategories(p.category);
+      document.getElementById('status').value = p.status || 'in_stock';
+      document.getElementById('price').value = p.price ?? '';
+      document.getElementById('stock').value = p.stock ?? '';
+      document.getElementById('description').value = p.description || '';
+      document.getElementById('active').checked = !!p.active;
+      setPreview(p.imageUrl);
+    }
+
+    async function uploadImage() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) return currentImageUrl;
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/admin/uploads', { method: 'POST', headers: authHeaders(), body: fd });
+      if (handleAuth(res)) throw new Error('Session expired');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Image upload failed');
+      return data.url;
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      errEl.classList.remove('show');
+      const name = document.getElementById('name').value.trim();
+      const category = categorySel.value;
+      const status = document.getElementById('status').value;
+      const price = document.getElementById('price').value;
+      const stock = document.getElementById('stock').value;
+      const description = document.getElementById('description').value.trim();
+      const active = document.getElementById('active').checked;
+
+      if (!name) return showErr('Product name is required.');
+      if (!category) return showErr('Category is required.');
+      if (price === '' || Number(price) < 0) return showErr('A valid price is required.');
+      if (stock === '' || parseInt(stock, 10) < 0) return showErr('A valid stock quantity is required.');
+
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+      try {
+        const imageUrl = await uploadImage();
+        const body = JSON.stringify({
+          name, category, status,
+          price: Number(price), stock: parseInt(stock, 10),
+          description, imageUrl, active,
+        });
+        const url = editingId ? '/admin/products/' + editingId : '/admin/products';
+        const method = editingId ? 'PUT' : 'POST';
+        const res = await fetch(url, { method, headers: authHeaders({ 'Content-Type': 'application/json' }), body });
+        if (handleAuth(res)) return;
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Save failed');
+        location.href = '/admin/products';
+      } catch (e) {
+        showErr(e.message);
+        saveBtn.disabled = false; saveBtn.textContent = 'Save product';
+      }
+    });
+
+    loadExisting();
+  </script>
+</body>
+</html>

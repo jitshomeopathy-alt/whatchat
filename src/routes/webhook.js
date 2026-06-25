@@ -4,6 +4,7 @@ const { dispatch } = require('../conversation/dispatcher');
 const { sendTyping } = require('../services/whatsapp');
 const razorpay = require('../services/razorpay');
 const { completePayment } = require('../conversation/flows/consult');
+const Order = require('../models/Order');
 
 // How long to show the "typing…" indicator before our reply, for a human feel.
 // Randomised within a small range so it never feels mechanically uniform.
@@ -127,12 +128,29 @@ router.post('/razorpay', async (req, res) => {
     const event = req.body?.event;
     if (event === 'payment_link.paid') {
       const entity = req.body?.payload?.payment_link?.entity || {};
-      const whatsappId = entity?.notes?.whatsappId;
-      if (whatsappId) {
+      const { whatsappId, orderId } = entity?.notes || {};
+
+      // Storefront order payment.
+      if (orderId) {
+        const paymentId =
+          req.body?.payload?.payment?.entity?.id || entity?.id || '';
+        const order = await Order.findById(orderId);
+        if (order && order.status === 'pending') {
+          order.status = 'paid';
+          order.payment.status = 'paid';
+          order.payment.paymentId = paymentId;
+          order.updatedAt = new Date();
+          await order.save();
+          console.log(`[Razorpay] Order ${orderId} marked paid (${entity.id})`);
+        } else if (!order) {
+          console.warn(`[Razorpay] payment_link.paid for unknown order ${orderId}`);
+        }
+      } else if (whatsappId) {
+        // WhatsApp consultation payment.
         console.log(`[Razorpay] Payment confirmed for ${whatsappId} (${entity.id})`);
         await completePayment(whatsappId);
       } else {
-        console.warn('[Razorpay] payment_link.paid missing notes.whatsappId');
+        console.warn('[Razorpay] payment_link.paid missing notes.orderId / notes.whatsappId');
       }
     }
   } catch (err) {

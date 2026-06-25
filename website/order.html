@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order — Astro Vaidhya</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b0e1a'/%3E%3Ctext x='32' y='44' font-size='38' text-anchor='middle' fill='%23c99a4b' font-family='Georgia,serif'%3EA%3C/text%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/site.css" />
+    <link rel="stylesheet" href="/shop.css" />
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="wrap nav-row">
+        <a class="brand" href="/">
+          <svg class="brand-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" fill="none" stroke="#c99a4b" stroke-width="1" opacity="0.55" />
+            <g stroke="#e8c57e" stroke-width="1.4" stroke-linecap="round">
+              <line x1="20" y1="20" x2="20" y2="6" /><line x1="20" y1="20" x2="31.3" y2="13" />
+              <line x1="20" y1="20" x2="31.3" y2="27" /><line x1="20" y1="20" x2="20" y2="34" />
+              <line x1="20" y1="20" x2="8.7" y2="27" /><line x1="20" y1="20" x2="8.7" y2="13" />
+            </g>
+            <circle cx="20" cy="20" r="3.4" fill="#e8c57e" />
+          </svg>
+          <span class="brand-text"><span class="brand-word">Astro&nbsp;Vaidhya</span><span class="brand-tag">AI Homeopathic Wellness</span></span>
+        </a>
+        <div class="nav-links">
+          <a href="/">Home</a><a href="/shop">Shop</a><a href="/about">About</a><a href="/contact">Contact</a>
+          <span id="navAuth"></span>
+        </div>
+      </div>
+    </nav>
+
+    <main class="shop-page" style="max-width:720px">
+      <p style="margin-bottom:20px"><a href="/account?tab=orders" style="color:var(--brass)">← Back to orders</a></p>
+      <div id="body"><div class="loading-state">Loading…</div></div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-row">
+        <span>&copy; 2026 Astro Vaidhya.</span>
+        <div class="footer-links">
+          <a href="/about">About</a><a href="/contact">Contact</a>
+          <a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/storefront.js"></script>
+    <script>
+      if (!Store.requireAuth()) { /* redirected */ }
+      const id = new URLSearchParams(location.search).get('id');
+
+      async function load() {
+        const body = document.getElementById('body');
+        if (!id) { body.innerHTML = '<div class="empty-state">Order not found.</div>'; return; }
+        let order;
+        try {
+          const res = await Store.api('/api/account/orders/' + id);
+          if (res.status === 404) { body.innerHTML = '<div class="empty-state">Order not found.</div>'; return; }
+          order = (await res.json()).order;
+        } catch (e) { return; }
+
+        const a = order.shippingAddress || {};
+        const addrLines = [a.line1, a.line2, [a.city, a.state].filter(Boolean).join(', '), a.pincode].filter(Boolean);
+        const when = new Date(order.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+
+        body.innerHTML = `
+          <div class="shop-head" style="margin-bottom:14px">
+            <h1 style="font-size:1.5rem">Order #${String(order._id).slice(-6)}</h1>
+            <span class="ostatus ${Store.esc(order.status)}">${Store.esc(order.status)}</span>
+          </div>
+          <p class="muted" style="margin-bottom:22px">Placed ${when}</p>
+
+          <div class="line-list">${(order.items || []).map((it) => `
+            <div class="line">
+              ${it.imageUrl ? `<img class="thumb" src="${Store.esc(it.imageUrl)}" alt="" />` : '<div class="thumb ph">🌿</div>'}
+              <div class="info"><div class="lname">${Store.esc(it.name)}</div><div class="lmeta">${Store.inr(it.price)} × ${it.quantity}</div></div>
+              <div style="font-weight:600">${Store.inr(it.price * it.quantity)}</div>
+            </div>`).join('')}
+          </div>
+          <div class="summary-bar"><span>Total</span><span class="total">${Store.inr(order.total)}</span></div>
+
+          ${order.status === 'pending' && order.payment && order.payment.status !== 'paid'
+            ? '<p class="muted" style="margin-top:18px">Payment pending. If you didn’t complete payment, your order will not be processed.</p>' : ''}
+
+          <div class="dash-panel" style="margin-top:26px">
+            <div class="kv"><div class="k">Ship to</div><div class="v">${Store.esc(a.name || '')}${a.phone ? '<br>' + Store.esc(a.phone) : ''}${addrLines.length ? '<br>' + addrLines.map(Store.esc).join('<br>') : '<br><span class="muted">No address on file</span>'}</div></div>
+          </div>`;
+      }
+      load();
+    </script>
+  </body>
+</html>

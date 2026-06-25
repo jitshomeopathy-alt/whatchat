@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cart — Astro Vaidhya</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b0e1a'/%3E%3Ctext x='32' y='44' font-size='38' text-anchor='middle' fill='%23c99a4b' font-family='Georgia,serif'%3EA%3C/text%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/site.css" />
+    <link rel="stylesheet" href="/shop.css" />
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="wrap nav-row">
+        <a class="brand" href="/">
+          <svg class="brand-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" fill="none" stroke="#c99a4b" stroke-width="1" opacity="0.55" />
+            <g stroke="#e8c57e" stroke-width="1.4" stroke-linecap="round">
+              <line x1="20" y1="20" x2="20" y2="6" /><line x1="20" y1="20" x2="31.3" y2="13" />
+              <line x1="20" y1="20" x2="31.3" y2="27" /><line x1="20" y1="20" x2="20" y2="34" />
+              <line x1="20" y1="20" x2="8.7" y2="27" /><line x1="20" y1="20" x2="8.7" y2="13" />
+            </g>
+            <circle cx="20" cy="20" r="3.4" fill="#e8c57e" />
+          </svg>
+          <span class="brand-text"><span class="brand-word">Astro&nbsp;Vaidhya</span><span class="brand-tag">AI Homeopathic Wellness</span></span>
+        </a>
+        <div class="nav-links">
+          <a href="/">Home</a><a href="/shop">Shop</a><a href="/about">About</a><a href="/contact">Contact</a>
+          <span id="navAuth"></span>
+        </div>
+      </div>
+    </nav>
+
+    <main class="shop-page" style="max-width:760px">
+      <div class="shop-head"><h1>Your cart</h1></div>
+      <div class="form-msg" id="msg"></div>
+      <div id="body"></div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-row">
+        <span>&copy; 2026 Astro Vaidhya.</span>
+        <div class="footer-links">
+          <a href="/about">About</a><a href="/contact">Contact</a>
+          <a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/storefront.js"></script>
+    <script>
+      const msg = document.getElementById('msg');
+      function showMsg(text, kind) { msg.textContent = text; msg.className = 'form-msg ' + kind; }
+
+      function render() {
+        const body = document.getElementById('body');
+        const cart = Store.getCart();
+        if (!cart.length) {
+          body.innerHTML = '<div class="empty-state">Your cart is empty.<br><br><a class="btn btn-dark" href="/shop">Browse products</a></div>';
+          return;
+        }
+        body.innerHTML = `
+          <div class="line-list">${cart.map((i) => `
+            <div class="line">
+              ${i.imageUrl ? `<img class="thumb" src="${Store.esc(i.imageUrl)}" alt="" />` : '<div class="thumb ph">🌿</div>'}
+              <div class="info">
+                <div class="lname">${Store.esc(i.name)}</div>
+                <div class="lmeta">${Store.inr(i.price)} each</div>
+              </div>
+              <input type="number" min="1" value="${i.quantity}" data-qty="${i.productId}" style="width:70px;padding:8px 10px;border:1px solid var(--hairline);border-radius:6px" />
+              <div style="min-width:80px;text-align:right;font-weight:600">${Store.inr(i.price * i.quantity)}</div>
+              <button class="lremove" data-remove="${i.productId}">Remove</button>
+            </div>`).join('')}
+          </div>
+          <div class="summary-bar">
+            <span class="total">${Store.inr(Store.cartTotal())}</span>
+            <button class="btn btn-dark" id="checkoutBtn">Checkout</button>
+          </div>
+          ${Store.isLoggedIn() ? '' : '<p class="muted" style="margin-top:12px;text-align:right">You’ll be asked to sign in to complete your order.</p>'}`;
+
+        body.querySelectorAll('[data-qty]').forEach((el) =>
+          el.addEventListener('change', () => { Store.setQty(el.dataset.qty, parseInt(el.value, 10) || 1); render(); }));
+        body.querySelectorAll('[data-remove]').forEach((el) =>
+          el.addEventListener('click', () => { Store.removeFromCart(el.dataset.remove); render(); }));
+        document.getElementById('checkoutBtn').addEventListener('click', checkout);
+      }
+
+      async function checkout() {
+        if (!Store.requireAuth()) return;
+        const cart = Store.getCart();
+        if (!cart.length) return;
+        const btn = document.getElementById('checkoutBtn');
+        btn.disabled = true; btn.textContent = 'Processing…';
+        showMsg('', '');
+        try {
+          const res = await Store.api('/api/shop/checkout', {
+            method: 'POST',
+            body: JSON.stringify({ items: cart.map((i) => ({ productId: i.productId, quantity: i.quantity })) }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Checkout failed');
+          Store.clearCart();
+          if (data.paymentUrl) {
+            location.href = data.paymentUrl; // Razorpay payment link
+          } else {
+            location.href = '/order?id=' + data.orderId; // dev / no payment configured
+          }
+        } catch (e) {
+          showMsg(e.message, 'err');
+          btn.disabled = false; btn.textContent = 'Checkout';
+        }
+      }
+
+      render();
+    </script>
+  </body>
+</html>
