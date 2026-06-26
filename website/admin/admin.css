@@ -229,9 +229,41 @@ td .muted { color: var(--muted); font-size: 13px; }
 .med .mreason { font-size: 13px; color: var(--text-light); margin-top: 2px; }
 .med-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
 
+/* Hamburger button (shown only on mobile) + dim overlay behind the drawer. */
+.nav-toggle-admin {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 38px; height: 38px;
+  padding: 8px; margin-right: 12px;
+  background: none; border: 0; cursor: pointer;
+}
+.nav-toggle-admin span {
+  display: block; height: 2px; width: 100%;
+  background: var(--text, #1c2b27); border-radius: 2px;
+}
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 55;
+}
+
 @media (max-width: 720px) {
-  :root { --sidebar-w: 0px; }
-  .sidebar { display: none; }
   .main { margin-left: 0; }
   .profile { grid-template-columns: 1fr; }
+
+  .nav-toggle-admin { display: flex; }
+  .header h1 { margin-right: auto; }
+
+  /* Sidebar becomes an off-canvas drawer, revealed via the hamburger. */
+  .sidebar {
+    width: 248px;
+    z-index: 60;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+  body.nav-open .sidebar { transform: translateX(0); }
+  body.nav-open .sidebar-overlay { display: block; }
 }

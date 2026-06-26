@@ -165,14 +165,8 @@ svg {
   }
 }
 
-@media (max-width: 600px) {
-  .nav-row {
-    height: auto;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 16px 0;
-  }
-}
+/* Mobile nav (hamburger + dropdown) is handled by /site-nav.js, which injects
+   its own responsive styles so it works on every page, including index.html. */
 
 /* ── PAGE HERO ────────────────────────────────────────────────────────────── */
 .page-hero {
