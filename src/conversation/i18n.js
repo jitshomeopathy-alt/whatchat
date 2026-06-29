@@ -31,8 +31,8 @@ const STRINGS = {
     hi: 'अरे! 😅 कृपया सही उम्र लिखिए — 1 से 150 के बीच की संख्या। 🔢',
   },
   askGender: {
-    en: ({ age }) => `Got it — *${age} years young*! 🎉\n\nAnd how do you identify? This helps me care for you better. 💙`,
-    hi: ({ age }) => `समझ गया — *${age} साल*! 🎉\n\nऔर आप अपनी पहचान किस रूप में करते हैं? इससे मैं आपकी बेहतर देखभाल कर पाऊँगा। 💙`,
+    en: 'Thank you. 💙 And how do you identify? This helps me care for you better.',
+    hi: 'धन्यवाद। 💙 और आप अपनी पहचान किस रूप में करते हैं? इससे मैं आपकी बेहतर देखभाल कर पाऊँगा।',
   },
   genderRetry: {
     en: 'No worries! 🙂 Please pick the option that fits you best. 👇',
@@ -287,7 +287,248 @@ const STRINGS = {
   labelAddiction: { en: 'De-addiction / Substance Recovery', hi: 'व्यसन मुक्ति / नशा रिकवरी' },
   labelMental: { en: 'Mental / Emotional Wellness', hi: 'मानसिक / भावनात्मक कल्याण' },
   labelSex: { en: 'Sexual Health & Wellness', hi: 'यौन स्वास्थ्य और कल्याण' },
+
+  // ── "Are you ready?" gate (after the intro messages) ─────────────────────────
+  readyPrompt: {
+    en: 'Are you ready to begin? 🌱',
+    hi: 'क्या आप शुरू करने के लिए तैयार हैं? 🌱',
+  },
+  readyYes: { en: 'Yes, I’m ready ✅', hi: 'हाँ, मैं तैयार हूँ ✅' },
+  readyNo: { en: 'Not yet', hi: 'अभी नहीं' },
+  notReady: {
+    en: 'No rush at all. 🌸 Whenever you feel ready, just type *hi* and we’ll begin together. I’m here for you. 💚',
+    hi: 'बिल्कुल जल्दी नहीं है। 🌸 जब भी आप तैयार महसूस करें, बस *hi* लिखिए और हम साथ शुरू करेंगे। मैं आपके लिए यहाँ हूँ। 💚',
+  },
+
+  // ── Concern intake ───────────────────────────────────────────────────────────
+  takeYourTime: {
+    en: 'Take your time. 💚 You don’t need to find the right words — just tell me what feels the most important today.',
+    hi: 'आराम से बताइए। 💚 आपको सही शब्द ढूँढने की ज़रूरत नहीं — बस यह बताइए कि आज आपके लिए सबसे ज़रूरी क्या लगता है।',
+  },
+  concernPrompt: {
+    en: 'Hello, and thank you for connecting. 💚 Feel free to share whatever is going on, and we can figure it out together.',
+    hi: 'नमस्ते, और जुड़ने के लिए धन्यवाद। 💚 जो कुछ भी चल रहा है, बेझिझक बताइए, और हम इसे साथ मिलकर सुलझा लेंगे।',
+  },
+  concernButton: { en: 'Choose 👇', hi: 'चुनें 👇' },
+  concernHeader: { en: 'What’s going on?', hi: 'क्या हो रहा है?' },
+  concernSection: { en: 'I’m feeling…', hi: 'मैं महसूस कर रहा/रही हूँ…' },
+  concernInWords: {
+    en: 'Of course — tell me in your own words. ✍️ Please describe what you’re going through, in as much detail as you’d like.',
+    hi: 'ज़रूर — अपने शब्दों में बताइए। ✍️ कृपया बताइए कि आप किस दौर से गुज़र रहे हैं, जितना चाहें उतने विस्तार से।',
+  },
+  concernInWordsRetry: {
+    en: 'Please type a few words about what you’re going through so I can understand. ✍️🙂',
+    hi: 'कृपया कुछ शब्दों में बताइए कि आप किस दौर से गुज़र रहे हैं, ताकि मैं समझ सकूँ। ✍️🙂',
+  },
+  concernRetry: {
+    en: 'Please tap one of the options, or choose *In my words* ✍️ to type it yourself. 🙂',
+    hi: 'कृपया किसी एक विकल्प को चुनिए, या ख़ुद लिखने के लिए *अपने शब्दों में* ✍️ चुनिए। 🙂',
+  },
+  concernThanks: {
+    en: 'Thank you for sharing that with me. 🙏 It takes courage to put it into words. 💚',
+    hi: 'मुझ पर भरोसा करके यह बताने के लिए धन्यवाद। 🙏 इसे शब्दों में कहना हिम्मत का काम है। 💚',
+  },
+  realizePrompt: {
+    en: 'When did you first realise this had become a real problem, rather than just a habit? ✍️',
+    hi: 'आपको पहली बार कब महसूस हुआ कि यह सिर्फ़ एक आदत नहीं, बल्कि एक असली समस्या बन गई है? ✍️',
+  },
+  realizeRetry: {
+    en: 'Whenever you’re ready, share a little about when you first realised it. ✍️🙂',
+    hi: 'जब भी आप तैयार हों, थोड़ा बताइए कि आपको यह पहली बार कब महसूस हुआ। ✍️🙂',
+  },
+  affectPrompt: {
+    en: 'What has this affected the most?',
+    hi: 'इसने सबसे ज़्यादा किस चीज़ को प्रभावित किया है?',
+  },
+  affectButton: { en: 'Choose 👇', hi: 'चुनें 👇' },
+  affectHeader: { en: 'Most affected', hi: 'सबसे ज़्यादा प्रभावित' },
+  affectSection: { en: 'It has affected…', hi: 'इसने प्रभावित किया…' },
+  affectRetry: {
+    en: 'Please tap one of the options above so I can understand you better. 🙂👆',
+    hi: 'कृपया ऊपर दिए विकल्पों में से एक चुनिए ताकि मैं आपको बेहतर समझ सकूँ। 🙂👆',
+  },
+  severityPrompt: {
+    en: 'And how much control do you feel you have over it right now?',
+    hi: 'और अभी आपको इस पर कितना नियंत्रण महसूस होता है?',
+  },
+  severityButton: { en: 'Choose 👇', hi: 'चुनें 👇' },
+  severityHeader: { en: 'Sense of control', hi: 'नियंत्रण की भावना' },
+  severitySection: { en: 'Right now I have…', hi: 'अभी मेरे पास है…' },
+  severityRetry: {
+    en: 'Please tap one of the options above. 🙂👆',
+    hi: 'कृपया ऊपर दिए विकल्पों में से एक चुनिए। 🙂👆',
+  },
+
+  // ── Summary + confirm ─────────────────────────────────────────────────────────
+  summaryIntro: {
+    en: 'Let me make sure I’ve understood you correctly. 💚',
+    hi: 'मुझे यह पक्का कर लेने दीजिए कि मैंने आपको सही समझा है। 💚',
+  },
+  summaryBody: {
+    en: ({ name, gender, concern, realize, affect, severity }) =>
+      `📝 *Here’s what I heard:*\n\n` +
+      `• *Name:* ${name}\n` +
+      `• *Gender:* ${gender}\n` +
+      `• *What’s going on:* ${concern}\n` +
+      `• *When it became real:* ${realize}\n` +
+      `• *Most affected:* ${affect}\n` +
+      `• *Sense of control:* ${severity}`,
+    hi: ({ name, gender, concern, realize, affect, severity }) =>
+      `📝 *मैंने यह समझा:*\n\n` +
+      `• *नाम:* ${name}\n` +
+      `• *लिंग:* ${gender}\n` +
+      `• *क्या चल रहा है:* ${concern}\n` +
+      `• *कब असली समस्या बनी:* ${realize}\n` +
+      `• *सबसे ज़्यादा प्रभावित:* ${affect}\n` +
+      `• *नियंत्रण की भावना:* ${severity}`,
+  },
+  summaryConfirmPrompt: {
+    en: 'Did I understand you correctly?',
+    hi: 'क्या मैंने आपको सही समझा?',
+  },
+  summaryYes: { en: 'Yes, that’s right ✅', hi: 'हाँ, सही है ✅' },
+  summaryNo: { en: 'Not quite ✏️', hi: 'बिल्कुल नहीं ✏️' },
+  summaryRedo: {
+    en: 'No problem at all — let’s go through it again so I get it right. 💚',
+    hi: 'कोई बात नहीं — चलिए इसे दोबारा देखते हैं ताकि मैं सही समझ सकूँ। 💚',
+  },
+
+  // ── Path selection (Clinical vs Astro + Clinical) ─────────────────────────────
+  pathPrompt: {
+    en: 'Thank you for trusting me. 💚 How would you like to continue?',
+    hi: 'मुझ पर भरोसा करने के लिए धन्यवाद। 💚 आप कैसे आगे बढ़ना चाहेंगे?',
+  },
+  pathHeader: { en: 'Choose your path', hi: 'अपना रास्ता चुनें' },
+  pathClinical: { en: 'Clinical 🩺', hi: 'क्लिनिकल 🩺' },
+  pathAstro: { en: 'Astro + Clinical 🔮', hi: 'ज्योतिष + क्लिनिकल 🔮' },
+  pathRetry: {
+    en: 'Please tap *Clinical* 🩺 or *Astro + Clinical* 🔮 to continue. 🙂',
+    hi: 'कृपया आगे बढ़ने के लिए *क्लिनिकल* 🩺 या *ज्योतिष + क्लिनिकल* 🔮 चुनिए। 🙂',
+  },
+  doctorJoined: {
+    en: '👨‍⚕️ *Dr. Jitendra Pal has joined the chat.*\n\nYou’re in caring hands now. 💚',
+    hi: '👨‍⚕️ *डॉ. जितेन्द्र पाल चैट में शामिल हो गए हैं।*\n\nअब आप अच्छे हाथों में हैं। 💚',
+  },
+  astroExpertJoined: {
+    en: '🔮 *Astro expert Jitendra Pal has joined the chat.*\n\nYou’re in caring hands now. 💚',
+    hi: '🔮 *ज्योतिष विशेषज्ञ जितेन्द्र पाल चैट में शामिल हो गए हैं।*\n\nअब आप अच्छे हाथों में हैं। 💚',
+  },
+
+  // ── Astro details (asked only on the Astro + Clinical path) ───────────────────
+  askPalm: {
+    en: 'To prepare your astro reading, please send a clear *photo of both your palms* 🖐️ (both hands open, fingers spread, good lighting).\n\n_(If you’d rather not, just type "skip".)_',
+    hi: 'आपकी ज्योतिष रीडिंग तैयार करने के लिए, कृपया अपनी *दोनों हथेलियों की एक साफ़ फ़ोटो* भेजिए 🖐️ (दोनों हाथ खुले, उंगलियाँ फैलाकर, अच्छी रोशनी में)।\n\n_(अगर आप नहीं चाहते, तो बस "skip" लिखिए।)_',
+  },
+  palmSendPrompt: {
+    en: 'Please send a *photo* 🖐️, or type *"skip"* to continue without one. 🙂',
+    hi: 'कृपया एक *फ़ोटो* भेजिए 🖐️, या बिना फ़ोटो के आगे बढ़ने के लिए *"skip"* लिखिए। 🙂',
+  },
+  askKundli: {
+    en: 'If you have your *Kundli (birth chart)*, please share it as a photo or PDF 📜.\n\n_(If you don’t have it handy, just type "skip".)_',
+    hi: 'यदि आपके पास अपनी *कुंडली (जन्म कुंडली)* है, तो कृपया उसे फ़ोटो या PDF के रूप में भेजिए 📜।\n\n_(अगर अभी उपलब्ध नहीं है, तो बस "skip" लिखिए।)_',
+  },
+  kundliSendPrompt: {
+    en: 'Please send a *photo or PDF* 📜, or type *"skip"* to continue. 🙂',
+    hi: 'कृपया एक *फ़ोटो या PDF* 📜 भेजिए, या आगे बढ़ने के लिए *"skip"* लिखिए। 🙂',
+  },
+  uploading: {
+    en: '⏳ Uploading, hold on just a moment... 📤',
+    hi: '⏳ अपलोड हो रहा है, बस एक पल रुकिए... 📤',
+  },
+  uploadError: {
+    en: ({ msg }) => `Oh no, I couldn’t upload that (${msg}). 😟 Please try again, or type "skip" to continue. 🙂`,
+    hi: ({ msg }) => `अरे, मैं इसे अपलोड नहीं कर पाया (${msg})। 😟 कृपया दोबारा कोशिश कीजिए, या आगे बढ़ने के लिए "skip" लिखिए। 🙂`,
+  },
+
+  // ── Closing (after payment) ───────────────────────────────────────────────────
+  consultClosing: {
+    en: '🎉 *You’re all set!* 💚 Jitendra Pal will continue with you here shortly. Take care of yourself. 🌸',
+    hi: '🎉 *सब तैयार है!* 💚 जितेन्द्र पाल जल्द ही यहीं आपके साथ आगे बढ़ेंगे। अपना ख़याल रखिए। 🌸',
+  },
 };
+
+// ── Tappable / sequential option sets (kept here so flows stay declarative) ─────
+
+/**
+ * The 7 intro messages sent one-by-one right after language selection.
+ * @param {string} lang
+ * @returns {string[]}
+ */
+function introLines(lang = 'en') {
+  const en = [
+    'Hello, I’m Astro Vaidhya. 🙏',
+    'Before we begin, I’d like you to know how I work.',
+    'I don’t begin by looking for a disease.',
+    'I begin by understanding the person.',
+    'Some conversations take a few minutes.',
+    'There’s no right or wrong here.',
+    'For the best treatment, I’ll ask you a few more questions.',
+  ];
+  const hi = [
+    'नमस्ते, मैं Astro Vaidhya हूँ। 🙏',
+    'शुरू करने से पहले, मैं चाहता हूँ कि आप जानें कि मैं कैसे काम करता हूँ।',
+    'मैं बीमारी ढूँढने से शुरुआत नहीं करता।',
+    'मैं इंसान को समझने से शुरुआत करता हूँ।',
+    'कुछ बातचीत में कुछ मिनट लग जाते हैं।',
+    'यहाँ कोई सही या ग़लत नहीं है।',
+    'बेहतर इलाज के लिए, मैं आपसे कुछ और सवाल पूछूँगा।',
+  ];
+  return lang === 'hi' ? hi : en;
+}
+
+/**
+ * The 9 concern options. `id` is what comes back on a tap; `value` is the full
+ * phrase stored as the user's answer; `title` is the (<=24 char) list row label;
+ * `description` carries the full first-person sentence under the title.
+ * @param {string} lang
+ * @returns {Array<{id:string,title:string,description:string,value:string}>}
+ */
+function concernOptions(lang = 'en') {
+  const rows = [
+    { id: 'porn',     en: 'I can’t stop watching porn',  hi: 'मैं पोर्न देखना बंद नहीं कर पाता',  enT: 'Can’t stop porn',        hiT: 'पोर्न नहीं छूटता' },
+    { id: 'anxious',  en: 'I’m always anxious',          hi: 'मैं हमेशा चिंतित रहता हूँ',          enT: 'Always anxious',         hiT: 'हमेशा चिंतित' },
+    { id: 'exhausted',en: 'I’m exhausted all the time',  hi: 'मैं हर समय थका रहता हूँ',            enT: 'Always exhausted',       hiT: 'हमेशा थका हुआ' },
+    { id: 'sleep',    en: 'I can’t sleep',               hi: 'मुझे नींद नहीं आती',                  enT: 'Can’t sleep',            hiT: 'नींद नहीं आती' },
+    { id: 'overthink',en: 'I keep overthinking',         hi: 'मैं बहुत ज़्यादा सोचता रहता हूँ',     enT: 'Keep overthinking',      hiT: 'ज़्यादा सोचना' },
+    { id: 'relation', en: 'My relationship is breaking', hi: 'मेरा रिश्ता टूट रहा है',              enT: 'Relationship breaking',  hiT: 'रिश्ता टूट रहा' },
+    { id: 'smoking',  en: 'I want to quit smoking',      hi: 'मैं धूम्रपान छोड़ना चाहता हूँ',       enT: 'Want to quit smoking',   hiT: 'धूम्रपान छोड़ना' },
+    { id: 'unknown',  en: 'I don’t know what’s wrong',   hi: 'मुझे नहीं पता क्या ग़लत है',          enT: 'Don’t know what’s wrong',hiT: 'पता नहीं क्या' },
+    { id: 'other',    en: 'In my words',                 hi: 'अपने शब्दों में',                     enT: 'In my words ✍️',         hiT: 'अपने शब्दों में ✍️' },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({
+    id: `concern:${r.id}`,
+    title: l === 'hi' ? r.hiT : r.enT,
+    description: r[l],
+    value: r[l],
+  }));
+}
+
+/** The 6 "what has this affected the most" options. */
+function affectOptions(lang = 'en') {
+  const rows = [
+    { id: 'mental',     en: 'My mental health',  hi: 'मेरा मानसिक स्वास्थ्य' },
+    { id: 'relation',   en: 'My relationship',   hi: 'मेरा रिश्ता' },
+    { id: 'work',       en: 'My work or studies',hi: 'मेरा काम या पढ़ाई' },
+    { id: 'confidence', en: 'My confidence',     hi: 'मेरा आत्मविश्वास' },
+    { id: 'sleep',      en: 'My sleep',          hi: 'मेरी नींद' },
+    { id: 'everything', en: 'Everything',        hi: 'सब कुछ' },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({ id: `affect:${r.id}`, title: r[l], value: r[l] }));
+}
+
+/** The 4 sense-of-control (severity) options. */
+function severityOptions(lang = 'en') {
+  const rows = [
+    { id: 'almost', en: 'Almost complete control', hi: 'लगभग पूरा नियंत्रण' },
+    { id: 'some',   en: 'Some control',            hi: 'थोड़ा नियंत्रण' },
+    { id: 'little', en: 'Very little control',      hi: 'बहुत कम नियंत्रण' },
+    { id: 'none',   en: 'No control at all',        hi: 'बिल्कुल नियंत्रण नहीं' },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({ id: `sev:${r.id}`, title: r[l], value: r[l] }));
+}
 
 /**
  * Short, warm "human touch" lines dropped in between questions to keep the
@@ -345,4 +586,12 @@ function categoryLabel(category, lang = 'en') {
   return map[category] ? t(map[category], lang) : category;
 }
 
-module.exports = { t, categoryLabel, encouragement };
+module.exports = {
+  t,
+  categoryLabel,
+  encouragement,
+  introLines,
+  concernOptions,
+  affectOptions,
+  severityOptions,
+};

@@ -3,7 +3,6 @@ const { loadSession, saveSession, resetSession } = require('./stateManager');
 const registrationFlow = require('./flows/registration');
 const consultFlow = require('./flows/consult');
 const User = require('../models/User');
-const { t } = require('./i18n');
 
 /**
  * Main dispatcher. Receives a parsed message and routes it to the correct flow.
@@ -45,76 +44,49 @@ async function dispatch(whatsappId, message) {
     return;
   }
 
-  // ── Registration states ────────────────────────────────────────────────────
+  // ── Intake states (language → intro → concern → summary) ───────────────────
 
   const registrationStates = [
     'IDLE',
     'REGISTERING_LANGUAGE',
+    'READY_CONFIRM',
     'PURPOSE_SELECT',
     'REGISTERING_NAME',
-    'REGISTERING_AGE',
     'REGISTERING_GENDER',
-    'REGISTERING_EMAIL',
-    'REGISTERING_IMAGE',
-    'REGISTERING_DOB',
-    'REGISTERING_BIRTH_TIME',
-    'REGISTERING_ADDRESS',
+    'CONCERN_SELECT',
+    'CONCERN_OTHER',
+    'CONCERN_REALIZE',
+    'CONCERN_AFFECT',
+    'CONCERN_SEVERITY',
+    'SUMMARY_CONFIRM',
   ];
 
-  const consultStates = ['ASTRO_SATISFACTION', 'ASTRO_FEEDBACK', 'CATEGORY_SELECT', 'CONSULT_OTHER', 'CONSULT_Q', 'PAYMENT_PENDING', 'CONSULT_ACTION'];
+  // ── Post-summary states (path selection → astro details → payment) ─────────
+
+  const consultStates = [
+    'PATH_SELECT',
+    'ASTRO_PALM',
+    'ASTRO_KUNDLI',
+    'ASTRO_DOB',
+    'ASTRO_BIRTH_TIME',
+    'PAYMENT_PENDING',
+  ];
 
   if (registrationStates.includes(state)) {
-    if (state === 'IDLE') {
-      // Returning contact: if this number already exists in our DB, skip
-      // registration. Greet them and continue the normal journey — their
-      // answers are refreshed (not duplicated) as they go.
-      const existingUser = await User.findOne({ whatsappId });
-      if (existingUser) {
-        const lang = existingUser.language || 'en';
-        await saveSession(whatsappId, { state: 'REGISTERED', language: lang });
-        await sendText(whatsappId, t('welcomeBack', lang, { name: existingUser.name }));
-        await consultFlow.startAstrology(whatsappId, existingUser);
-        return;
-      }
-
-      // Brand-new contact — start registration regardless of what they said.
-      await registrationFlow.handle(whatsappId, message, session);
-      return;
-    }
-
-    // Mid-registration: forward to registration flow
+    // Every contact — new or returning — starts the journey from the top
+    // (language → intro). Mid-intake states forward to the same handler.
     await registrationFlow.handle(whatsappId, message, session);
     return;
   }
-
-  // ── Post-registration: (re)start the astrology → consult flow ─────────────
-
-  if (state === 'REGISTERED') {
-    const user = await User.findOne({ whatsappId });
-    if (!user) {
-      await registrationFlow.handle(whatsappId, message, { ...session.toObject(), state: 'IDLE' });
-      return;
-    }
-    // Returning, already-registered user — greet them, then refresh their
-    // details through the normal journey (answers are updated, not duplicated).
-    await sendText(whatsappId, t('welcomeBack', user.language || 'en', { name: user.name }));
-    await consultFlow.startAstrology(whatsappId, user);
-    return;
-  }
-
-  // ── Ongoing astrology → consult flow ──────────────────────────────────────
 
   if (consultStates.includes(state)) {
     await consultFlow.handle(whatsappId, message, session);
     return;
   }
 
-  // ── Fallback ──────────────────────────────────────────────────────────────
+  // ── Any other / legacy state → restart the journey cleanly ─────────────────
 
-  await sendText(
-    whatsappId,
-    `👋 Hello! I'm Astro Vaidhya, your AI wellness companion.\n\nType *"help"* to see what I can do for you.`
-  );
+  await registrationFlow.handle(whatsappId, message, { ...(session.toObject?.() ?? session), state: 'IDLE' });
 }
 
 async function sendHelpMessage(whatsappId, state, session) {
@@ -128,13 +100,10 @@ async function sendHelpMessage(whatsappId, state, session) {
     msg += `• Type *"hi"* or *"register"* to create your profile\n`;
   } else {
     msg += `Hello, *${user.name}*! Here's how it works:\n\n`;
-    msg += `• Type *"hi"* — I'll give you an astrological reading, then a few questions, then your personalised result\n`;
+    msg += `• Type *"hi"* — I'll walk you through a few gentle questions, then connect you with our care team\n`;
     msg += `• *"help"* — Show this menu\n`;
     msg += `• *"cancel"* — Cancel the current operation\n`;
     msg += `\nCurrent status: *${formatState(state)}*`;
-    if (session.category) {
-      msg += ` | Category: *${session.category}*`;
-    }
   }
 
   await sendText(whatsappId, msg);
@@ -142,25 +111,24 @@ async function sendHelpMessage(whatsappId, state, session) {
 
 function formatState(state) {
   const labels = {
-    IDLE: 'Not registered',
-    REGISTERING_LANGUAGE: 'Registering (language)',
+    IDLE: 'Not started',
+    REGISTERING_LANGUAGE: 'Choosing language',
+    READY_CONFIRM: 'Getting ready',
     PURPOSE_SELECT: 'Choosing purpose',
-    REGISTERING_NAME: 'Registering (name)',
-    REGISTERING_AGE: 'Registering (age)',
-    REGISTERING_GENDER: 'Registering (gender)',
-    REGISTERING_EMAIL: 'Registering (email)',
-    REGISTERING_IMAGE: 'Registering (palm photo)',
-    REGISTERING_DOB: 'Registering (date of birth)',
-    REGISTERING_BIRTH_TIME: 'Registering (birth time)',
-    REGISTERING_ADDRESS: 'Registering (city)',
-    REGISTERED: 'Registered',
-    ASTRO_SATISFACTION: 'Astrology (rating)',
-    ASTRO_FEEDBACK: 'Astrology (feedback note)',
-    CATEGORY_SELECT: 'Selecting category',
-    CONSULT_OTHER: 'Describing concern',
-    CONSULT_Q: 'Questionnaire',
+    REGISTERING_NAME: 'Sharing name',
+    REGISTERING_GENDER: 'Sharing gender',
+    CONCERN_SELECT: 'Sharing concern',
+    CONCERN_OTHER: 'Describing concern',
+    CONCERN_REALIZE: 'Reflecting',
+    CONCERN_AFFECT: 'What it affects',
+    CONCERN_SEVERITY: 'Sense of control',
+    SUMMARY_CONFIRM: 'Confirming summary',
+    PATH_SELECT: 'Choosing path',
+    ASTRO_PALM: 'Sharing palm photo',
+    ASTRO_KUNDLI: 'Sharing kundli',
+    ASTRO_DOB: 'Sharing date of birth',
+    ASTRO_BIRTH_TIME: 'Sharing birth time',
     PAYMENT_PENDING: 'Awaiting payment',
-    CONSULT_ACTION: 'Choosing next step',
   };
   return labels[state] || state;
 }

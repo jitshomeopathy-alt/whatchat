@@ -14,10 +14,26 @@ const sessionSchema = new mongoose.Schema(
       enum: [
         'IDLE',
         'REGISTERING_LANGUAGE',
+        'READY_CONFIRM', // 7 intro messages sent, awaiting "Are you ready?" yes/no
         'PURPOSE_SELECT', // intro shown, awaiting "consult a doctor" vs "explore" choice
         'REGISTERING_NAME',
-        'REGISTERING_AGE',
         'REGISTERING_GENDER',
+        // ── Concern intake ────────────────────────────────────────────────
+        'CONCERN_SELECT', // awaiting concern option tap (9-option list)
+        'CONCERN_OTHER', // "In my words" chosen, awaiting free-text concern
+        'CONCERN_REALIZE', // awaiting free-text "when did you first realise"
+        'CONCERN_AFFECT', // awaiting "what has this affected most" tap
+        'CONCERN_SEVERITY', // awaiting sense-of-control tap
+        'SUMMARY_CONFIRM', // summary shown, awaiting "did I understand correctly" yes/no
+        // ── Path selection + astro details ────────────────────────────────
+        'PATH_SELECT', // awaiting "Clinical" vs "Astro + Clinical" tap
+        'ASTRO_PALM', // awaiting palm photo
+        'ASTRO_KUNDLI', // awaiting kundli photo/pdf
+        'ASTRO_DOB', // awaiting date of birth
+        'ASTRO_BIRTH_TIME', // awaiting birth time
+        'PAYMENT_PENDING', // doctor/expert joined, awaiting ₹399 payment
+        // ── Legacy (kept for back-compat) ─────────────────────────────────
+        'REGISTERING_AGE',
         'REGISTERING_EMAIL',
         'REGISTERING_IMAGE',
         'REGISTERING_DOB',
@@ -25,15 +41,12 @@ const sessionSchema = new mongoose.Schema(
         'REGISTERING_RAASHI',
         'REGISTERING_ADDRESS',
         'REGISTERED',
-        // ── New astrology → consult flow ──────────────────────────────────
-        'ASTRO_SATISFACTION', // reading shown, awaiting 0-25/25-50/50-75/75-100 tap
-        'ASTRO_FEEDBACK', // low rating given, awaiting free-text note
-        'CATEGORY_SELECT', // awaiting category button tap
-        'CONSULT_OTHER', // "Something else" chosen, awaiting free-text problem
-        'CONSULT_Q', // answering category questions
-        'PAYMENT_PENDING', // result shown, awaiting ₹399 payment before order/consult
-        'CONSULT_ACTION', // review shown, awaiting order/consult tap
-        // ── Legacy (kept for back-compat) ─────────────────────────────────
+        'ASTRO_SATISFACTION',
+        'ASTRO_FEEDBACK',
+        'CATEGORY_SELECT',
+        'CONSULT_OTHER',
+        'CONSULT_Q',
+        'CONSULT_ACTION',
         'ANALYSE_PENDING',
         'ANALYSE_DONE',
         'RECOVER_CATEGORY_SELECT',

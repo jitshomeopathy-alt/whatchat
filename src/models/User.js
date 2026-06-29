@@ -14,10 +14,11 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     age: {
-      type: Number,
-      required: true,
+      type: Number, // no longer collected in the intake flow — optional
+      required: false,
       min: 1,
       max: 150,
+      default: null,
     },
     gender: {
       type: String,

@@ -1,13 +1,20 @@
-const { sendText, sendButtons, downloadMedia } = require('../../services/whatsapp');
-const { uploadFromUrl } = require('../../services/imagekit');
-const { saveSession } = require('../stateManager');
-const { formatDob, isValidDob } = require('../../utils/date');
+const { sendText, sendButtons, sendList } = require('../../services/whatsapp');
+const { saveSession, resetSession } = require('../stateManager');
 const consultFlow = require('./consult');
-const { t } = require('../i18n');
+const {
+  t,
+  introLines,
+  concernOptions,
+  affectOptions,
+  severityOptions,
+} = require('../i18n');
 const User = require('../../models/User');
 
 /**
- * Handle registration flow.
+ * Intake flow: language → intro → "ready?" → purpose → name → gender →
+ * concern → realise → affect → severity → summary. On a confirmed summary we
+ * save the user and hand off to the consult flow (path selection + payment).
+ *
  * @param {string} whatsappId
  * @param {Object} message - Parsed WhatsApp message object
  * @param {Object} session - Current session document
@@ -15,7 +22,7 @@ const User = require('../../models/User');
 async function handle(whatsappId, message, session) {
   const state = session.state;
 
-  // ── IDLE: kick off registration — ask language first ─────────────────────────
+  // ── IDLE: kick off — ask language first ──────────────────────────────────────
   if (state === 'IDLE') {
     await saveSession(whatsappId, {
       state: 'REGISTERING_LANGUAGE',
@@ -32,7 +39,7 @@ async function handle(whatsappId, message, session) {
     return;
   }
 
-  // ── REGISTERING_LANGUAGE ─────────────────────────────────────────────────────
+  // ── REGISTERING_LANGUAGE → send the 7 intro lines + "Are you ready?" ──────────
   if (state === 'REGISTERING_LANGUAGE') {
     const raw = (message.interactive?.id || extractText(message) || '').toLowerCase().trim();
     let language = null;
@@ -51,26 +58,57 @@ async function handle(whatsappId, message, session) {
       return;
     }
 
-    const buffer = { ...(session.registrationBuffer || {}), language };
     await saveSession(whatsappId, {
-      state: 'PURPOSE_SELECT',
+      state: 'READY_CONFIRM',
       language,
-      registrationBuffer: buffer,
+      registrationBuffer: { ...(session.registrationBuffer || {}), language },
     });
-    // Short intro about Astro Vaidhya, then ask why they're here.
-    await sendText(whatsappId, t('intro', language));
-    await sendButtons(
-      whatsappId,
-      t('purposePrompt', language),
-      [
-        { id: 'purpose:consult', title: t('purposeConsult', language) },
-        { id: 'purpose:explore', title: t('purposeExplore', language) },
-      ]
-    );
+
+    // Send the intro messages one-by-one, then the readiness gate.
+    for (const line of introLines(language)) {
+      await sendText(whatsappId, line);
+    }
+    await sendButtons(whatsappId, t('readyPrompt', language), [
+      { id: 'ready:yes', title: t('readyYes', language) },
+      { id: 'ready:no', title: t('readyNo', language) },
+    ]);
     return;
   }
 
-  // ── PURPOSE_SELECT ───────────────────────────────────────────────────────────
+  // ── READY_CONFIRM → yes: ask purpose · no: gentle reset ───────────────────────
+  if (state === 'READY_CONFIRM') {
+    const lang = session.language || 'en';
+    const id = message.interactive?.id || null;
+    const raw = (id || extractText(message) || '').toLowerCase().trim();
+    let ready = null;
+    if (id === 'ready:yes') ready = true;
+    else if (id === 'ready:no') ready = false;
+    else if (raw === 'yes' || raw.includes('ready')) ready = true;
+    else if (raw === 'no' || raw.includes('not')) ready = false;
+
+    if (ready === false) {
+      await sendText(whatsappId, t('notReady', lang));
+      await resetSession(whatsappId, false);
+      return;
+    }
+
+    if (ready !== true) {
+      await sendButtons(whatsappId, t('readyPrompt', lang), [
+        { id: 'ready:yes', title: t('readyYes', lang) },
+        { id: 'ready:no', title: t('readyNo', lang) },
+      ]);
+      return;
+    }
+
+    await saveSession(whatsappId, { state: 'PURPOSE_SELECT' });
+    await sendButtons(whatsappId, t('purposePrompt', lang), [
+      { id: 'purpose:explore', title: t('purposeExplore', lang) },
+      { id: 'purpose:consult', title: t('purposeConsult', lang) },
+    ]);
+    return;
+  }
+
+  // ── PURPOSE_SELECT → consult: doctor + payment · explore: continue intake ─────
   if (state === 'PURPOSE_SELECT') {
     const lang = session.language || 'en';
     const raw = (message.interactive?.id || extractText(message) || '').toLowerCase().trim();
@@ -79,26 +117,20 @@ async function handle(whatsappId, message, session) {
     else if (raw === 'purpose:explore' || raw.includes('explore') || raw.includes('astro')) purpose = 'explore';
 
     if (!purpose) {
-      await sendButtons(
-        whatsappId,
-        t('purposeRetry', lang),
-        [
-          { id: 'purpose:consult', title: t('purposeConsult', lang) },
-          { id: 'purpose:explore', title: t('purposeExplore', lang) },
-        ]
-      );
+      await sendButtons(whatsappId, t('purposeRetry', lang), [
+        { id: 'purpose:explore', title: t('purposeExplore', lang) },
+        { id: 'purpose:consult', title: t('purposeConsult', lang) },
+      ]);
       return;
     }
 
-    // "Consult a doctor" → hand off to the doctor-consult flow. We keep the user
-    // unregistered (IDLE) so a later "hi" can restart and explore if they wish.
+    // "Consult a doctor" → straight to Dr. Jitendra Pal + payment (no intake).
     if (purpose === 'consult') {
-      await saveSession(whatsappId, { state: 'IDLE', registrationBuffer: {} });
-      await sendText(whatsappId, t('consultDirect', lang));
+      await consultFlow.startDoctorConsult(whatsappId, lang, null);
       return;
     }
 
-    // "Explore Astro Vaidhya" → continue the normal registration journey.
+    // "Explore Astro Vaidhya" → continue the intake journey.
     await saveSession(whatsappId, { state: 'REGISTERING_NAME' });
     await sendText(whatsappId, t('askName', lang));
     return;
@@ -108,175 +140,177 @@ async function handle(whatsappId, message, session) {
   if (state === 'REGISTERING_NAME') {
     const lang = session.language || 'en';
     const name = extractText(message);
-    if (!name || name.length < 2) {
+    if (!name || name.trim().length < 2) {
       await sendText(whatsappId, t('invalidName', lang));
       return;
     }
 
-    const buffer = { ...(session.registrationBuffer || {}), name };
     await saveSession(whatsappId, {
-      state: 'REGISTERING_AGE',
-      registrationBuffer: buffer,
+      state: 'REGISTERING_GENDER',
+      registrationBuffer: { ...(session.registrationBuffer || {}), name: name.trim() },
     });
-    await sendText(whatsappId, t('askAge', lang, { name }));
+    await sendButtons(whatsappId, t('askGender', lang), [
+      { id: 'male', title: t('genderMale', lang) },
+      { id: 'female', title: t('genderFemale', lang) },
+      { id: 'other', title: t('genderOther', lang) },
+    ]);
     return;
   }
 
-  // ── REGISTERING_AGE ──────────────────────────────────────────────────────────
-  if (state === 'REGISTERING_AGE') {
+  // ── REGISTERING_GENDER → "take your time" + concern list ──────────────────────
+  if (state === 'REGISTERING_GENDER') {
     const lang = session.language || 'en';
-    const text = extractText(message);
-    const age = parseInt(text, 10);
-
-    if (isNaN(age) || age < 1 || age > 150) {
-      await sendText(whatsappId, t('invalidAge', lang));
-      return;
-    }
-
-    const buffer = { ...(session.registrationBuffer || {}), age };
-    await saveSession(whatsappId, {
-      state: 'REGISTERING_GENDER',
-      registrationBuffer: buffer,
-    });
-    await sendButtons(
-      whatsappId,
-      t('askGender', lang, { age }),
-      [
+    const gender = (message.interactive?.id || extractText(message))?.toLowerCase().trim();
+    if (!['male', 'female', 'other'].includes(gender)) {
+      await sendButtons(whatsappId, t('genderRetry', lang), [
         { id: 'male', title: t('genderMale', lang) },
         { id: 'female', title: t('genderFemale', lang) },
         { id: 'other', title: t('genderOther', lang) },
-      ]
+      ]);
+      return;
+    }
+
+    await saveSession(whatsappId, {
+      state: 'CONCERN_SELECT',
+      gender,
+      registrationBuffer: { ...(session.registrationBuffer || {}), gender },
+    });
+    await sendText(whatsappId, t('takeYourTime', lang));
+    await sendConcernList(whatsappId, lang);
+    return;
+  }
+
+  // ── CONCERN_SELECT ───────────────────────────────────────────────────────────
+  if (state === 'CONCERN_SELECT') {
+    const lang = session.language || 'en';
+    const id = message.interactive?.id || null;
+    const options = concernOptions(lang);
+
+    // "In my words" → switch to free-text.
+    if (id === 'concern:other') {
+      await saveSession(whatsappId, { state: 'CONCERN_OTHER' });
+      await sendText(whatsappId, t('concernInWords', lang));
+      return;
+    }
+
+    const picked = options.find((o) => o.id === id);
+    if (!picked) {
+      await sendText(whatsappId, t('concernRetry', lang));
+      return;
+    }
+
+    await saveSession(whatsappId, {
+      state: 'CONCERN_REALIZE',
+      registrationBuffer: { ...(session.registrationBuffer || {}), concern: picked.value },
+    });
+    await sendText(whatsappId, t('concernThanks', lang));
+    await sendText(whatsappId, t('realizePrompt', lang));
+    return;
+  }
+
+  // ── CONCERN_OTHER (free-text concern) ─────────────────────────────────────────
+  if (state === 'CONCERN_OTHER') {
+    const lang = session.language || 'en';
+    const concern = extractText(message)?.trim();
+    if (!concern || concern.length < 3) {
+      await sendText(whatsappId, t('concernInWordsRetry', lang));
+      return;
+    }
+
+    await saveSession(whatsappId, {
+      state: 'CONCERN_REALIZE',
+      registrationBuffer: { ...(session.registrationBuffer || {}), concern: concern.slice(0, 1000) },
+    });
+    await sendText(whatsappId, t('concernThanks', lang));
+    await sendText(whatsappId, t('realizePrompt', lang));
+    return;
+  }
+
+  // ── CONCERN_REALIZE (free-text) → affect question ─────────────────────────────
+  if (state === 'CONCERN_REALIZE') {
+    const lang = session.language || 'en';
+    const realize = extractText(message)?.trim();
+    if (!realize || realize.length < 2) {
+      await sendText(whatsappId, t('realizeRetry', lang));
+      return;
+    }
+
+    await saveSession(whatsappId, {
+      state: 'CONCERN_AFFECT',
+      registrationBuffer: { ...(session.registrationBuffer || {}), realize: realize.slice(0, 1000) },
+    });
+    await sendList(
+      whatsappId,
+      t('affectPrompt', lang),
+      t('affectButton', lang),
+      affectOptions(lang).map((o) => ({ id: o.id, title: o.title })),
+      { header: t('affectHeader', lang), sectionTitle: t('affectSection', lang) }
     );
     return;
   }
 
-  // ── REGISTERING_GENDER ───────────────────────────────────────────────────────
-  if (state === 'REGISTERING_GENDER') {
+  // ── CONCERN_AFFECT → severity question ────────────────────────────────────────
+  if (state === 'CONCERN_AFFECT') {
     const lang = session.language || 'en';
-    const text = (message.interactive?.id || extractText(message))?.toLowerCase().trim();
-    const allowed = ['male', 'female', 'other'];
-
-    if (!allowed.includes(text)) {
-      await sendButtons(
-        whatsappId,
-        t('genderRetry', lang),
-        [
-          { id: 'male', title: t('genderMale', lang) },
-          { id: 'female', title: t('genderFemale', lang) },
-          { id: 'other', title: t('genderOther', lang) },
-        ]
-      );
+    const id = message.interactive?.id || null;
+    const picked = affectOptions(lang).find((o) => o.id === id);
+    if (!picked) {
+      await sendText(whatsappId, t('affectRetry', lang));
       return;
     }
 
-    // Email collection is paused for now — go straight to the birth details.
-    // The palm photo is collected last, just before the astrology reading.
-    const buffer = { ...(session.registrationBuffer || {}), gender: text };
     await saveSession(whatsappId, {
-      state: 'REGISTERING_DOB',
-      registrationBuffer: buffer,
+      state: 'CONCERN_SEVERITY',
+      registrationBuffer: { ...(session.registrationBuffer || {}), affect: picked.value },
     });
-    await sendText(whatsappId, t('askDob', lang));
+    await sendList(
+      whatsappId,
+      t('severityPrompt', lang),
+      t('severityButton', lang),
+      severityOptions(lang).map((o) => ({ id: o.id, title: o.title })),
+      { header: t('severityHeader', lang), sectionTitle: t('severitySection', lang) }
+    );
     return;
   }
 
-  // ── REGISTERING_DOB ──────────────────────────────────────────────────────────
-  if (state === 'REGISTERING_DOB') {
+  // ── CONCERN_SEVERITY → summary + confirm ──────────────────────────────────────
+  if (state === 'CONCERN_SEVERITY') {
     const lang = session.language || 'en';
-    const dobInput = extractText(message)?.trim();
-    if (!isValidDob(dobInput)) {
-      await sendText(whatsappId, t('invalidDob', lang));
+    const id = message.interactive?.id || null;
+    const picked = severityOptions(lang).find((o) => o.id === id);
+    if (!picked) {
+      await sendText(whatsappId, t('severityRetry', lang));
       return;
     }
 
-    const dob = formatDob(dobInput); // normalized to dd-mm-yyyy
-    const buffer = { ...(session.registrationBuffer || {}), dob };
-    await saveSession(whatsappId, {
-      state: 'REGISTERING_BIRTH_TIME',
-      registrationBuffer: buffer,
-    });
-    await sendText(whatsappId, t('askBirthTime', lang));
+    const buffer = { ...(session.registrationBuffer || {}), severity: picked.value };
+    await saveSession(whatsappId, { state: 'SUMMARY_CONFIRM', registrationBuffer: buffer });
+    await sendSummary(whatsappId, lang, buffer);
     return;
   }
 
-  // ── REGISTERING_BIRTH_TIME ────────────────────────────────────────────────────
-  if (state === 'REGISTERING_BIRTH_TIME') {
+  // ── SUMMARY_CONFIRM → yes: save + path select · no: redo concern ──────────────
+  if (state === 'SUMMARY_CONFIRM') {
     const lang = session.language || 'en';
-    const raw = extractText(message)?.trim();
-    let birthTime = null;
+    const raw = (message.interactive?.id || extractText(message) || '').toLowerCase().trim();
+    const yes = raw === 'summary:yes' || raw === 'yes' || raw.includes('right') || raw.includes('correct');
+    const no = raw === 'summary:no' || raw === 'no' || raw.includes('quite') || raw.includes('wrong');
 
-    if (raw && raw.toLowerCase() !== 'skip') {
-      const parsed = parseBirthTime(raw);
-      if (!parsed) {
-        await sendText(whatsappId, t('invalidBirthTime', lang));
-        return;
-      }
-      birthTime = parsed;
-    }
-
-    const buffer = { ...(session.registrationBuffer || {}), birthTime };
-    await saveSession(whatsappId, {
-      state: 'REGISTERING_ADDRESS',
-      registrationBuffer: buffer,
-    });
-    await sendText(whatsappId, t('askAddress', lang, { dob: buffer.dob }));
-    return;
-  }
-
-  // ── REGISTERING_ADDRESS → ask for the palm photo (last question) ──────────────
-  if (state === 'REGISTERING_ADDRESS') {
-    const lang = session.language || 'en';
-    const address = extractText(message)?.trim();
-    if (!address || address.length < 2) {
-      await sendText(whatsappId, t('invalidAddress', lang));
+    if (no && !yes) {
+      await saveSession(whatsappId, { state: 'CONCERN_SELECT' });
+      await sendText(whatsappId, t('summaryRedo', lang));
+      await sendText(whatsappId, t('takeYourTime', lang));
+      await sendConcernList(whatsappId, lang);
       return;
     }
 
-    const buffer = { ...(session.registrationBuffer || {}), address };
-    await saveSession(whatsappId, {
-      state: 'REGISTERING_IMAGE',
-      registrationBuffer: buffer,
-    });
-    await sendText(whatsappId, t('askImage', lang));
-    return;
-  }
+    if (!yes) {
+      await sendSummary(whatsappId, lang, session.registrationBuffer || {});
+      return;
+    }
 
-  // ── REGISTERING_IMAGE (final step → save + start astrology) ───────────────────
-  if (state === 'REGISTERING_IMAGE') {
-    const lang = session.language || 'en';
+    // Confirmed — persist the user, then hand off to path selection.
     const buffer = session.registrationBuffer || {};
-    let imageUrl = null;
-
-    const textInput = extractText(message)?.toLowerCase().trim();
-
-    if (textInput === 'skip') {
-      // User chose to skip photo
-      imageUrl = null;
-    } else if (message.type === 'image') {
-      try {
-        const mediaId = message.image?.id;
-        if (!mediaId) {
-          await sendText(whatsappId, t('imageReadError', lang));
-          return;
-        }
-
-        await sendText(whatsappId, t('imageUploading', lang));
-        const mediaBuffer = await downloadMedia(mediaId);
-        const filename = `user_${whatsappId}_palm.jpg`;
-        imageUrl = await uploadFromUrl(null, filename, mediaBuffer);
-      } catch (err) {
-        console.error('[Registration] Image upload error:', err.message);
-        await sendText(whatsappId, t('imageUploadError', lang, { msg: err.message }));
-        return;
-      }
-    } else {
-      await sendText(whatsappId, t('imageSendPrompt', lang));
-      return;
-    }
-
-    buffer.imageUrl = imageUrl;
-
-    // Save the complete user profile to MongoDB
     let user;
     try {
       user = await User.findOneAndUpdate(
@@ -284,14 +318,8 @@ async function handle(whatsappId, message, session) {
         {
           whatsappId,
           name: buffer.name,
-          age: buffer.age,
           gender: buffer.gender,
-          imageUrl: buffer.imageUrl || null,
-          language: buffer.language || 'en',
-          dob: buffer.dob,
-          birthTime: buffer.birthTime || null,
-          address: buffer.address,
-          createdAt: new Date(),
+          language: lang,
         },
         { upsert: true, new: true }
       );
@@ -301,60 +329,51 @@ async function handle(whatsappId, message, session) {
       return;
     }
 
-    await saveSession(whatsappId, {
-      state: 'REGISTERED',
-      registrationBuffer: {},
-    });
-
-    await sendText(whatsappId, t('profileComplete', lang, { name: buffer.name }));
-
-    // Automatically generate the astrological reading (next step in the flow).
-    await consultFlow.startAstrology(whatsappId, user);
+    await consultFlow.startPathSelect(whatsappId, user, buffer);
     return;
   }
 }
 
-/**
- * Extract text from various message types.
- */
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+async function sendConcernList(whatsappId, lang) {
+  await sendList(
+    whatsappId,
+    t('concernPrompt', lang),
+    t('concernButton', lang),
+    concernOptions(lang).map((o) => ({ id: o.id, title: o.title, description: o.description })),
+    { header: t('concernHeader', lang), sectionTitle: t('concernSection', lang) }
+  );
+}
+
+async function sendSummary(whatsappId, lang, buffer) {
+  const genderLabels = {
+    male: t('genderMale', lang),
+    female: t('genderFemale', lang),
+    other: t('genderOther', lang),
+  };
+  await sendText(
+    whatsappId,
+    `${t('summaryIntro', lang)}\n\n` +
+      t('summaryBody', lang, {
+        name: buffer.name || '—',
+        gender: genderLabels[buffer.gender] || buffer.gender || '—',
+        concern: buffer.concern || '—',
+        realize: buffer.realize || '—',
+        affect: buffer.affect || '—',
+        severity: buffer.severity || '—',
+      })
+  );
+  await sendButtons(whatsappId, t('summaryConfirmPrompt', lang), [
+    { id: 'summary:yes', title: t('summaryYes', lang) },
+    { id: 'summary:no', title: t('summaryNo', lang) },
+  ]);
+}
+
+/** Extract text from a text message (interactive taps are read via .interactive). */
 function extractText(message) {
   if (message.type === 'text') return message.text?.body || '';
   return null;
-}
-
-/**
- * Parse and normalise a free-text birth time into 24-hour "HH:MM".
- * Accepts "14:30", "9:05", "9.05", "0930", and 12-hour forms like "2:30 pm" /
- * "9 am". Returns the normalised string, or null if it can't be understood.
- */
-function parseBirthTime(input) {
-  const s = input.toLowerCase().trim();
-  const ampm = /(am|pm)/.exec(s)?.[1] || null;
-  const cleaned = s.replace(/(am|pm)/g, '').replace(/\./g, ':').trim();
-
-  let hh;
-  let mm;
-  let m = /^(\d{1,2}):(\d{2})$/.exec(cleaned);
-  if (m) {
-    hh = parseInt(m[1], 10);
-    mm = parseInt(m[2], 10);
-  } else if ((m = /^(\d{1,2})$/.exec(cleaned)) && ampm) {
-    // bare hour with am/pm, e.g. "9 am"
-    hh = parseInt(m[1], 10);
-    mm = 0;
-  } else if ((m = /^(\d{2})(\d{2})$/.exec(cleaned))) {
-    // compact "0930"
-    hh = parseInt(m[1], 10);
-    mm = parseInt(m[2], 10);
-  } else {
-    return null;
-  }
-
-  if (ampm === 'pm' && hh < 12) hh += 12;
-  if (ampm === 'am' && hh === 12) hh = 0;
-
-  if (isNaN(hh) || isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) return null;
-  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
 }
 
 module.exports = { handle };
