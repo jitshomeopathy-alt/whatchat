@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blogs · WhatChat Admin</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <style>
+    .toolbar { display: flex; justify-content: flex-end; margin-bottom: 18px; }
+    .btn-inline { width: auto; margin: 0; padding: 10px 18px; text-decoration: none; }
+
+    .article-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+    .article-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .article-thumb {
+      width: 100%; height: 160px; object-fit: cover; background: var(--green-light);
+      display: flex; align-items: center; justify-content: center; color: var(--green-dark); font-size: 30px;
+    }
+    .article-body-card { padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .article-cat { font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--green-dark); }
+    .article-name { font-weight: 700; font-size: 15.5px; line-height: 1.3; }
+    .article-desc { color: var(--text-light); font-size: 13.5px; line-height: 1.5; }
+    .article-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 6px; }
+    .article-actions { display: flex; gap: 8px; }
+    .btn-sm { width: auto; margin: 0; padding: 7px 14px; font-size: 13px; text-decoration: none; }
+    .btn-danger { background: var(--danger); }
+    .btn-danger:hover { background: #c42f2f; }
+    .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .badge.green { background: #e3f5e8; color: #1f7a3d; }
+    .badge.gray { background: #eceff1; color: #6b7682; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="dot">💬</span> WhatChat</div>
+      <a href="/admin" class="nav-item"><span class="ico">👥</span> Users</a>
+      <a href="/admin/messages" class="nav-item"><span class="ico">✉️</span> Send Message</a>
+      <a href="/admin/stories" class="nav-item"><span class="ico">⭐</span> Success Stories</a>
+      <a href="/admin/articles" class="nav-item active"><span class="ico">📝</span> Blogs</a>
+      <a href="/admin/products" class="nav-item"><span class="ico">📦</span> Products</a>
+      <a href="/admin/orders" class="nav-item"><span class="ico">🧾</span> Orders</a>
+      <div class="spacer"></div>
+      <div class="nav-item signout" id="signout"><span class="ico">↩︎</span> Sign out</div>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <h1>Blogs</h1>
+        <div class="who">
+          <span>Administrator</span>
+          <div class="avatar">A</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="toolbar">
+          <a class="btn btn-inline" href="/admin/article-edit">＋ Add article</a>
+        </div>
+        <div id="grid">
+          <div class="loading">Loading articles…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('wc_admin_token');
+    if (!token) location.replace('/admin/login');
+
+    document.getElementById('signout').addEventListener('click', () => {
+      localStorage.removeItem('wc_admin_token');
+      location.replace('/admin/login');
+    });
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]
+      ));
+    }
+    function authHeaders(extra) {
+      return Object.assign({ Authorization: 'Bearer ' + token }, extra || {});
+    }
+    function handleAuth(res) {
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('wc_admin_token');
+        location.replace('/admin/login');
+        return true;
+      }
+      return false;
+    }
+    function fmtDate(d) {
+      if (!d) return '';
+      try { return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
+      catch (e) { return ''; }
+    }
+
+    let articles = [];
+
+    async function load() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '<div class="loading">Loading articles…</div>';
+      let res;
+      try {
+        res = await fetch('/admin/articles', { headers: authHeaders(), cache: 'no-store' });
+      } catch (e) {
+        grid.innerHTML = '<div class="empty">Network error. Please retry.</div>';
+        return;
+      }
+      if (handleAuth(res)) return;
+      if (!res.ok) { grid.innerHTML = '<div class="empty">Failed to load articles.</div>'; return; }
+      const data = await res.json();
+      articles = data.data || [];
+      render();
+    }
+
+    function render() {
+      const grid = document.getElementById('grid');
+      if (!articles.length) {
+        grid.innerHTML = '<div class="empty">No articles yet. Click “Add article” to create the first one.</div>';
+        return;
+      }
+      grid.innerHTML = '<div class="article-grid">' + articles.map((a) => `
+        <div class="article-card">
+          ${a.thumbnailUrl
+            ? `<img class="article-thumb" src="${esc(a.thumbnailUrl)}" alt="${esc(a.title)}" />`
+            : `<div class="article-thumb">📝</div>`}
+          <div class="article-body-card">
+            <div class="article-cat">${esc(a.category)}</div>
+            <div class="article-name">${esc(a.title)}</div>
+            <div class="article-desc">${esc((a.description || '').slice(0, 120))}</div>
+            <div class="article-foot">
+              <span>
+                ${a.status === 'published'
+                  ? '<span class="badge green">Published</span>'
+                  : '<span class="badge gray">Draft</span>'}
+              </span>
+              <div class="article-actions">
+                ${a.status === 'published' ? `<a class="btn btn-ghost btn-sm" href="/blog/${esc(a.slug)}" target="_blank" rel="noopener">View</a>` : ''}
+                <a class="btn btn-ghost btn-sm" href="/admin/article-edit?id=${a._id}">Edit</a>
+                <button class="btn btn-danger btn-sm" data-del="${a._id}">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>`).join('') + '</div>';
+
+      grid.querySelectorAll('[data-del]').forEach((b) =>
+        b.addEventListener('click', () => remove(b.dataset.del)));
+    }
+
+    async function remove(id) {
+      const a = articles.find((x) => x._id === id);
+      if (!confirm(`Delete the article “${a ? a.title : 'this one'}”? This cannot be undone.`)) return;
+      const res = await fetch('/admin/articles/' + id, { method: 'DELETE', headers: authHeaders() });
+      if (handleAuth(res)) return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Delete failed');
+        return;
+      }
+      load();
+    }
+
+    load();
+  </script>
+  <script src="/admin/admin-nav.js" defer></script>
+</body>
+</html>

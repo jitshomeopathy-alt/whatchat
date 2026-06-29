@@ -26,6 +26,7 @@
     { href: '/', label: 'Home' },
     { href: '/shop', label: 'Shop' },
     { href: '/stories', label: 'Stories' },
+    { href: '/blog', label: 'Blog' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
   ];

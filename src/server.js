@@ -10,6 +10,8 @@ const publicRouter = require('./routes/public');
 const shopRouter = require('./routes/shop');
 const accountRouter = require('./routes/account');
 const { initCollection } = require('./services/qdrant');
+const Article = require('./models/Article');
+const { renderArticlePage } = require('./utils/renderArticle');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -50,6 +52,8 @@ app.get('/admin/user', adminPage('admin/user.html'));
 app.get('/admin/messages', adminPage('admin/messages.html'));
 app.get('/admin/stories', adminPage('admin/stories.html'));
 app.get('/admin/story-edit', adminPage('admin/story-edit.html'));
+app.get('/admin/articles', adminPage('admin/articles.html'));
+app.get('/admin/article-edit', adminPage('admin/article-edit.html'));
 app.get('/admin/products', adminPage('admin/products.html'));
 app.get('/admin/product-edit', adminPage('admin/product-edit.html'));
 app.get('/admin/orders', adminPage('admin/orders.html'));
@@ -118,6 +122,27 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
   });
+});
+
+// ── Blog ────────────────────────────────────────────────────────────────────
+// The list page is static (it fetches /api/articles client-side). The detail
+// page is server-rendered so crawlers/social scrapers get real SEO + OG tags.
+app.get('/blog', (req, res) => res.sendFile(path.join(WEBSITE_DIR, 'blog.html')));
+
+app.get('/blog/:slug', requireDB, async (req, res, next) => {
+  try {
+    const article = await Article.findOne({ slug: req.params.slug, status: 'published' }).lean();
+    if (!article) {
+      return res
+        .status(404)
+        .type('html')
+        .send('<!doctype html><meta charset="utf-8"><title>Not found</title><p>Article not found. <a href="/blog">Back to blog</a></p>');
+    }
+    res.set('Cache-Control', 'public, max-age=300');
+    return res.type('html').send(renderArticlePage(article));
+  } catch (err) {
+    return next(err);
+  }
 });
 
 // ── Website pages ─────────────────────────────────────────────────────────────

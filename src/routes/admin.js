@@ -8,6 +8,7 @@ const Medicine = require('../models/Medicine');
 const User = require('../models/User');
 const AnalysisHistory = require('../models/AnalysisHistory');
 const Story = require('../models/Story');
+const Article = require('../models/Article');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const { upsertMedicine, deleteMedicine } = require('../services/qdrant');
@@ -403,8 +404,12 @@ router.post('/uploads', adminAuth, (req, res) => {
       return res.status(400).json({ error: 'No file uploaded (field "file")' });
     }
     try {
-      const safe = (req.file.originalname || 'story').replace(/[^a-zA-Z0-9._-]/g, '_');
-      const url = await uploadImage(req.file.buffer, `story_${Date.now()}_${safe}`);
+      // Optional ?folder=articles routes blog images to their own ImageKit folder.
+      const isArticle = req.query.folder === 'articles';
+      const prefix = isArticle ? 'article' : 'story';
+      const folder = isArticle ? '/whatchat/articles' : '/whatchat/stories';
+      const safe = (req.file.originalname || prefix).replace(/[^a-zA-Z0-9._-]/g, '_');
+      const url = await uploadImage(req.file.buffer, `${prefix}_${Date.now()}_${safe}`, folder);
       return res.json({ url });
     } catch (e) {
       console.error('[Admin] Story image upload failed:', e.message);
@@ -521,6 +526,156 @@ router.delete('/stories/:id', adminAuth, async (req, res) => {
     }
     await Story.deleteOne({ _id: req.params.id });
     return res.json({ message: 'Story deleted successfully' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Blog articles ─────────────────────────────────────────────────────────────
+
+/**
+ * Build a slug from `title` that is unique across articles. If `ignoreId` is
+ * given (on update) the article's own current slug doesn't count as a clash.
+ */
+async function uniqueSlug(title, ignoreId) {
+  const base = Article.slugify(title) || 'article';
+  let slug = base;
+  let n = 2;
+  // Loop until we find a slug not used by another article.
+  // eslint-disable-next-line no-await-in-loop
+  while (await Article.exists({ slug, _id: { $ne: ignoreId || null } })) {
+    slug = `${base}-${n}`;
+    n += 1;
+  }
+  return slug;
+}
+
+function validCategory(category) {
+  return Article.CATEGORIES.includes(category);
+}
+
+/**
+ * GET /admin/articles
+ * List all articles (newest first), including drafts.
+ */
+router.get('/articles', adminAuth, async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const articles = await Article.find().sort({ createdAt: -1 }).lean();
+    return res.json({ total: articles.length, data: articles });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /admin/articles/:id
+ * Fetch a single article (including its full body) for the editor.
+ */
+router.get('/articles/:id', adminAuth, async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const article = await Article.findById(req.params.id).lean();
+    if (!article) return res.status(404).json({ error: 'Article not found' });
+    return res.json(article);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /admin/articles
+ * Create an article.
+ * Body: { title, category, thumbnailUrl?, description?, body?, status?, seoTitle?, seoDescription? }
+ */
+router.post('/articles', adminAuth, async (req, res) => {
+  try {
+    const {
+      title, category, thumbnailUrl, description, body, status, seoTitle, seoDescription,
+    } = req.body || {};
+
+    if (!title || !String(title).trim()) {
+      return res.status(400).json({ error: 'title is required' });
+    }
+    if (!validCategory(category)) {
+      return res.status(400).json({ error: 'a valid category is required' });
+    }
+    const cleanStatus = Article.STATUSES.includes(status) ? status : 'draft';
+    const slug = await uniqueSlug(title);
+
+    const article = await Article.create({
+      title: String(title).trim(),
+      slug,
+      category,
+      thumbnailUrl: thumbnailUrl ? String(thumbnailUrl).trim() : '',
+      description: description ? String(description).trim() : '',
+      body: body || '',
+      status: cleanStatus,
+      seoTitle: seoTitle ? String(seoTitle).trim() : '',
+      seoDescription: seoDescription ? String(seoDescription).trim() : '',
+      publishedAt: cleanStatus === 'published' ? new Date() : null,
+    });
+
+    return res.status(201).json(article);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * PUT /admin/articles/:id
+ * Update an article. Body: partial of the create fields.
+ */
+router.put('/articles/:id', adminAuth, async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) return res.status(404).json({ error: 'Article not found' });
+
+    const {
+      title, category, thumbnailUrl, description, body, status, seoTitle, seoDescription,
+    } = req.body || {};
+
+    if (title !== undefined) {
+      if (!String(title).trim()) return res.status(400).json({ error: 'title cannot be empty' });
+      // Re-slug only when the title actually changed, so existing links stay stable.
+      if (String(title).trim() !== article.title) {
+        article.slug = await uniqueSlug(title, article._id);
+      }
+      article.title = String(title).trim();
+    }
+    if (category !== undefined) {
+      if (!validCategory(category)) return res.status(400).json({ error: 'invalid category' });
+      article.category = category;
+    }
+    if (thumbnailUrl !== undefined) article.thumbnailUrl = thumbnailUrl ? String(thumbnailUrl).trim() : '';
+    if (description !== undefined) article.description = String(description).trim();
+    if (body !== undefined) article.body = body || '';
+    if (seoTitle !== undefined) article.seoTitle = String(seoTitle).trim();
+    if (seoDescription !== undefined) article.seoDescription = String(seoDescription).trim();
+    if (status !== undefined) {
+      if (!Article.STATUSES.includes(status)) return res.status(400).json({ error: 'invalid status' });
+      // Stamp publishedAt the first time it goes live.
+      if (status === 'published' && !article.publishedAt) article.publishedAt = new Date();
+      article.status = status;
+    }
+    article.updatedAt = new Date();
+
+    await article.save();
+    return res.json(article);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * DELETE /admin/articles/:id
+ */
+router.delete('/articles/:id', adminAuth, async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) return res.status(404).json({ error: 'Article not found' });
+    await Article.deleteOne({ _id: req.params.id });
+    return res.json({ message: 'Article deleted successfully' });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
