@@ -392,8 +392,28 @@ const STRINGS = {
     en: 'No problem at all — let’s go through it again so I get it right. 💚',
     hi: 'कोई बात नहीं — चलिए इसे दोबारा देखते हैं ताकि मैं सही समझ सकूँ। 💚',
   },
+  summaryClarify: {
+    en: 'I’m sorry I didn’t get it quite right. 💚 Please tell me a bit more about yourself in your own words, and I’ll understand you better. ✍️',
+    hi: 'माफ़ कीजिए, मैं इसे पूरी तरह सही नहीं समझ पाया। 💚 कृपया अपने शब्दों में अपने बारे में थोड़ा और बताइए, ताकि मैं आपको बेहतर समझ सकूँ। ✍️',
+  },
+  summaryClarifyRetry: {
+    en: 'Please share a little more in your own words so I can understand you better. ✍️🙂',
+    hi: 'कृपया अपने शब्दों में थोड़ा और बताइए ताकि मैं आपको बेहतर समझ सकूँ। ✍️🙂',
+  },
+  summaryClarifyThanks: {
+    en: 'Thank you for explaining that. 🙏 That really helps me understand you. 💚',
+    hi: 'बताने के लिए धन्यवाद। 🙏 इससे मुझे आपको समझने में बहुत मदद मिलती है। 💚',
+  },
 
   // ── Path selection (Clinical vs Astro + Clinical) ─────────────────────────────
+  pathIntro: {
+    en: 'There are two ways we can work towards your cure together. 💚 You can choose whichever feels right for you.',
+    hi: 'हम मिलकर आपके इलाज की ओर दो तरीक़ों से बढ़ सकते हैं। 💚 आप जो भी आपको सही लगे, वह चुन सकते हैं।',
+  },
+  pathThanks: {
+    en: 'Thank you for choosing. 🙏 Let’s continue. 💚',
+    hi: 'चुनने के लिए धन्यवाद। 🙏 चलिए आगे बढ़ते हैं। 💚',
+  },
   pathPrompt: {
     en: 'Thank you for trusting me. 💚 How would you like to continue?',
     hi: 'मुझ पर भरोसा करने के लिए धन्यवाद। 💚 आप कैसे आगे बढ़ना चाहेंगे?',

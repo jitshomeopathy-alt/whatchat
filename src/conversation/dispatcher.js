@@ -59,6 +59,7 @@ async function dispatch(whatsappId, message) {
     'CONCERN_AFFECT',
     'CONCERN_SEVERITY',
     'SUMMARY_CONFIRM',
+    'SUMMARY_CLARIFY',
   ];
 
   // ── Post-summary states (path selection → astro details → payment) ─────────
@@ -123,6 +124,7 @@ function formatState(state) {
     CONCERN_AFFECT: 'What it affects',
     CONCERN_SEVERITY: 'Sense of control',
     SUMMARY_CONFIRM: 'Confirming summary',
+    SUMMARY_CLARIFY: 'Explaining more',
     PATH_SELECT: 'Choosing path',
     ASTRO_PALM: 'Sharing palm photo',
     ASTRO_KUNDLI: 'Sharing kundli',

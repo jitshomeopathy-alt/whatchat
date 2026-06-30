@@ -296,11 +296,11 @@ async function handle(whatsappId, message, session) {
     const yes = raw === 'summary:yes' || raw === 'yes' || raw.includes('right') || raw.includes('correct');
     const no = raw === 'summary:no' || raw === 'no' || raw.includes('quite') || raw.includes('wrong');
 
+    // "Not quite" → don't restart the flow; just let them explain more about
+    // themselves in their own words.
     if (no && !yes) {
-      await saveSession(whatsappId, { state: 'CONCERN_SELECT' });
-      await sendText(whatsappId, t('summaryRedo', lang));
-      await sendText(whatsappId, t('takeYourTime', lang));
-      await sendConcernList(whatsappId, lang);
+      await saveSession(whatsappId, { state: 'SUMMARY_CLARIFY' });
+      await sendText(whatsappId, t('summaryClarify', lang));
       return;
     }
 
@@ -310,28 +310,52 @@ async function handle(whatsappId, message, session) {
     }
 
     // Confirmed — persist the user, then hand off to path selection.
-    const buffer = session.registrationBuffer || {};
-    let user;
-    try {
-      user = await User.findOneAndUpdate(
-        { whatsappId },
-        {
-          whatsappId,
-          name: buffer.name,
-          gender: buffer.gender,
-          language: lang,
-        },
-        { upsert: true, new: true }
-      );
-    } catch (err) {
-      console.error('[Registration] User save error:', err.message);
-      await sendText(whatsappId, t('saveError', lang));
+    await saveAndStartPath(whatsappId, lang, session.registrationBuffer || {});
+    return;
+  }
+
+  // ── SUMMARY_CLARIFY → capture the extra explanation, then continue ────────────
+  if (state === 'SUMMARY_CLARIFY') {
+    const lang = session.language || 'en';
+    const extra = extractText(message)?.trim();
+    if (!extra || extra.length < 3) {
+      await sendText(whatsappId, t('summaryClarifyRetry', lang));
       return;
     }
 
-    await consultFlow.startPathSelect(whatsappId, user, buffer);
+    // Fold the user's own words into the concern so the care team sees them,
+    // then move forward without restarting the flow.
+    const prev = session.registrationBuffer || {};
+    const concern = [prev.concern, extra].filter(Boolean).join(' — ').slice(0, 1000);
+    const buffer = { ...prev, concern };
+
+    await sendText(whatsappId, t('summaryClarifyThanks', lang));
+    await saveAndStartPath(whatsappId, lang, buffer);
     return;
   }
+}
+
+/** Persist the user from the intake buffer, then hand off to path selection. */
+async function saveAndStartPath(whatsappId, lang, buffer) {
+  let user;
+  try {
+    user = await User.findOneAndUpdate(
+      { whatsappId },
+      {
+        whatsappId,
+        name: buffer.name,
+        gender: buffer.gender,
+        language: lang,
+      },
+      { upsert: true, new: true }
+    );
+  } catch (err) {
+    console.error('[Registration] User save error:', err.message);
+    await sendText(whatsappId, t('saveError', lang));
+    return;
+  }
+
+  await consultFlow.startPathSelect(whatsappId, user, buffer);
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────

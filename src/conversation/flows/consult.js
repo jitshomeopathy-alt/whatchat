@@ -34,6 +34,8 @@ async function startPathSelect(whatsappId, user, buffer = {}) {
     language: lang,
     registrationBuffer: buffer,
   });
+  // A small heads-up that there are two ways to proceed before showing them.
+  await sendText(whatsappId, t('pathIntro', lang));
   await sendButtons(
     whatsappId,
     t('pathPrompt', lang),
@@ -91,6 +93,9 @@ async function handlePathSelect(whatsappId, message, session) {
 
   const buffer = { ...(session.registrationBuffer || {}), path };
 
+  // A quick thank-you before moving ahead, whichever path they chose.
+  await sendText(whatsappId, t('pathThanks', lang));
+
   // Clinical → record intake, Dr. Jitendra Pal joins, then payment.
   if (path === 'clinical') {
     await saveSession(whatsappId, { registrationBuffer: buffer });
@@ -101,12 +106,40 @@ async function handlePathSelect(whatsappId, message, session) {
     return;
   }
 
-  // Astro + Clinical → collect palm, kundli, DOB, birth time first.
-  await saveSession(whatsappId, { state: 'ASTRO_PALM', registrationBuffer: buffer });
-  await sendText(whatsappId, t('askPalm', lang));
+  // Astro + Clinical → ask for the Kundli first. If they share it, that's all we
+  // need; if not, we fall back to palm photo, DOB and birth time.
+  await saveSession(whatsappId, { state: 'ASTRO_KUNDLI', registrationBuffer: buffer });
+  await sendText(whatsappId, t('askKundli', lang));
 }
 
-// ── Astro details: palm → kundli → DOB → birth time ────────────────────────────
+// ── Astro details: kundli → (if skipped) palm → DOB → birth time ───────────────
+async function handleKundli(whatsappId, message, session) {
+  const lang = session.language || 'en';
+  const buffer = session.registrationBuffer || {};
+
+  const text = extractText(message)?.toLowerCase().trim();
+  if (text === 'skip') {
+    // No Kundli — collect palm photo, DOB and birth time instead.
+    await saveSession(whatsappId, { state: 'ASTRO_PALM', registrationBuffer: { ...buffer, kundliUrl: null } });
+    await sendText(whatsappId, t('askPalm', lang));
+    return;
+  }
+
+  // Kundli may arrive as an image or a PDF document.
+  const mediaId = message.type === 'image' ? message.image?.id : message.type === 'document' ? message.document?.id : null;
+  if (!mediaId) {
+    await sendText(whatsappId, t('kundliSendPrompt', lang));
+    return;
+  }
+
+  const ext = message.type === 'document' ? 'pdf' : 'jpg';
+  const url = await uploadMedia(whatsappId, lang, mediaId, `user_${whatsappId}_kundli.${ext}`);
+  if (url === undefined) return;
+
+  // Kundli provided — skip palm, DOB and birth time, and finalise directly.
+  await finalizeAstro(whatsappId, lang, { ...buffer, kundliUrl: url });
+}
+
 async function handlePalm(whatsappId, message, session) {
   const lang = session.language || 'en';
   const buffer = session.registrationBuffer || {};
@@ -128,34 +161,6 @@ async function handlePalm(whatsappId, message, session) {
 }
 
 async function advanceAfterPalm(whatsappId, lang, buffer) {
-  await saveSession(whatsappId, { state: 'ASTRO_KUNDLI', registrationBuffer: buffer });
-  await sendText(whatsappId, t('askKundli', lang));
-}
-
-async function handleKundli(whatsappId, message, session) {
-  const lang = session.language || 'en';
-  const buffer = session.registrationBuffer || {};
-
-  const text = extractText(message)?.toLowerCase().trim();
-  if (text === 'skip') {
-    await advanceAfterKundli(whatsappId, lang, { ...buffer, kundliUrl: null });
-    return;
-  }
-
-  // Kundli may arrive as an image or a PDF document.
-  const mediaId = message.type === 'image' ? message.image?.id : message.type === 'document' ? message.document?.id : null;
-  if (!mediaId) {
-    await sendText(whatsappId, t('kundliSendPrompt', lang));
-    return;
-  }
-
-  const ext = message.type === 'document' ? 'pdf' : 'jpg';
-  const url = await uploadMedia(whatsappId, lang, mediaId, `user_${whatsappId}_kundli.${ext}`);
-  if (url === undefined) return;
-  await advanceAfterKundli(whatsappId, lang, { ...buffer, kundliUrl: url });
-}
-
-async function advanceAfterKundli(whatsappId, lang, buffer) {
   await saveSession(whatsappId, { state: 'ASTRO_DOB', registrationBuffer: buffer });
   await sendText(whatsappId, t('askDob', lang));
 }
@@ -188,15 +193,27 @@ async function handleBirthTime(whatsappId, message, session) {
   }
 
   const buffer = { ...(session.registrationBuffer || {}), birthTime };
+  await finalizeAstro(whatsappId, lang, buffer);
+}
+
+/**
+ * Persist the astro details on the user, record the intake, then the expert
+ * joins and we move to payment. Reached either straight after a shared Kundli
+ * or after the palm → DOB → birth-time fallback.
+ */
+async function finalizeAstro(whatsappId, lang, buffer) {
   await saveSession(whatsappId, { registrationBuffer: buffer });
 
-  // Persist the astro details on the user, record the intake, then the expert
-  // joins and we move to payment.
   let user;
   try {
     user = await User.findOneAndUpdate(
       { whatsappId },
-      { imageUrl: buffer.palmUrl || null, dob: buffer.dob || null, birthTime: buffer.birthTime || null },
+      {
+        imageUrl: buffer.palmUrl || null,
+        kundliUrl: buffer.kundliUrl || null,
+        dob: buffer.dob || null,
+        birthTime: buffer.birthTime || null,
+      },
       { new: true }
     );
   } catch (err) {

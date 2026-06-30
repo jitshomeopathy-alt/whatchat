@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema(
       type: String, // palm photo
       default: null,
     },
+    kundliUrl: {
+      type: String, // Kundli (birth chart) image or PDF
+      default: null,
+    },
     // Preferred language for questions and AI results: 'en' | 'hi'
     language: {
       type: String,
