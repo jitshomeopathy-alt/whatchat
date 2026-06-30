@@ -465,6 +465,19 @@ const STRINGS = {
     en: '🎉 *You’re all set!* 💚 Jitendra Pal will continue with you here shortly. Take care of yourself. 🌸',
     hi: '🎉 *सब तैयार है!* 💚 जितेन्द्र पाल जल्द ही यहीं आपके साथ आगे बढ़ेंगे। अपना ख़याल रखिए। 🌸',
   },
+  // Sent after payment when a handoff number is configured: the user is moved to
+  // a dedicated number to continue with the expert. {link} is a wa.me deep link.
+  consultHandoff: {
+    en: ({ link }) =>
+      `🎉 *You’re all set — thank you!* 💚\n\nTo continue your consultation, please tap below to chat with our expert directly:\n👉 ${link}\n\nWe’ll take great care of you there. 🌸`,
+    hi: ({ link }) =>
+      `🎉 *सब तैयार है — धन्यवाद!* 💚\n\nअपनी सलाह जारी रखने के लिए, कृपया नीचे टैप करके सीधे हमारे विशेषज्ञ से बात करें:\n👉 ${link}\n\nहम वहाँ आपका पूरा ख़याल रखेंगे। 🌸`,
+  },
+  // Terminal auto-reply once the conversation has moved to the handoff number.
+  chatShifted: {
+    en: '🙏 Your chat has been shifted to our expert’s number — please continue there. Thank you! 💚',
+    hi: '🙏 आपकी बातचीत हमारे विशेषज्ञ के नंबर पर स्थानांतरित कर दी गई है — कृपया वहीं आगे बढ़ें। धन्यवाद! 💚',
+  },
 };
 
 // ── Tappable / sequential option sets (kept here so flows stay declarative) ─────

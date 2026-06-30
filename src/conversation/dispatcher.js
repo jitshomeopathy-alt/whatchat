@@ -1,4 +1,5 @@
 const { sendText } = require('../services/whatsapp');
+const { t } = require('./i18n');
 const { loadSession, saveSession, resetSession } = require('./stateManager');
 const registrationFlow = require('./flows/registration');
 const consultFlow = require('./flows/consult');
@@ -41,6 +42,15 @@ async function dispatch(whatsappId, message) {
           ? `Welcome back, *${user.name}*! Type *"help"* to see what I can do.`
           : `Type *"hi"* or *"register"* to get started.`)
     );
+    return;
+  }
+
+  // ── Handed off to the expert's number (terminal) ───────────────────────────
+  // After payment the conversation moves to a dedicated number. Any message here
+  // (hi/hello/anything, now or later) just gets a gentle "chat shifted" reply.
+  // "cancel"/"reset" above still lets them start a fresh consultation.
+  if (state === 'SHIFTED') {
+    await sendText(whatsappId, t('chatShifted', session.language || 'en'));
     return;
   }
 

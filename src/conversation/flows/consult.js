@@ -1,6 +1,7 @@
 const { sendText, sendButtons, downloadMedia } = require('../../services/whatsapp');
 const { uploadFromUrl } = require('../../services/imagekit');
 const razorpay = require('../../services/razorpay');
+const email = require('../../services/email');
 const { saveSession, resetSession } = require('../stateManager');
 const { formatDob, isValidDob } = require('../../utils/date');
 const { t } = require('../i18n');
@@ -318,15 +319,75 @@ async function completePayment(whatsappId) {
   if (session.state !== 'PAYMENT_PENDING') return;
 
   const lang = session.language || 'en';
+  const path = session.registrationBuffer?.path || 'doctor';
   await saveSession(whatsappId, { paymentStatus: 'paid' });
   await sendText(whatsappId, t('paymentConfirmed', lang));
-  await finish(whatsappId, lang);
+
+  const user = await User.findOne({ whatsappId });
+  // Notify the admin by email — best-effort, never blocks the user's flow.
+  await notifyAdminOfPayment(whatsappId, user, path).catch((err) =>
+    console.error('[Consult] Admin payment email failed:', err.message)
+  );
+
+  await finish(whatsappId, lang, user, path);
 }
 
-/** Send the closing message and reset the session. */
-async function finish(whatsappId, lang) {
+/**
+ * Close out the paid consultation. If a handoff WhatsApp number is configured we
+ * move the user to a dedicated expert number (via a wa.me deep link) and park the
+ * session in the terminal SHIFTED state; otherwise we fall back to the in-chat
+ * closing message and reset.
+ */
+async function finish(whatsappId, lang, user = null, path = 'doctor') {
+  const handoff = handoffNumber(path);
+  if (handoff) {
+    const link = handoffLink(handoff, user);
+    await sendText(whatsappId, t('consultHandoff', lang, { link }));
+    // Terminal state: any later message gets the "chat shifted" auto-reply.
+    await saveSession(whatsappId, { state: 'SHIFTED' });
+    return;
+  }
   await sendText(whatsappId, t('consultClosing', lang));
   await resetSession(whatsappId, false);
+}
+
+/**
+ * Pick the handoff number for the chosen path. Astro consults can route to a
+ * different expert than clinical/doctor ones; both fall back to a shared number.
+ * @param {string} path - 'astro' | 'clinical' | 'doctor'
+ * @returns {string|null} digits-only WhatsApp number, or null if not configured
+ */
+function handoffNumber(path) {
+  const astro = process.env.HANDOFF_WA_NUMBER_ASTRO;
+  const doctor = process.env.HANDOFF_WA_NUMBER_DOCTOR;
+  const shared = process.env.HANDOFF_WA_NUMBER;
+  const chosen = (path === 'astro' ? astro : doctor) || shared;
+  if (!chosen) return null;
+  return String(chosen).replace(/[^\d]/g, '');
+}
+
+/** Build a wa.me deep link to the handoff number with a friendly prefilled message. */
+function handoffLink(number, user) {
+  const name = user?.name ? `, this is ${user.name}` : '';
+  const prefill = `Hi${name}. I've completed my payment and would like to continue my consultation. 🙏`;
+  return `https://wa.me/${number}?text=${encodeURIComponent(prefill)}`;
+}
+
+/** Email the admin that a user has paid. Best-effort. */
+async function notifyAdminOfPayment(whatsappId, user, path) {
+  const pathLabel = path === 'astro' ? 'Astro + Clinical' : 'Doctor / Clinical';
+  const name = user?.name || 'Unknown';
+  const subject = `💰 New paid consultation — ${name} (${pathLabel})`;
+  const lines = [
+    'A user has completed payment.',
+    '',
+    `Name:    ${name}`,
+    `WhatsApp: ${whatsappId}`,
+    `Path:     ${pathLabel}`,
+    user?.dob ? `DOB:      ${user.dob}` : null,
+    `Time:     ${new Date().toISOString()}`,
+  ].filter(Boolean);
+  await email.sendEmail({ subject, text: lines.join('\n') });
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────────
