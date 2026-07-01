@@ -193,6 +193,107 @@ Synthesis rules:
 }
 
 /**
+ * Produce a short 3–4 point personality read from the user's intake answers.
+ * Shown right after the intake summary is confirmed/clarified, before the user
+ * picks a consultation path. Returns 3–4 short *bold*-headed WhatsApp bullets.
+ *
+ * @param {Object} details - { name, gender, concern, realize, affect, severity, language }
+ * @returns {Promise<string>} - 3–4 bullet personality read
+ */
+async function personalitySummary(details) {
+  const client = getClient();
+  const language = languageName(details.language);
+
+  const systemPrompt = `You are a warm, perceptive personality guide. From a person's intake answers, distil a short, uplifting personality read.
+
+Person's intake:
+- Name: ${details.name || ''}
+- Gender: ${details.gender || ''}
+- What's going on: ${details.concern || ''}
+- When it became real: ${details.realize || ''}
+- Most affected area: ${details.affect || ''}
+- Sense of control: ${details.severity || ''}
+
+Write EXACTLY 3–4 bullet points about who this person is as a personality (their temperament, inner strengths, how they cope, and one gentle blind spot). Rules:
+- Each bullet: a short *bold* 2–4 word label, then one warm, specific sentence. Never more than one sentence per bullet.
+- Speak TO the person ("you tend to…"). Be encouraging and psychologically realistic, never generic.
+- No medical, diagnostic, or lifespan claims. No preamble, no closing line — only the bullets.
+- Use a "•" at the start of each bullet.
+- Write the entire response in ${language}.`;
+
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: 'Write the 3–4 point personality read.' },
+    ],
+    max_tokens: 400,
+    temperature: 0.7,
+  });
+
+  return response.choices[0].message.content.trim();
+}
+
+/**
+ * Produce a short 3–4 point astrology read from the user's birth details (and an
+ * optional palm/kundli image). Shown right after the astro details are collected,
+ * before payment. Returns 3–4 short *bold*-headed WhatsApp bullets.
+ *
+ * @param {Object} details - { name, dob, birthTime, gender, hasKundli, language }
+ * @param {string|null} imageUrl - Public URL of a palm/kundli IMAGE (jpg), or null
+ * @returns {Promise<string>} - 3–4 bullet astro read
+ */
+async function astroSummary(details, imageUrl) {
+  const client = getClient();
+  const language = languageName(details.language);
+
+  const palmLine = imageUrl
+    ? 'An image (palm or kundli) is attached — read only its general character cues and weave them in as gentle tendencies, never as medical, identity, age, or lifespan claims.'
+    : details.hasKundli
+      ? 'The person shared their Kundli (birth chart) — treat the reading as chart-informed.'
+      : 'Build the reading from the birth details; present astrological cues as gentle, plausible tendencies.';
+
+  const systemPrompt = `You are an astrologer synthesising Vedic astrology and palmistry into a short, warm reading.
+
+Person:
+- Name: ${details.name || ''}
+- Date of Birth: ${details.dob || 'unknown'}
+- Time of Birth: ${details.birthTime || 'unknown'}
+- Gender: ${details.gender || ''}
+- Palm/Kundli: ${palmLine}
+
+Write EXACTLY 3–4 bullet points as the person's astro read (their core nature, strengths/planetary leanings, the current life theme, and one gentle caution). Rules:
+- Each bullet: a short *bold* 2–4 word label, then one warm, specific sentence. Never more than one sentence per bullet.
+- Speak TO the person. Keep astrology jargon light and always explain it in human terms.
+- Use confident but non-absolute language. No medical, legal, financial, or lifespan predictions.
+- No preamble, no closing line — only the bullets, each starting with "•".
+- Write the entire response in ${language}.`;
+
+  const userContent = [{ type: 'text', text: 'Write the 3–4 point astro read.' }];
+  if (imageUrl) {
+    userContent.push({ type: 'image_url', image_url: { url: imageUrl, detail: 'low' } });
+  }
+
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userContent },
+    ],
+    max_tokens: 450,
+    temperature: 0.7,
+  });
+
+  const text = response.choices[0].message.content.trim();
+  // If the vision model balked at the image, retry once without it.
+  if (imageUrl && looksLikeRefusal(text)) {
+    console.warn('[OpenAI] astroSummary declined the image — retrying without it.');
+    return astroSummary({ ...details }, null);
+  }
+  return text;
+}
+
+/**
  * Synthesise a recovery recommendation from Q&A answers.
  * @param {string} category - 'X', 'Y', or 'Z'
  * @param {string[]} answers - Array of answers matching the question set
@@ -481,4 +582,4 @@ function parseReviewResponse(response) {
   return { message, medicines };
 }
 
-module.exports = { analyseUser, astrologyReading, recoverSynthesis, detectCategory, embedText, reviewAndPrescribe, reviewFreeform };
+module.exports = { analyseUser, astrologyReading, personalitySummary, astroSummary, recoverSynthesis, detectCategory, embedText, reviewAndPrescribe, reviewFreeform };

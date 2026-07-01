@@ -1,5 +1,6 @@
 const { sendText, sendButtons, sendList } = require('../../services/whatsapp');
 const { saveSession, resetSession } = require('../stateManager');
+const { personalitySummary } = require('../../services/openai');
 const consultFlow = require('./consult');
 const {
   t,
@@ -355,7 +356,36 @@ async function saveAndStartPath(whatsappId, lang, buffer) {
     return;
   }
 
+  // Share a short 3–4 point personality read (from ChatGPT) before the user
+  // chooses a path. Best-effort — a failure here never blocks the journey.
+  await sendPersonalitySummary(whatsappId, lang, buffer);
+
   await consultFlow.startPathSelect(whatsappId, user, buffer);
+}
+
+/**
+ * Generate and send a 3–4 point personality read from the intake answers.
+ * Best-effort: on any error we send a gentle fallback and continue.
+ */
+async function sendPersonalitySummary(whatsappId, lang, buffer) {
+  try {
+    const read = await personalitySummary({
+      name: buffer.name,
+      gender: buffer.gender,
+      concern: buffer.concern,
+      realize: buffer.realize,
+      affect: buffer.affect,
+      severity: buffer.severity,
+      language: lang,
+    });
+    if (read) {
+      await sendText(whatsappId, `${t('personalityIntro', lang)}\n\n${read}`);
+      return;
+    }
+  } catch (err) {
+    console.error('[Registration] Personality summary error:', err.message);
+  }
+  await sendText(whatsappId, t('personalityError', lang));
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────

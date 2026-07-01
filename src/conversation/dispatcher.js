@@ -81,6 +81,7 @@ async function dispatch(whatsappId, message) {
     'ASTRO_DOB',
     'ASTRO_BIRTH_TIME',
     'PAYMENT_PENDING',
+    'MEDICAL_Q',
   ];
 
   if (registrationStates.includes(state)) {
@@ -141,6 +142,7 @@ function formatState(state) {
     ASTRO_DOB: 'Sharing date of birth',
     ASTRO_BIRTH_TIME: 'Sharing birth time',
     PAYMENT_PENDING: 'Awaiting payment',
+    MEDICAL_Q: 'Medical questions',
   };
   return labels[state] || state;
 }

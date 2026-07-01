@@ -405,6 +405,52 @@ const STRINGS = {
     hi: 'बताने के लिए धन्यवाद। 🙏 इससे मुझे आपको समझने में बहुत मदद मिलती है। 💚',
   },
 
+  // ── Personality read (3–4 points, shown after the summary is confirmed) ───────
+  personalityIntro: {
+    en: 'From everything you’ve shared, here’s a little of what I sense about *you* 💚:',
+    hi: 'आपने जो कुछ बताया, उससे मुझे *आपके* बारे में कुछ ऐसा महसूस होता है 💚:',
+  },
+  personalityError: {
+    en: 'I couldn’t prepare your personality note just now, but that’s okay — let’s keep going. 💚',
+    hi: 'मैं अभी आपका व्यक्तित्व नोट तैयार नहीं कर पाया, पर कोई बात नहीं — चलिए आगे बढ़ते हैं। 💚',
+  },
+
+  // ── Astro read (3–4 points, shown after kundli/DOB details) ───────────────────
+  astroResultIntro: {
+    en: 'Thank you. 🙏 Based on your birth details, here’s a short reading for *you* 🔮:',
+    hi: 'धन्यवाद। 🙏 आपके जन्म विवरण के आधार पर, यह रही *आपके* लिए एक छोटी रीडिंग 🔮:',
+  },
+  astroResultError: {
+    en: 'I couldn’t prepare your astro reading just now, but that’s okay — let’s continue. 💚',
+    hi: 'मैं अभी आपकी ज्योतिष रीडिंग तैयार नहीं कर पाया, पर कोई बात नहीं — चलिए आगे बढ़ते हैं। 💚',
+  },
+
+  // ── Post-payment medical questions (asked before the expert handoff) ──────────
+  medicalIntro: {
+    en: '🩺 Before I connect you with our expert, I’d like to ask you a few short medical questions so they can help you better. Please answer honestly — there are no wrong answers. 💚',
+    hi: '🩺 आपको हमारे विशेषज्ञ से जोड़ने से पहले, मैं आपसे कुछ छोटे मेडिकल सवाल पूछना चाहूँगा ताकि वे आपकी बेहतर मदद कर सकें। कृपया सच्चाई से उत्तर दें — कोई उत्तर ग़लत नहीं है। 💚',
+  },
+  medicalQuestion: {
+    en: ({ n, text, options }) => `*Question ${n}:*\n${text}${options}`,
+    hi: ({ n, text, options }) => `*प्रश्न ${n}:*\n${text}${options}`,
+  },
+  medicalOptionsHint: {
+    en: '\n\n_Reply with the number of your choice._',
+    hi: '\n\n_अपनी पसंद का नंबर लिखकर उत्तर दें।_',
+  },
+  medicalOptionsHintMulti: {
+    en: '\n\n_Reply with the number(s) of your choice — separate multiple with commas._',
+    hi: '\n\n_अपनी पसंद के नंबर लिखें — एक से अधिक हों तो कॉमा से अलग करें।_',
+  },
+  medicalRetry: {
+    en: 'Please reply with a short answer to continue. 🙂',
+    hi: 'आगे बढ़ने के लिए कृपया एक छोटा उत्तर लिखिए। 🙂',
+  },
+  medicalDone: {
+    en: '✅ Thank you for sharing all of that. 🙏 Your answers are safely with our expert now. 💚',
+    hi: '✅ यह सब बताने के लिए धन्यवाद। 🙏 आपके उत्तर अब हमारे विशेषज्ञ के पास सुरक्षित हैं। 💚',
+  },
+
   // ── Path selection (Clinical vs Astro + Clinical) ─────────────────────────────
   pathIntro: {
     en: 'There are two ways we can work towards your cure together. 💚 You can choose whichever feels right for you.',

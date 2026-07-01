@@ -32,6 +32,7 @@ const sessionSchema = new mongoose.Schema(
         'ASTRO_DOB', // awaiting date of birth
         'ASTRO_BIRTH_TIME', // awaiting birth time
         'PAYMENT_PENDING', // doctor/expert joined, awaiting ₹399 payment
+        'MEDICAL_Q', // paid; collecting the medical questionnaire before handoff
         'SHIFTED', // paid; conversation handed off to the expert's number — terminal
         // ── Legacy (kept for back-compat) ─────────────────────────────────
         'REGISTERING_AGE',
