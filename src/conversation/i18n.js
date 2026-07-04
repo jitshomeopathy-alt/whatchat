@@ -113,12 +113,22 @@ const STRINGS = {
 
   // ── Birth time ───────────────────────────────────────────────────────────────
   askBirthTime: {
-    en: 'And do you know your *time of birth*? ⏰ Please share it in 24-hour format (e.g. 14:30). If you’re not sure, just type *"skip"*. 🙂',
-    hi: 'और क्या आपको अपना *जन्म समय* पता है? ⏰ कृपया 24-घंटे के प्रारूप में बताइए (जैसे 14:30)। यदि निश्चित नहीं हैं, तो बस *"skip"* लिखिए। 🙂',
+    en: 'And what is your exact *time of birth*? ⏰ This lets me calculate your precise birth chart — please share it in 24-hour format (e.g. 14:30).',
+    hi: 'और आपका सटीक *जन्म समय* क्या है? ⏰ इससे मैं आपकी सही जन्म कुंडली बना पाऊँगा — कृपया 24-घंटे के प्रारूप में बताइए (जैसे 14:30)।',
   },
   invalidBirthTime: {
-    en: 'That time doesn’t look right. 🤔 Please use 24-hour format like *14:30*, or type *"skip"* if you’re not sure. ⏰',
-    hi: 'यह समय सही नहीं लग रहा। 🤔 कृपया *14:30* जैसे 24-घंटे प्रारूप में लिखिए, या निश्चित न होने पर *"skip"* लिखिए। ⏰',
+    en: 'That time doesn’t look right. 🤔 Please share it in 24-hour format like *14:30* — I need this to build your chart accurately. ⏰',
+    hi: 'यह समय सही नहीं लग रहा। 🤔 कृपया *14:30* जैसे 24-घंटे प्रारूप में लिखिए — आपकी सटीक कुंडली बनाने के लिए यह ज़रूरी है। ⏰',
+  },
+
+  // ── Birth place ──────────────────────────────────────────────────────────────
+  askBirthPlace: {
+    en: 'And one last thing — which *city/town* were you born in? 📍 (e.g. Indore, Madhya Pradesh). This is needed to calculate your chart accurately.',
+    hi: 'और आख़िरी बात — आपका जन्म किस *शहर/कस्बे* में हुआ था? 📍 (जैसे इंदौर, मध्य प्रदेश)। आपकी सटीक कुंडली के लिए यह ज़रूरी है।',
+  },
+  birthPlaceNotFound: {
+    en: 'Hmm, I couldn’t quite place that on the map. 🗺️ Could you try again with the city and state, e.g. *"Indore, Madhya Pradesh"*? 📍',
+    hi: 'हम्म, मैं उसे नक़्शे पर ठीक से नहीं ढूँढ पाया। 🗺️ कृपया शहर और राज्य के साथ फिर से बताइए, जैसे *"इंदौर, मध्य प्रदेश"*? 📍',
   },
 
   // ── Gender button titles ─────────────────────────────────────────────────────

@@ -80,6 +80,7 @@ async function dispatch(whatsappId, message) {
     'ASTRO_KUNDLI',
     'ASTRO_DOB',
     'ASTRO_BIRTH_TIME',
+    'ASTRO_BIRTH_PLACE',
     'PAYMENT_PENDING',
     'MEDICAL_Q',
   ];
@@ -141,6 +142,7 @@ function formatState(state) {
     ASTRO_KUNDLI: 'Sharing kundli',
     ASTRO_DOB: 'Sharing date of birth',
     ASTRO_BIRTH_TIME: 'Sharing birth time',
+    ASTRO_BIRTH_PLACE: 'Sharing birth place',
     PAYMENT_PENDING: 'Awaiting payment',
     MEDICAL_Q: 'Medical questions',
   };

@@ -239,7 +239,7 @@ Write EXACTLY 3–4 bullet points about who this person is as a personality (the
  * optional palm/kundli image). Shown right after the astro details are collected,
  * before payment. Returns 3–4 short *bold*-headed WhatsApp bullets.
  *
- * @param {Object} details - { name, dob, birthTime, gender, hasKundli, language }
+ * @param {Object} details - { name, dob, birthTime, birthPlace, district, state, gender, hasKundli, language }
  * @param {string|null} imageUrl - Public URL of a palm/kundli IMAGE (jpg), or null
  * @returns {Promise<string>} - 3–4 bullet astro read
  */
@@ -259,6 +259,7 @@ Person:
 - Name: ${details.name || ''}
 - Date of Birth: ${details.dob || 'unknown'}
 - Time of Birth: ${details.birthTime || 'unknown'}
+- Place of Birth: ${details.birthPlace || 'unknown'}${details.district || details.state ? ` (${[details.district, details.state].filter(Boolean).join(', ')})` : ''}
 - Gender: ${details.gender || ''}
 - Palm/Kundli: ${palmLine}
 

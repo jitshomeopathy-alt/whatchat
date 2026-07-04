@@ -31,6 +31,7 @@ const sessionSchema = new mongoose.Schema(
         'ASTRO_KUNDLI', // awaiting kundli photo/pdf
         'ASTRO_DOB', // awaiting date of birth
         'ASTRO_BIRTH_TIME', // awaiting birth time
+        'ASTRO_BIRTH_PLACE', // awaiting place of birth (city/town — geocoded to lat/long, district, state)
         'PAYMENT_PENDING', // doctor/expert joined, awaiting ₹399 payment
         'MEDICAL_Q', // paid; collecting the medical questionnaire before handoff
         'SHIFTED', // paid; conversation handed off to the expert's number — terminal

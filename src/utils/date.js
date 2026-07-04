@@ -47,4 +47,15 @@ function isValidDob(input) {
   return !isNaN(new Date(s).getTime());
 }
 
-module.exports = { formatDob, isValidDob };
+/**
+ * Convert our stored dd-mm-yyyy DOB into the ISO yyyy-mm-dd form the
+ * astronomical calculation engine (services/jyotish.js) requires.
+ * @param {string} dmy - "dd-mm-yyyy"
+ * @returns {string} "yyyy-mm-dd"
+ */
+function toIsoDob(dmy) {
+  const [d, m, y] = String(dmy).split('-');
+  return `${y}-${m}-${d}`;
+}
+
+module.exports = { formatDob, isValidDob, toIsoDob };

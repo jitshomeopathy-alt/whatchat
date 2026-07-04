@@ -9,6 +9,7 @@ const adminRouter = require('./routes/admin');
 const publicRouter = require('./routes/public');
 const shopRouter = require('./routes/shop');
 const accountRouter = require('./routes/account');
+const kundaliRouter = require('./routes/kundali');
 const { initCollection } = require('./services/qdrant');
 const Article = require('./models/Article');
 const { renderArticlePage } = require('./utils/renderArticle');
@@ -112,6 +113,8 @@ app.use('/webhook', requireDB, webhookRouter);
 app.use('/admin', requireDB, adminRouter);
 app.use('/api/shop', requireDB, shopRouter);
 app.use('/api/account', requireDB, accountRouter);
+// Kundali/reading routes are pure computation + an outbound Anthropic call — no DB needed.
+app.use('/api', kundaliRouter);
 app.use('/api', requireDB, publicRouter);
 
 // Health check

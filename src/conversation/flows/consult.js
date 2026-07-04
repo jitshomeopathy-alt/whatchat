@@ -3,9 +3,12 @@ const { uploadFromUrl } = require('../../services/imagekit');
 const razorpay = require('../../services/razorpay');
 const email = require('../../services/email');
 const { astroSummary, detectCategory } = require('../../services/openai');
+const { geocodeBirthPlace } = require('../../services/geocode');
+const { calculateKundali } = require('../../services/jyotish');
+const { astroBulletReading } = require('../../services/astroClaude');
 const { getQuestionPlan } = require('../questions');
 const { saveSession, resetSession } = require('../stateManager');
-const { formatDob, isValidDob } = require('../../utils/date');
+const { formatDob, isValidDob, toIsoDob } = require('../../utils/date');
 const { t } = require('../i18n');
 const User = require('../../models/User');
 const AnalysisHistory = require('../../models/AnalysisHistory');
@@ -66,6 +69,8 @@ async function handle(whatsappId, message, session) {
       return handleDob(whatsappId, message, session);
     case 'ASTRO_BIRTH_TIME':
       return handleBirthTime(whatsappId, message, session);
+    case 'ASTRO_BIRTH_PLACE':
+      return handleBirthPlace(whatsappId, message, session);
     case 'PAYMENT_PENDING':
       return handlePayment(whatsappId, message, session);
     case 'MEDICAL_Q':
@@ -185,21 +190,60 @@ async function handleDob(whatsappId, message, session) {
   await sendText(whatsappId, t('askBirthTime', lang));
 }
 
+/**
+ * Birth time is now required (not skippable): the calculation engine needs it
+ * to compute a real Lagna/houses/dasha timeline, not just a rough guess.
+ */
 async function handleBirthTime(whatsappId, message, session) {
   const lang = session.language || 'en';
   const raw = extractText(message)?.trim();
-  let birthTime = null;
+  const parsed = raw ? parseBirthTime(raw) : null;
 
-  if (raw && raw.toLowerCase() !== 'skip') {
-    const parsed = parseBirthTime(raw);
-    if (!parsed) {
-      await sendText(whatsappId, t('invalidBirthTime', lang));
-      return;
-    }
-    birthTime = parsed;
+  if (!parsed) {
+    await sendText(whatsappId, t('invalidBirthTime', lang));
+    return;
   }
 
-  const buffer = { ...(session.registrationBuffer || {}), birthTime };
+  const buffer = { ...(session.registrationBuffer || {}), birthTime: parsed };
+  await saveSession(whatsappId, { state: 'ASTRO_BIRTH_PLACE', registrationBuffer: buffer });
+  await sendText(whatsappId, t('askBirthPlace', lang));
+}
+
+/**
+ * Collect the free-text place of birth and resolve it to lat/long, district and
+ * state via a free geocoder. Also required (not skippable): the engine needs a
+ * real lat/long to compute the ascendant and houses, so a failed lookup asks
+ * the user to retry with a more specific place rather than continuing blind.
+ */
+async function handleBirthPlace(whatsappId, message, session) {
+  const lang = session.language || 'en';
+  const raw = extractText(message)?.trim();
+
+  if (!raw) {
+    await sendText(whatsappId, t('askBirthPlace', lang));
+    return;
+  }
+
+  let geo = null;
+  try {
+    geo = await geocodeBirthPlace(raw);
+  } catch (err) {
+    console.error('[Consult] Geocoding error:', err.message);
+  }
+
+  if (!geo) {
+    await sendText(whatsappId, t('birthPlaceNotFound', lang));
+    return;
+  }
+
+  const buffer = {
+    ...(session.registrationBuffer || {}),
+    birthPlace: raw,
+    latitude: geo.latitude,
+    longitude: geo.longitude,
+    district: geo.district,
+    state: geo.state,
+  };
   await finalizeAstro(whatsappId, lang, buffer);
 }
 
@@ -220,6 +264,11 @@ async function finalizeAstro(whatsappId, lang, buffer) {
         kundliUrl: buffer.kundliUrl || null,
         dob: buffer.dob || null,
         birthTime: buffer.birthTime || null,
+        birthPlace: buffer.birthPlace || null,
+        latitude: buffer.latitude ?? null,
+        longitude: buffer.longitude ?? null,
+        district: buffer.district || null,
+        state: buffer.state || null,
       },
       { new: true }
     );
@@ -239,11 +288,24 @@ async function finalizeAstro(whatsappId, lang, buffer) {
 }
 
 /**
- * Generate and send a 3–4 point astro read from the collected birth details
- * (and a palm/kundli image when one is a photo). Best-effort: on any error we
- * send a gentle fallback and continue to payment.
+ * Generate and send a 3–4 point astro read before payment. Best-effort: on
+ * any error we send a gentle fallback and continue to payment regardless.
+ *
+ * Two paths, depending on what we actually collected:
+ *  - Precise data (dob + birth time + geocoded lat/long, from the palm→DOB→
+ *    birth-time→birth-place fallback): run the real calculation engine
+ *    (services/jyotish.js) and have Claude turn the computed chart + the
+ *    user's stated concern into the reading — see sendComputedAstroSummary.
+ *  - No precise data (the user shared their own Kundli image/PDF instead):
+ *    we have no birth coordinates to compute anything ourselves, so this
+ *    keeps the original GPT-4o vision read of whatever they shared.
  */
 async function sendAstroSummary(whatsappId, lang, buffer) {
+  const hasPreciseData = !!(buffer.dob && buffer.birthTime && buffer.latitude != null && buffer.longitude != null);
+  if (hasPreciseData) {
+    return sendComputedAstroSummary(whatsappId, lang, buffer);
+  }
+
   // Only jpg images can be read by the vision model; a PDF kundli is text-only.
   const imageUrl =
     buffer.palmUrl || (/\.jpe?g$/i.test(buffer.kundliUrl || '') ? buffer.kundliUrl : null);
@@ -253,6 +315,9 @@ async function sendAstroSummary(whatsappId, lang, buffer) {
         name: buffer.name,
         dob: buffer.dob,
         birthTime: buffer.birthTime,
+        birthPlace: buffer.birthPlace,
+        district: buffer.district,
+        state: buffer.state,
         gender: buffer.gender,
         hasKundli: !!buffer.kundliUrl,
         language: lang,
@@ -265,6 +330,32 @@ async function sendAstroSummary(whatsappId, lang, buffer) {
     }
   } catch (err) {
     console.error('[Consult] Astro summary error:', err.message);
+  }
+  await sendText(whatsappId, t('astroResultError', lang));
+}
+
+/**
+ * Compute the real Kundali (Lagna, planetary positions/houses, dasha, yogas,
+ * live transits) from the collected birth details, then have Claude turn it
+ * into a short WhatsApp read that explicitly ties the chart to the user's
+ * stated concern (astrology ↔ wellbeing framing + concern-specific evidence).
+ */
+async function sendComputedAstroSummary(whatsappId, lang, buffer) {
+  try {
+    const kundali = calculateKundali(toIsoDob(buffer.dob), buffer.birthTime, buffer.latitude, buffer.longitude);
+    const read = await astroBulletReading({
+      kundali,
+      name: buffer.name,
+      gender: buffer.gender,
+      concern: buffer.concern,
+      language: lang,
+    });
+    if (read) {
+      await sendText(whatsappId, `${t('astroResultIntro', lang)}\n\n${read}`);
+      return;
+    }
+  } catch (err) {
+    console.error('[Consult] Computed astro summary error:', err.message);
   }
   await sendText(whatsappId, t('astroResultError', lang));
 }
@@ -564,6 +655,7 @@ async function notifyAdminOfPayment(whatsappId, user, path) {
     `WhatsApp: ${whatsappId}`,
     `Path:     ${pathLabel}`,
     user?.dob ? `DOB:      ${user.dob}` : null,
+    user?.birthPlace ? `Birth Place: ${user.birthPlace}${user.district || user.state ? ` (${[user.district, user.state].filter(Boolean).join(', ')})` : ''}` : null,
     `Time:     ${new Date().toISOString()}`,
   ].filter(Boolean);
   await email.sendEmail({ subject, text: lines.join('\n') });

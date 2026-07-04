@@ -64,6 +64,27 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // Place of birth, as typed by the user (e.g. "Indore, Madhya Pradesh").
+    birthPlace: {
+      type: String,
+      default: null,
+    },
+    latitude: {
+      type: Number,
+      default: null,
+    },
+    longitude: {
+      type: Number,
+      default: null,
+    },
+    district: {
+      type: String,
+      default: null,
+    },
+    state: {
+      type: String,
+      default: null,
+    },
     createdAt: {
       type: Date,
       default: Date.now,
