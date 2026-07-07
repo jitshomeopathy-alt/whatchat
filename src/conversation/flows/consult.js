@@ -2,7 +2,7 @@ const { sendText, sendButtons, downloadMedia } = require('../../services/whatsap
 const { uploadFromUrl } = require('../../services/imagekit');
 const razorpay = require('../../services/razorpay');
 const email = require('../../services/email');
-const { astroSummary, detectCategory } = require('../../services/openai');
+const { detectCategory } = require('../../services/openai');
 const { geocodeBirthPlace } = require('../../services/geocode');
 const { calculateKundali } = require('../../services/jyotish');
 const { astroBulletReading } = require('../../services/astroClaude');
@@ -124,16 +124,21 @@ async function handlePathSelect(whatsappId, message, session) {
   await sendText(whatsappId, t('askKundli', lang));
 }
 
-// ── Astro details: kundli → (if skipped) palm → DOB → birth time ───────────────
+// ── Astro details: kundli (optional, never skips the rest) → palm → DOB → birth time → birth place ──
+/**
+ * The Kundli is purely optional supplementary material for the expert — a
+ * shared Kundli or a "skip" both lead on to the palm photo and then the
+ * required DOB/birth-time/birth-place steps, since those are what the
+ * calculation engine (services/jyotish.js) needs to produce the precise,
+ * date/time/location-grounded reading (see sendComputedAstroSummary).
+ */
 async function handleKundli(whatsappId, message, session) {
   const lang = session.language || 'en';
   const buffer = session.registrationBuffer || {};
 
   const text = extractText(message)?.toLowerCase().trim();
   if (text === 'skip') {
-    // No Kundli — collect palm photo, DOB and birth time instead.
-    await saveSession(whatsappId, { state: 'ASTRO_PALM', registrationBuffer: { ...buffer, kundliUrl: null } });
-    await sendText(whatsappId, t('askPalm', lang));
+    await advanceToPalm(whatsappId, lang, { ...buffer, kundliUrl: null });
     return;
   }
 
@@ -148,19 +153,21 @@ async function handleKundli(whatsappId, message, session) {
   const url = await uploadMedia(whatsappId, lang, mediaId, `user_${whatsappId}_kundli.${ext}`);
   if (url === undefined) return;
 
-  // Kundli provided — skip palm, DOB and birth time, and finalise directly.
-  await finalizeAstro(whatsappId, lang, { ...buffer, kundliUrl: url });
+  await advanceToPalm(whatsappId, lang, { ...buffer, kundliUrl: url });
 }
 
+async function advanceToPalm(whatsappId, lang, buffer) {
+  await saveSession(whatsappId, { state: 'ASTRO_PALM', registrationBuffer: buffer });
+  await sendText(whatsappId, t('askPalm', lang));
+}
+
+/**
+ * Palm photo is required (not skippable): Claude weaves real palmistry cues
+ * into the astro reading (see astroClaude.js), so we need an actual photo.
+ */
 async function handlePalm(whatsappId, message, session) {
   const lang = session.language || 'en';
   const buffer = session.registrationBuffer || {};
-
-  const text = extractText(message)?.toLowerCase().trim();
-  if (text === 'skip') {
-    await advanceAfterPalm(whatsappId, lang, { ...buffer, palmUrl: null });
-    return;
-  }
 
   if (message.type !== 'image') {
     await sendText(whatsappId, t('palmSendPrompt', lang));
@@ -279,66 +286,26 @@ async function finalizeAstro(whatsappId, lang, buffer) {
 
   await recordIntake(whatsappId, user, buffer);
 
-  // Share a short 3–4 point astro read (from ChatGPT) built from the kundli/DOB
-  // details before we move to payment. Best-effort. (The astro expert already
-  // "joined" up front when the astro path was selected.)
-  await sendAstroSummary(whatsappId, lang, buffer);
+  // Share a short 3–4 point astro read before we move to payment. Best-effort.
+  // (The astro expert already "joined" up front when the astro path was
+  // selected.) DOB, birth time and a geocoded birth place are always
+  // collected by this point (see handleBirthPlace), so we always run the
+  // real calculation engine rather than guessing from an image.
+  await sendComputedAstroSummary(whatsappId, lang, buffer);
 
   await requestPayment(whatsappId, lang, user);
-}
-
-/**
- * Generate and send a 3–4 point astro read before payment. Best-effort: on
- * any error we send a gentle fallback and continue to payment regardless.
- *
- * Two paths, depending on what we actually collected:
- *  - Precise data (dob + birth time + geocoded lat/long, from the palm→DOB→
- *    birth-time→birth-place fallback): run the real calculation engine
- *    (services/jyotish.js) and have Claude turn the computed chart + the
- *    user's stated concern into the reading — see sendComputedAstroSummary.
- *  - No precise data (the user shared their own Kundli image/PDF instead):
- *    we have no birth coordinates to compute anything ourselves, so this
- *    keeps the original GPT-4o vision read of whatever they shared.
- */
-async function sendAstroSummary(whatsappId, lang, buffer) {
-  const hasPreciseData = !!(buffer.dob && buffer.birthTime && buffer.latitude != null && buffer.longitude != null);
-  if (hasPreciseData) {
-    return sendComputedAstroSummary(whatsappId, lang, buffer);
-  }
-
-  // Only jpg images can be read by the vision model; a PDF kundli is text-only.
-  const imageUrl =
-    buffer.palmUrl || (/\.jpe?g$/i.test(buffer.kundliUrl || '') ? buffer.kundliUrl : null);
-  try {
-    const read = await astroSummary(
-      {
-        name: buffer.name,
-        dob: buffer.dob,
-        birthTime: buffer.birthTime,
-        birthPlace: buffer.birthPlace,
-        district: buffer.district,
-        state: buffer.state,
-        gender: buffer.gender,
-        hasKundli: !!buffer.kundliUrl,
-        language: lang,
-      },
-      imageUrl
-    );
-    if (read) {
-      await sendText(whatsappId, `${t('astroResultIntro', lang)}\n\n${read}`);
-      return;
-    }
-  } catch (err) {
-    console.error('[Consult] Astro summary error:', err.message);
-  }
-  await sendText(whatsappId, t('astroResultError', lang));
 }
 
 /**
  * Compute the real Kundali (Lagna, planetary positions/houses, dasha, yogas,
  * live transits) from the collected birth details, then have Claude turn it
  * into a short WhatsApp read that explicitly ties the chart to the user's
- * stated concern (astrology ↔ wellbeing framing + concern-specific evidence).
+ * exact date/time/place of birth and their full intake context — their
+ * concern, when it became real, what it affects, and their sense of control
+ * — not just a one-line concern label. If a palm photo was shared, it's
+ * passed through too so Claude can weave in palmistry cues alongside the
+ * computed chart. Best-effort: on any error we send a gentle fallback and
+ * continue to payment regardless.
  */
 async function sendComputedAstroSummary(whatsappId, lang, buffer) {
   try {
@@ -347,7 +314,16 @@ async function sendComputedAstroSummary(whatsappId, lang, buffer) {
       kundali,
       name: buffer.name,
       gender: buffer.gender,
+      dob: buffer.dob,
+      birthTime: buffer.birthTime,
+      birthPlace: buffer.birthPlace,
+      district: buffer.district,
+      state: buffer.state,
+      palmImageUrl: buffer.palmUrl || null,
       concern: buffer.concern,
+      realize: buffer.realize,
+      affect: buffer.affect,
+      severity: buffer.severity,
       language: lang,
     });
     if (read) {

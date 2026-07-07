@@ -492,12 +492,12 @@ const STRINGS = {
 
   // ── Astro details (asked only on the Astro + Clinical path) ───────────────────
   askPalm: {
-    en: 'To prepare your astro reading, please send a clear *photo of both your palms* 🖐️ (both hands open, fingers spread, good lighting).\n\n_(If you’d rather not, just type "skip".)_',
-    hi: 'आपकी ज्योतिष रीडिंग तैयार करने के लिए, कृपया अपनी *दोनों हथेलियों की एक साफ़ फ़ोटो* भेजिए 🖐️ (दोनों हाथ खुले, उंगलियाँ फैलाकर, अच्छी रोशनी में)।\n\n_(अगर आप नहीं चाहते, तो बस "skip" लिखिए।)_',
+    en: 'To prepare your astro reading, please send a clear *photo of both your palms* 🖐️ (both hands open, fingers spread, good lighting). This helps me read your palmistry cues alongside your birth chart.',
+    hi: 'आपकी ज्योतिष रीडिंग तैयार करने के लिए, कृपया अपनी *दोनों हथेलियों की एक साफ़ फ़ोटो* भेजिए 🖐️ (दोनों हाथ खुले, उंगलियाँ फैलाकर, अच्छी रोशनी में)। इससे मैं आपकी जन्म कुंडली के साथ हस्तरेखा भी पढ़ सकूँगा।',
   },
   palmSendPrompt: {
-    en: 'Please send a *photo* 🖐️, or type *"skip"* to continue without one. 🙂',
-    hi: 'कृपया एक *फ़ोटो* भेजिए 🖐️, या बिना फ़ोटो के आगे बढ़ने के लिए *"skip"* लिखिए। 🙂',
+    en: 'Please send a clear *photo of both your palms* 🖐️ — I need this to complete your reading. 🙂',
+    hi: 'कृपया अपनी *दोनों हथेलियों की एक साफ़ फ़ोटो* भेजिए 🖐️ — आपकी रीडिंग पूरी करने के लिए यह ज़रूरी है। 🙂',
   },
   askKundli: {
     en: 'If you have your *Kundli (birth chart)*, please share it as a photo or PDF 📜.\n\n_(If you don’t have it handy, just type "skip".)_',
