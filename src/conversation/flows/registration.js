@@ -196,7 +196,10 @@ async function handle(whatsappId, message, session) {
 
     const picked = options.find((o) => o.id === id);
     if (!picked) {
+      // Re-send the list too — if they cleared the chat and typed "hi", the
+      // original tappable list is gone, so a text nudge alone leaves them stuck.
       await sendText(whatsappId, t('concernRetry', lang));
+      await sendConcernList(whatsappId, lang);
       return;
     }
 
@@ -256,7 +259,15 @@ async function handle(whatsappId, message, session) {
     const id = message.interactive?.id || null;
     const picked = affectOptions(lang).find((o) => o.id === id);
     if (!picked) {
+      // Re-send the list so a returning/cleared-chat user can still tap.
       await sendText(whatsappId, t('affectRetry', lang));
+      await sendList(
+        whatsappId,
+        t('affectPrompt', lang),
+        t('affectButton', lang),
+        affectOptions(lang).map((o) => ({ id: o.id, title: o.title })),
+        { header: t('affectHeader', lang), sectionTitle: t('affectSection', lang) }
+      );
       return;
     }
 
@@ -280,7 +291,15 @@ async function handle(whatsappId, message, session) {
     const id = message.interactive?.id || null;
     const picked = severityOptions(lang).find((o) => o.id === id);
     if (!picked) {
+      // Re-send the list so a returning/cleared-chat user can still tap.
       await sendText(whatsappId, t('severityRetry', lang));
+      await sendList(
+        whatsappId,
+        t('severityPrompt', lang),
+        t('severityButton', lang),
+        severityOptions(lang).map((o) => ({ id: o.id, title: o.title })),
+        { header: t('severityHeader', lang), sectionTitle: t('severitySection', lang) }
+      );
       return;
     }
 

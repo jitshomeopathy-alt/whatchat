@@ -534,6 +534,82 @@ const STRINGS = {
     en: '🙏 Your chat has been shifted to our expert’s number — please continue there. Thank you! 💚',
     hi: '🙏 आपकी बातचीत हमारे विशेषज्ञ के नंबर पर स्थानांतरित कर दी गई है — कृपया वहीं आगे बढ़ें। धन्यवाद! 💚',
   },
+
+  // ── Doctor consultation questionnaire (direct "Consult a doctor" path) ────────
+  // Asked, one at a time, after payment on the direct doctor-consult path, so
+  // Dr. Jit has full clinical context before the chat is handed off.
+  diIntro: {
+    en: '🙏 Thank you. To help Dr. Jit understand your case, I’ll ask you a few quick questions. It won’t take long. 💚',
+    hi: '🙏 धन्यवाद। डॉ. जित को आपकी स्थिति समझने में मदद के लिए, मैं आपसे कुछ छोटे सवाल पूछूँगा। इसमें ज़्यादा समय नहीं लगेगा। 💚',
+  },
+  diAskArea: {
+    en: 'Which area best describes your concern today?',
+    hi: 'आज आपकी समस्या किस क्षेत्र से सबसे ज़्यादा जुड़ी है?',
+  },
+  diAskProblem: {
+    en: 'In your own words, what is the main problem you’re facing right now?\n\nDescribe it as much as you’d like — there’s no fixed format, just tell me the way you would tell a doctor in person.',
+    hi: 'अपने शब्दों में बताइए, अभी आपकी मुख्य समस्या क्या है?\n\nजितना चाहें उतना विस्तार से बताइए — कोई तय प्रारूप नहीं है, बस ऐसे बताइए जैसे आप किसी डॉक्टर को सामने बैठकर बताते।',
+  },
+  diAskSince: {
+    en: 'Since when have you been experiencing this?\n\nTap an option below, or type it in your own words.',
+    hi: 'यह समस्या आपको कब से है?\n\nनीचे कोई विकल्प चुनिए, या अपने शब्दों में लिखिए।',
+  },
+  diAskWorse: {
+    en: 'Is there anything that makes it worse — certain weather, food, time of day, stress, after eating, at night?\n\nTap an option, tell me whatever you’ve noticed, or write "not sure".',
+    hi: 'क्या कोई चीज़ इसे बढ़ाती है — कोई मौसम, भोजन, दिन का समय, तनाव, खाने के बाद, रात में?\n\nकोई विकल्प चुनिए, जो भी आपने महसूस किया हो बताइए, या "पता नहीं" लिखिए।',
+  },
+  diAskBetter: {
+    en: 'And is there anything that makes it feel better — rest, warmth, a specific position, medicine?',
+    hi: 'और क्या कोई चीज़ इसे बेहतर महसूस कराती है — आराम, गर्माहट, कोई ख़ास मुद्रा, दवा?',
+  },
+  diAskTreatment: {
+    en: 'Have you taken any treatment for this already — allopathic, homeopathic, home remedies, or anything else?\n\nIf yes, please tell me what, and whether it helped.',
+    hi: 'क्या आपने इसके लिए पहले कोई इलाज लिया है — एलोपैथिक, होम्योपैथिक, घरेलू उपाय, या कुछ और?\n\nयदि हाँ, तो कृपया बताइए क्या लिया और उससे आराम मिला या नहीं।',
+  },
+  diAskSleep: {
+    en: 'How has your sleep been lately?',
+    hi: 'आजकल आपकी नींद कैसी रही है?',
+  },
+  diAskEnergy: {
+    en: 'How is your energy level through the day?',
+    hi: 'दिनभर आपकी ऊर्जा (एनर्जी) कैसी रहती है?',
+  },
+  diAskAppetite: {
+    en: 'How is your appetite?',
+    hi: 'आपकी भूख कैसी है?',
+  },
+  diAskStress: {
+    en: 'How would you rate your stress level these days?',
+    hi: 'इन दिनों आप अपने तनाव के स्तर को कैसा बताएँगे?',
+  },
+  diAskReports: {
+    en: 'Do you have any medical reports related to this — blood tests, prescriptions, scans, ultrasound, etc.?\n\nIf yes, you can upload them now (photo or PDF). This helps Dr. Jit understand your case better.\n\nIf not, just type "skip".',
+    hi: 'क्या इससे जुड़ी आपके पास कोई मेडिकल रिपोर्ट है — ब्लड टेस्ट, पर्ची, स्कैन, अल्ट्रासाउंड आदि?\n\nयदि हाँ, तो आप अभी उन्हें भेज सकते हैं (फ़ोटो या PDF)। इससे डॉ. जित आपकी स्थिति बेहतर समझ पाएँगे।\n\nयदि नहीं, तो बस "skip" लिखिए।',
+  },
+  diAskOther: {
+    en: 'Any other problem you’d like to mention?\n\nType it here, or type "skip" to submit.',
+    hi: 'कोई और समस्या जो आप बताना चाहें?\n\nयहाँ लिखिए, या भेजने के लिए "skip" लिखिए।',
+  },
+  diSubmitted: {
+    en: '🙏 Thank you! I’ve noted everything down for Dr. Jit. 💚',
+    hi: '🙏 धन्यवाद! मैंने डॉ. जित के लिए सब कुछ नोट कर लिया है। 💚',
+  },
+  diPickOption: {
+    en: 'Please tap one of the options above so I can note it down. 🙂👆',
+    hi: 'कृपया ऊपर दिए विकल्पों में से एक चुनिए ताकि मैं उसे नोट कर सकूँ। 🙂👆',
+  },
+  diTypeAnswer: {
+    en: 'Please type your answer in a few words so I can note it down. 🙂',
+    hi: 'कृपया कुछ शब्दों में अपना उत्तर लिखिए ताकि मैं उसे नोट कर सकूँ। 🙂',
+  },
+  diReportsSendOrSkip: {
+    en: 'Please send a *photo or PDF* of your report 📄, or type *"skip"* to continue. 🙂',
+    hi: 'कृपया अपनी रिपोर्ट की *फ़ोटो या PDF* 📄 भेजिए, या आगे बढ़ने के लिए *"skip"* लिखिए। 🙂',
+  },
+  diChoose: { en: 'Choose', hi: 'चुनें' },
+  diHeaderArea: { en: 'Your concern', hi: 'आपकी समस्या' },
+  diHeaderSince: { en: 'Since when', hi: 'कब से' },
+  diHeaderWorse: { en: 'Triggers', hi: 'कारण' },
 };
 
 // ── Tappable / sequential option sets (kept here so flows stay declarative) ─────
@@ -619,6 +695,90 @@ function severityOptions(lang = 'en') {
   return rows.map((r) => ({ id: `sev:${r.id}`, title: r[l], value: r[l] }));
 }
 
+// ── Doctor consultation questionnaire option sets ───────────────────────────────
+// The stored `value` is always the English label so the doctor's intake email
+// reads consistently regardless of the language the user chose.
+function diAreaOptions(lang = 'en') {
+  const rows = [
+    { id: 'sexual',    en: 'Sexual Health',            hi: 'यौन स्वास्थ्य' },
+    { id: 'hair',      en: 'Hair & Scalp',             hi: 'बाल और सिर की त्वचा' },
+    { id: 'skin',      en: 'Skin & Beauty',            hi: 'त्वचा और सुंदरता' },
+    { id: 'weight',    en: 'Weight Loss',              hi: 'वज़न घटाना' },
+    { id: 'stress',    en: 'Stress, Anxiety & Sleep',  hi: 'तनाव, चिंता और नींद' },
+    { id: 'pcos',      en: "PCOS & Women's Health",     hi: 'PCOS और महिला स्वास्थ्य' },
+    { id: 'diabetes',  en: 'Diabetes & Thyroid Care',  hi: 'मधुमेह और थायरॉइड' },
+    { id: 'digestion', en: 'Digestion & Gut Health',   hi: 'पाचन और पेट स्वास्थ्य' },
+    { id: 'joint',     en: 'Joint & Back Pain',        hi: 'जोड़ और कमर दर्द' },
+    { id: 'child',     en: 'Child Health & Immunity',  hi: 'बाल एवं इम्युनिटी' },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({ id: `diarea:${r.id}`, title: r[l], value: r.en }));
+}
+
+function diSinceOptions(lang = 'en') {
+  const rows = [
+    { id: 'lt1w',  en: 'Less than 1 week',  hi: '1 सप्ताह से कम' },
+    { id: '1to4w', en: '1–4 weeks',         hi: '1–4 सप्ताह' },
+    { id: '1to6m', en: '1–6 months',        hi: '1–6 महीने' },
+    { id: 'gt6m',  en: 'More than 6 months', hi: '6 महीने से ज़्यादा' },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({ id: `disince:${r.id}`, title: r[l], value: r.en }));
+}
+
+function diWorseOptions(lang = 'en') {
+  const rows = [
+    { id: 'weather',  en: 'Weather',           hi: 'मौसम' },
+    { id: 'food',     en: 'Food',              hi: 'भोजन' },
+    { id: 'stress',   en: 'Stress',            hi: 'तनाव' },
+    { id: 'timeofday',en: 'Time of day',       hi: 'दिन का समय' },
+    { id: 'activity', en: 'Physical activity', hi: 'शारीरिक गतिविधि' },
+    { id: 'notsure',  en: 'Not sure',          hi: 'पता नहीं' },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({ id: `diworse:${r.id}`, title: r[l], value: r.en }));
+}
+
+function diSleepOptions(lang = 'en') {
+  const rows = [
+    { id: 'good',      en: 'Good',      hi: 'अच्छी' },
+    { id: 'disturbed', en: 'Disturbed', hi: 'बाधित' },
+    { id: 'verypoor',  en: 'Very poor', hi: 'बहुत ख़राब' },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({ id: `disleep:${r.id}`, title: r[l], value: r.en }));
+}
+
+function diEnergyOptions(lang = 'en') {
+  const rows = [
+    { id: 'good',    en: 'Good',     hi: 'अच्छी' },
+    { id: 'low',     en: 'Low',      hi: 'कम' },
+    { id: 'verylow', en: 'Very low', hi: 'बहुत कम' },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({ id: `dienergy:${r.id}`, title: r[l], value: r.en }));
+}
+
+function diAppetiteOptions(lang = 'en') {
+  const rows = [
+    { id: 'normal',    en: 'Normal',    hi: 'सामान्य' },
+    { id: 'increased', en: 'Increased', hi: 'बढ़ी हुई' },
+    { id: 'reduced',   en: 'Reduced',   hi: 'घटी हुई' },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({ id: `diappetite:${r.id}`, title: r[l], value: r.en }));
+}
+
+function diStressOptions(lang = 'en') {
+  const rows = [
+    { id: 'low',      en: 'Low',      hi: 'कम' },
+    { id: 'moderate', en: 'Moderate', hi: 'मध्यम' },
+    { id: 'high',     en: 'High',     hi: 'ज़्यादा' },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({ id: `distress:${r.id}`, title: r[l], value: r.en }));
+}
+
 /**
  * Short, warm "human touch" lines dropped in between questions to keep the
  * questionnaire feeling like a caring conversation rather than a form. Picked in
@@ -683,4 +843,11 @@ module.exports = {
   concernOptions,
   affectOptions,
   severityOptions,
+  diAreaOptions,
+  diSinceOptions,
+  diWorseOptions,
+  diSleepOptions,
+  diEnergyOptions,
+  diAppetiteOptions,
+  diStressOptions,
 };

@@ -1,4 +1,4 @@
-const { sendText, sendButtons, downloadMedia } = require('../../services/whatsapp');
+const { sendText, sendButtons, sendList, downloadMedia } = require('../../services/whatsapp');
 const { uploadFromUrl } = require('../../services/imagekit');
 const razorpay = require('../../services/razorpay');
 const email = require('../../services/email');
@@ -9,7 +9,16 @@ const { astroBulletReading } = require('../../services/astroClaude');
 const { getQuestionPlan } = require('../questions');
 const { saveSession, resetSession } = require('../stateManager');
 const { formatDob, isValidDob, toIsoDob } = require('../../utils/date');
-const { t } = require('../i18n');
+const {
+  t,
+  diAreaOptions,
+  diSinceOptions,
+  diWorseOptions,
+  diSleepOptions,
+  diEnergyOptions,
+  diAppetiteOptions,
+  diStressOptions,
+} = require('../i18n');
 const User = require('../../models/User');
 const AnalysisHistory = require('../../models/AnalysisHistory');
 
@@ -75,6 +84,8 @@ async function handle(whatsappId, message, session) {
       return handlePayment(whatsappId, message, session);
     case 'MEDICAL_Q':
       return handleMedical(whatsappId, message, session);
+    case 'DOCTOR_INTAKE':
+      return handleDoctorIntake(whatsappId, message, session);
     default:
       return;
   }
@@ -438,6 +449,13 @@ async function completePayment(whatsappId) {
     console.error('[Consult] Admin payment email failed:', err.message)
   );
 
+  // Direct "Consult a doctor" path → the fixed clinical questionnaire so Dr. Jit
+  // has full context. The Explore paths (astro/clinical) keep the adaptive,
+  // concern-driven question set.
+  if (path === 'doctor') {
+    return startDoctorIntake(whatsappId, lang);
+  }
+
   // Collect a short medical questionnaire, then hand the user off to the expert.
   await startMedicalQuestions(whatsappId, lang, user, path);
 }
@@ -576,6 +594,179 @@ async function recordMedical(whatsappId, user, category, plan, answers) {
     response: 'Medical questionnaire submitted — awaiting expert follow-up.',
     medicines: [],
   });
+}
+
+// ── Direct "Consult a doctor" questionnaire ──────────────────────────────────
+/**
+ * The fixed clinical questionnaire run after payment on the direct
+ * "Consult a doctor" path. Declared as data so the single handler below can
+ * drive every step uniformly. `type`:
+ *   - 'list'    → tappable list; when `acceptText` is set, typed free text is
+ *                 also accepted (used for "since when" / "what makes it worse").
+ *   - 'buttons' → up to 3 reply buttons; a tap is required.
+ *   - 'text'    → free text; `skippable` steps accept "skip".
+ *   - 'upload'  → a photo/PDF; always skippable via "skip".
+ * The stored answer is the option's English `value` (for selectables) or the
+ * user's text, so the doctor's intake email reads consistently.
+ */
+function doctorIntakeSteps(lang) {
+  return [
+    { key: 'area',      label: 'Concern area',    type: 'list',    header: t('diHeaderArea', lang),  prompt: t('diAskArea', lang),      options: diAreaOptions(lang) },
+    { key: 'problem',   label: 'Main problem',    type: 'text',                                       prompt: t('diAskProblem', lang) },
+    { key: 'since',     label: 'Since when',      type: 'list',    header: t('diHeaderSince', lang), prompt: t('diAskSince', lang),     options: diSinceOptions(lang),  acceptText: true },
+    { key: 'worse',     label: 'Makes it worse',  type: 'list',    header: t('diHeaderWorse', lang), prompt: t('diAskWorse', lang),     options: diWorseOptions(lang),  acceptText: true },
+    { key: 'better',    label: 'Makes it better', type: 'text',                                       prompt: t('diAskBetter', lang) },
+    { key: 'treatment', label: 'Treatment taken', type: 'text',                                       prompt: t('diAskTreatment', lang) },
+    { key: 'sleep',     label: 'Sleep',           type: 'buttons',                                    prompt: t('diAskSleep', lang),     options: diSleepOptions(lang) },
+    { key: 'energy',    label: 'Energy',          type: 'buttons',                                    prompt: t('diAskEnergy', lang),    options: diEnergyOptions(lang) },
+    { key: 'appetite',  label: 'Appetite',        type: 'buttons',                                    prompt: t('diAskAppetite', lang),  options: diAppetiteOptions(lang) },
+    { key: 'stress',    label: 'Stress level',    type: 'buttons',                                    prompt: t('diAskStress', lang),    options: diStressOptions(lang) },
+    { key: 'reports',   label: 'Medical reports', type: 'upload',  skippable: true,                   prompt: t('diAskReports', lang) },
+    { key: 'other',     label: 'Anything else',   type: 'text',    skippable: true,                   prompt: t('diAskOther', lang) },
+  ];
+}
+
+/** Start the fixed doctor questionnaire (after payment on the direct doctor path). */
+async function startDoctorIntake(whatsappId, lang = 'en') {
+  await saveSession(whatsappId, { state: 'DOCTOR_INTAKE', recoverAnswers: [], currentQuestion: 0 });
+  await sendText(whatsappId, t('diIntro', lang));
+  await sendDoctorQuestion(whatsappId, lang, doctorIntakeSteps(lang)[0]);
+}
+
+/** Render one questionnaire step (list, buttons, or plain text prompt). */
+async function sendDoctorQuestion(whatsappId, lang, step) {
+  if (step.type === 'list') {
+    await sendList(
+      whatsappId,
+      step.prompt,
+      t('diChoose', lang),
+      step.options.map((o) => ({ id: o.id, title: o.title })),
+      { header: step.header, sectionTitle: step.header }
+    );
+    return;
+  }
+  if (step.type === 'buttons') {
+    await sendButtons(whatsappId, step.prompt, step.options.map((o) => ({ id: o.id, title: o.title })));
+    return;
+  }
+  await sendText(whatsappId, step.prompt);
+}
+
+/**
+ * Drive the fixed doctor questionnaire one step at a time. Captures the answer
+ * for the current step, then advances (or, if the reply doesn't fit, re-sends
+ * the same question so the user is never stuck without something to respond to
+ * — important when they've cleared the chat and lost the previous prompt).
+ */
+async function handleDoctorIntake(whatsappId, message, session) {
+  const lang = session.language || 'en';
+  const steps = doctorIntakeSteps(lang);
+  const idx = session.currentQuestion || 0;
+  const step = steps[idx];
+  if (!step) return; // out of range — nothing to do
+
+  const id = interactiveId(message);
+  const text = extractText(message)?.trim();
+  let answer = null;
+
+  if (step.type === 'buttons' || (step.type === 'list' && !step.acceptText)) {
+    // A provided option must be tapped.
+    const picked = step.options.find((o) => o.id === id);
+    if (!picked) {
+      await sendText(whatsappId, t('diPickOption', lang));
+      await sendDoctorQuestion(whatsappId, lang, step);
+      return;
+    }
+    answer = picked.value;
+  } else if (step.type === 'list' && step.acceptText) {
+    // Tap OR type — both are valid here.
+    const picked = id ? step.options.find((o) => o.id === id) : null;
+    if (picked) answer = picked.value;
+    else if (text) answer = text.slice(0, 1000);
+    else {
+      await sendDoctorQuestion(whatsappId, lang, step);
+      return;
+    }
+  } else if (step.type === 'upload') {
+    if (text && text.toLowerCase() === 'skip') {
+      answer = '(skipped)';
+    } else {
+      const mediaId =
+        message.type === 'image' ? message.image?.id : message.type === 'document' ? message.document?.id : null;
+      if (!mediaId) {
+        await sendText(whatsappId, t('diReportsSendOrSkip', lang));
+        return;
+      }
+      const ext = message.type === 'document' ? 'pdf' : 'jpg';
+      const url = await uploadMedia(whatsappId, lang, mediaId, `user_${whatsappId}_report.${ext}`);
+      if (url === undefined) return; // upload failed; user already prompted to retry
+      answer = url;
+    }
+  } else {
+    // Free-text step.
+    if (step.skippable && text && text.toLowerCase() === 'skip') {
+      answer = '(skipped)';
+    } else if (!text || text.length < 2) {
+      await sendText(whatsappId, t('diTypeAnswer', lang));
+      return;
+    } else {
+      answer = text.slice(0, 1000);
+    }
+  }
+
+  const answers = [...(session.recoverAnswers || []), answer];
+  const nextIdx = idx + 1;
+
+  if (nextIdx < steps.length) {
+    await saveSession(whatsappId, { recoverAnswers: answers, currentQuestion: nextIdx });
+    await sendDoctorQuestion(whatsappId, lang, steps[nextIdx]);
+    return;
+  }
+
+  // All answered — persist for the doctor, thank the user, then hand off.
+  await saveSession(whatsappId, { recoverAnswers: answers, currentQuestion: nextIdx });
+  const user = await User.findOne({ whatsappId });
+  await recordDoctorIntake(whatsappId, user, steps, answers).catch((err) =>
+    console.error('[Consult] Doctor intake save error:', err.message)
+  );
+  await sendText(whatsappId, t('diSubmitted', lang));
+  await finish(whatsappId, lang, user, 'doctor');
+}
+
+/**
+ * Persist the doctor questionnaire. The direct doctor path has no registered
+ * User, so the reliable channel to the doctor is email; we also write an
+ * AnalysisHistory row when a User record does exist. Best-effort.
+ */
+async function recordDoctorIntake(whatsappId, user, steps, answers) {
+  const qa = steps.map((s, i) => ({ question: s.label, answer: answers[i] || '' }));
+  const name = user?.name || 'Unknown';
+
+  const lines = [
+    'A user completed the doctor consultation questionnaire.',
+    '',
+    `Name:     ${name}`,
+    `WhatsApp: ${whatsappId}`,
+    '',
+    ...qa.map((x) => `${x.question}: ${x.answer}`),
+    '',
+    `Time:     ${new Date().toISOString()}`,
+  ];
+  await email
+    .sendEmail({ subject: `🩺 Doctor consultation intake — ${name}`, text: lines.join('\n') })
+    .catch((err) => console.error('[Consult] Doctor intake email failed:', err.message));
+
+  if (user) {
+    await AnalysisHistory.create({
+      userId: user._id,
+      whatsappId,
+      type: 'recover',
+      prompt: 'Doctor consultation questionnaire',
+      qa,
+      response: 'Doctor questionnaire submitted — awaiting expert follow-up.',
+      medicines: [],
+    });
+  }
 }
 
 /**

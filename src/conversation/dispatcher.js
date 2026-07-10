@@ -83,6 +83,7 @@ async function dispatch(whatsappId, message) {
     'ASTRO_BIRTH_PLACE',
     'PAYMENT_PENDING',
     'MEDICAL_Q',
+    'DOCTOR_INTAKE',
   ];
 
   if (registrationStates.includes(state)) {
@@ -145,6 +146,7 @@ function formatState(state) {
     ASTRO_BIRTH_PLACE: 'Sharing birth place',
     PAYMENT_PENDING: 'Awaiting payment',
     MEDICAL_Q: 'Medical questions',
+    DOCTOR_INTAKE: 'Doctor questionnaire',
   };
   return labels[state] || state;
 }
