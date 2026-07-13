@@ -8,8 +8,8 @@ const Order = require('../models/Order');
 
 // How long to show the "typing…" indicator before our reply, for a human feel.
 // Randomised within a small range so it never feels mechanically uniform.
-const TYPING_MIN_MS = parseInt(process.env.TYPING_MIN_MS, 10) || 5000;
-const TYPING_MAX_MS = parseInt(process.env.TYPING_MAX_MS, 10) || 5000;
+const TYPING_MIN_MS = parseInt(process.env.TYPING_MIN_MS, 10) || 3000;
+const TYPING_MAX_MS = parseInt(process.env.TYPING_MAX_MS, 10) || 3000;
 
 function humanTypingDelay() {
   const lo = Math.min(TYPING_MIN_MS, TYPING_MAX_MS);

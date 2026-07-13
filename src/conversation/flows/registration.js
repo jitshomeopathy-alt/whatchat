@@ -65,11 +65,8 @@ async function handle(whatsappId, message, session) {
       registrationBuffer: { ...(session.registrationBuffer || {}), language },
     });
 
-    // Send the intro messages one-by-one, then the intro image, then the
+    // Send the intro image first, then the intro messages one-by-one, then the
     // readiness gate.
-    for (const line of introLines(language)) {
-      await sendText(whatsappId, line);
-    }
     // `?tr=orig-true` forces ImageKit to serve the untouched original PNG.
     // Without it, ImageKit auto-optimizes to webp/jpeg based on the fetcher's
     // Accept header, which WhatsApp rejects (unsupported type / extension
@@ -82,6 +79,9 @@ async function handle(whatsappId, message, session) {
     } catch (err) {
       // Don't block the flow if the image fails to send.
       console.error('[Registration] intro image send failed:', err.message);
+    }
+    for (const line of introLines(language)) {
+      await sendText(whatsappId, line);
     }
     await sendButtons(whatsappId, t('readyPrompt', language), [
       { id: 'ready:yes', title: t('readyYes', language) },

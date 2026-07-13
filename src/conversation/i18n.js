@@ -621,22 +621,44 @@ const STRINGS = {
  */
 function introLines(lang = 'en') {
   const en = [
-    'Hello, I’m Astro Vaidhya. 🙏',
-    'Before we begin, I’d like you to know how I work.',
-    'I don’t begin by looking for a disease.',
-    'I begin by understanding the person.',
-    'Some conversations take a few minutes.',
-    'There’s no right or wrong here.',
-    'For the best treatment, I’ll ask you a few more questions.',
+    'Hi, I’m Kiko, an AI assistant for AstroVaidhya.',
+    'At AstroVaidhya, we combine Classical Homeopathy, psychological case analysis, and personalized lifestyle guidance to understand the root cause of your health concerns—not just the symptoms.',
+    '💚 Your privacy is our priority.',
+    'Good treatment doesn’t begin with the right medicine...\n' +
+      'It begins with the right understanding.\n' +
+      'To help you reach this understanding, I’ll ask you a few simple questions.\n' +
+      'Shall we begin?',
+    'Welcome to AstroVaidhya.\n' +
+      'First of all, thank you for trusting us and deciding to come here.\n' +
+      'Now, we’ll take the rest of the conversation slowly, step by step.\n' +
+      'Let’s start with your introduction.\n' +
+      'How should we address you?',
+    'At AstroVaidhya we start by understanding each individual, because no two people are exactly alike.',
+    'Before we move on, a small thing. 🌿',
+    'I can help you in two ways.\n\n' +
+      'First, let’s start the conversation right here. I’ll ask a few questions so I can better understand your situation and provide the right guidance.\n\n' +
+      'Second, if you prefer, you can connect directly with our team of doctors right now.\n\n' +
+      'Both options will remain completely confidential.',
   ];
   const hi = [
-    'नमस्ते, मैं Astro Vaidhya हूँ। 🙏',
-    'शुरू करने से पहले, मैं चाहता हूँ कि आप जानें कि मैं कैसे काम करता हूँ।',
-    'मैं बीमारी ढूँढने से शुरुआत नहीं करता।',
-    'मैं इंसान को समझने से शुरुआत करता हूँ।',
-    'कुछ बातचीत में कुछ मिनट लग जाते हैं।',
-    'यहाँ कोई सही या ग़लत नहीं है।',
-    'बेहतर इलाज के लिए, मैं आपसे कुछ और सवाल पूछूँगा।',
+    'नमस्ते, मैं Kiko हूँ, AstroVaidhya का एक AI सहायक।',
+    'AstroVaidhya में, हम Classical Homeopathy, मनोवैज्ञानिक केस विश्लेषण और व्यक्तिगत जीवनशैली मार्गदर्शन को मिलाकर आपकी स्वास्थ्य समस्याओं की जड़ को समझते हैं—सिर्फ़ लक्षणों को नहीं।',
+    '💚 आपकी निजता हमारी प्राथमिकता है।',
+    'अच्छा इलाज सही दवा से शुरू नहीं होता...\n' +
+      'यह सही समझ से शुरू होता है।\n' +
+      'इस समझ तक पहुँचने में आपकी मदद के लिए, मैं आपसे कुछ आसान सवाल पूछूँगा।\n' +
+      'क्या हम शुरू करें?',
+    'AstroVaidhya में आपका स्वागत है।\n' +
+      'सबसे पहले, हम पर भरोसा करने और यहाँ आने का निर्णय लेने के लिए धन्यवाद।\n' +
+      'अब, हम बाकी बातचीत धीरे-धीरे, कदम दर कदम आगे बढ़ाएँगे।\n' +
+      'चलिए आपके परिचय से शुरू करते हैं।\n' +
+      'हम आपको किस नाम से बुलाएँ?',
+    'AstroVaidhya में हम हर व्यक्ति को समझने से शुरुआत करते हैं, क्योंकि कोई भी दो लोग बिल्कुल एक जैसे नहीं होते।',
+    'आगे बढ़ने से पहले, एक छोटी सी बात। 🌿',
+    'मैं दो तरीकों से आपकी मदद कर सकता हूँ।\n\n' +
+      'पहला, चलिए बातचीत यहीं से शुरू करते हैं। मैं कुछ सवाल पूछूँगा ताकि मैं आपकी स्थिति को बेहतर ढंग से समझ सकूँ और सही मार्गदर्शन दे सकूँ।\n\n' +
+      'दूसरा, अगर आप चाहें, तो आप अभी सीधे हमारे डॉक्टरों की टीम से जुड़ सकते हैं।\n\n' +
+      'दोनों विकल्प पूरी तरह गोपनीय रहेंगे।',
   ];
   return lang === 'hi' ? hi : en;
 }
