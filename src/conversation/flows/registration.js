@@ -70,8 +70,13 @@ async function handle(whatsappId, message, session) {
     for (const line of introLines(language)) {
       await sendText(whatsappId, line);
     }
+    // `?tr=orig-true` forces ImageKit to serve the untouched original PNG.
+    // Without it, ImageKit auto-optimizes to webp/jpeg based on the fetcher's
+    // Accept header, which WhatsApp rejects (unsupported type / extension
+    // mismatch with the .png link).
     const introImageUrl =
-      process.env.INTRO_IMAGE_URL || 'https://ik.imagekit.io/a1tiuplap/whatchat/ii.png';
+      process.env.INTRO_IMAGE_URL ||
+      'https://ik.imagekit.io/a1tiuplap/whatchat/ii.png?tr=orig-true';
     try {
       await sendImage(whatsappId, introImageUrl);
     } catch (err) {
