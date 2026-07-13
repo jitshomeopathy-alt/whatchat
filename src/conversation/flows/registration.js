@@ -1,6 +1,5 @@
 const { sendText, sendImage, sendButtons, sendList } = require('../../services/whatsapp');
 const { saveSession, resetSession } = require('../stateManager');
-const { personalitySummary } = require('../../services/openai');
 const consultFlow = require('./consult');
 const {
   t,
@@ -31,7 +30,7 @@ async function handle(whatsappId, message, session) {
     });
     await sendButtons(
       whatsappId,
-      `👋 Welcome to Astro Vaidhya!\n\nPlease choose your language.\nकृपया अपनी भाषा चुनें।`,
+      `🙏 Welcome to Astro Vaidhya!\n\nPlease choose your language.\nकृपया अपनी भाषा चुनें।`,
       [
         { id: 'lang:en', title: 'English' },
         { id: 'lang:hi', title: 'हिंदी' },
@@ -298,7 +297,7 @@ async function handle(whatsappId, message, session) {
       whatsappId,
       t('severityPrompt', lang),
       t('severityButton', lang),
-      severityOptions(lang).map((o) => ({ id: o.id, title: o.title })),
+      severityOptions(lang).map((o) => ({ id: o.id, title: o.title, description: o.description })),
       { header: t('severityHeader', lang), sectionTitle: t('severitySection', lang) }
     );
     return;
@@ -316,7 +315,7 @@ async function handle(whatsappId, message, session) {
         whatsappId,
         t('severityPrompt', lang),
         t('severityButton', lang),
-        severityOptions(lang).map((o) => ({ id: o.id, title: o.title })),
+        severityOptions(lang).map((o) => ({ id: o.id, title: o.title, description: o.description })),
         { header: t('severityHeader', lang), sectionTitle: t('severitySection', lang) }
       );
       return;
@@ -394,36 +393,30 @@ async function saveAndStartPath(whatsappId, lang, buffer) {
     return;
   }
 
-  // Share a short 3–4 point personality read (from ChatGPT) before the user
-  // chooses a path. Best-effort — a failure here never blocks the journey.
-  await sendPersonalitySummary(whatsappId, lang, buffer);
+  // Share the "AstroVaidhya" story (image + two paths) before the user chooses.
+  await sendPostSummaryStory(whatsappId, lang);
 
   await consultFlow.startPathSelect(whatsappId, user, buffer);
 }
 
 /**
- * Generate and send a 3–4 point personality read from the intake answers.
- * Best-effort: on any error we send a gentle fallback and continue.
+ * Send the post-summary story: the mm image, then the short narrative that
+ * introduces the two AstroVaidhya paths. Best-effort on the image.
  */
-async function sendPersonalitySummary(whatsappId, lang, buffer) {
+async function sendPostSummaryStory(whatsappId, lang) {
+  // `?tr=orig-true` forces ImageKit to serve the untouched original PNG so
+  // WhatsApp accepts it (see the intro image note above).
+  const mmImageUrl =
+    process.env.MM_IMAGE_URL ||
+    'https://ik.imagekit.io/a1tiuplap/whatchat/mm.png?tr=orig-true';
   try {
-    const read = await personalitySummary({
-      name: buffer.name,
-      gender: buffer.gender,
-      concern: buffer.concern,
-      realize: buffer.realize,
-      affect: buffer.affect,
-      severity: buffer.severity,
-      language: lang,
-    });
-    if (read) {
-      await sendText(whatsappId, `${t('personalityIntro', lang)}\n\n${read}`);
-      return;
-    }
+    await sendImage(whatsappId, mmImageUrl);
   } catch (err) {
-    console.error('[Registration] Personality summary error:', err.message);
+    console.error('[Registration] mm image send failed:', err.message);
   }
-  await sendText(whatsappId, t('personalityError', lang));
+  await sendText(whatsappId, t('postSummaryImagine', lang));
+  await sendText(whatsappId, t('postSummaryQuestions', lang));
+  await sendText(whatsappId, t('postSummaryTwoPaths', lang));
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -433,7 +426,7 @@ async function sendConcernList(whatsappId, lang) {
     whatsappId,
     t('concernPrompt', lang),
     t('concernButton', lang),
-    concernOptions(lang).map((o) => ({ id: o.id, title: o.title, description: o.description })),
+    concernOptions(lang).map((o) => ({ id: o.id, title: o.title })),
     { header: t('concernHeader', lang), sectionTitle: t('concernSection', lang) }
   );
 }

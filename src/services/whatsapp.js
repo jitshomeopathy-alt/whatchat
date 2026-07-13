@@ -2,6 +2,24 @@ const axios = require('axios');
 
 const BASE_URL = 'https://graph.facebook.com/v20.0';
 
+// When we send several messages back-to-back (e.g. the intro lines or the
+// post-summary story), fire-hosing them can arrive out of order and is hard to
+// read. We space consecutive outbound messages to the *same* recipient by a
+// short gap so they land one-by-one, in order. Configurable via MESSAGE_GAP_MS
+// (set to 0 to disable). Keyed by recipient so unrelated users aren't delayed.
+const MESSAGE_GAP_MS = Number(process.env.MESSAGE_GAP_MS ?? 2000);
+const lastSentAt = new Map();
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Wait, if needed, so this send is >= MESSAGE_GAP_MS after the previous one to `to`. */
+async function paceMessage(to) {
+  if (!MESSAGE_GAP_MS || !to) return;
+  const wait = (lastSentAt.get(to) || 0) + MESSAGE_GAP_MS - Date.now();
+  if (wait > 0) await sleep(wait);
+  lastSentAt.set(to, Date.now());
+}
+
 /**
  * Send a plain text message via Meta Cloud API.
  * @param {string} to   - Recipient WhatsApp phone number (e.g. "919876543210")
@@ -31,6 +49,8 @@ async function sendTextRaw(to, text) {
   }
 
   const url = `${BASE_URL}/${phoneNumberId}/messages`;
+
+  await paceMessage(to);
 
   const payload = {
     messaging_product: 'whatsapp',
@@ -73,6 +93,8 @@ async function sendImage(to, imageUrl, caption) {
   }
 
   const url = `${BASE_URL}/${phoneNumberId}/messages`;
+
+  await paceMessage(to);
 
   const payload = {
     messaging_product: 'whatsapp',
@@ -222,6 +244,9 @@ async function sendInteractive(to, interactive) {
   }
 
   const url = `${BASE_URL}/${phoneNumberId}/messages`;
+
+  await paceMessage(to);
+
   const payload = {
     messaging_product: 'whatsapp',
     recipient_type: 'individual',

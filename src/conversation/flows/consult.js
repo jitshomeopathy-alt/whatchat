@@ -57,8 +57,7 @@ async function startPathSelect(whatsappId, user, buffer = {}) {
     [
       { id: 'path:clinical', title: t('pathClinical', lang) },
       { id: 'path:astro', title: t('pathAstro', lang) },
-    ],
-    { header: t('pathHeader', lang) }
+    ]
   );
 }
 
@@ -106,8 +105,7 @@ async function handlePathSelect(whatsappId, message, session) {
       [
         { id: 'path:clinical', title: t('pathClinical', lang) },
         { id: 'path:astro', title: t('pathAstro', lang) },
-      ],
-      { header: t('pathHeader', lang) }
+      ]
     );
     return;
   }

@@ -142,8 +142,8 @@ const STRINGS = {
 
   // ── Consult: astrology + satisfaction ────────────────────────────────────────
   welcomeBack: {
-    en: ({ name }) => `👋 Welcome back, *${name}*! 💛\n\nLooks like you’ve chatted with us before — no need to register again. We’ll just refresh your details as we go. 🔄`,
-    hi: ({ name }) => `👋 वापस स्वागत है, *${name}*! 💛\n\nलगता है आप पहले हमसे बात कर चुके हैं — दोबारा रजिस्टर करने की ज़रूरत नहीं। हम आगे बढ़ते हुए आपकी जानकारी अपडेट कर देंगे। 🔄`,
+    en: ({ name }) => `🙏 Welcome back, *${name}*! 💛\n\nLooks like you’ve chatted with us before — no need to register again. We’ll just refresh your details as we go. 🔄`,
+    hi: ({ name }) => `🙏 वापस स्वागत है, *${name}*! 💛\n\nलगता है आप पहले हमसे बात कर चुके हैं — दोबारा रजिस्टर करने की ज़रूरत नहीं। हम आगे बढ़ते हुए आपकी जानकारी अपडेट कर देंगे। 🔄`,
   },
   readingPalm: {
     en: ({ name }) => `🔮 Reading your details, *${name}*... take a deep breath, this’ll be just a moment. 🌬️✨`,
@@ -370,8 +370,8 @@ const STRINGS = {
     hi: 'कृपया ऊपर दिए विकल्पों में से एक चुनिए ताकि मैं आपको बेहतर समझ सकूँ। 🙂👆',
   },
   severityPrompt: {
-    en: 'And how much control do you feel you have over it right now?',
-    hi: 'और अभी आपको इस पर कितना नियंत्रण महसूस होता है?',
+    en: 'I’d like to understand one last thing.\nHow much control do you feel over this problem today? Choose the option that best matches your current situation.',
+    hi: 'मैं एक आख़िरी बात समझना चाहता हूँ।\nआज आप इस समस्या पर कितना नियंत्रण महसूस करते हैं? वह विकल्प चुनिए जो आपकी मौजूदा स्थिति से सबसे मेल खाता हो।',
   },
   severityButton: { en: 'Choose 👇', hi: 'चुनें 👇' },
   severityHeader: { en: 'Sense of control', hi: 'नियंत्रण की भावना' },
@@ -415,8 +415,8 @@ const STRINGS = {
     hi: 'कोई बात नहीं — चलिए इसे दोबारा देखते हैं ताकि मैं सही समझ सकूँ। 💚',
   },
   summaryClarify: {
-    en: 'I’m sorry I didn’t get it quite right. 💚 Please tell me a bit more about yourself in your own words, and I’ll understand you better. ✍️',
-    hi: 'माफ़ कीजिए, मैं इसे पूरी तरह सही नहीं समझ पाया। 💚 कृपया अपने शब्दों में अपने बारे में थोड़ा और बताइए, ताकि मैं आपको बेहतर समझ सकूँ। ✍️',
+    en: 'If I missed something, tell me more in detail. ✍️',
+    hi: 'अगर मुझसे कुछ छूट गया हो, तो मुझे विस्तार से और बताइए। ✍️',
   },
   summaryClarifyRetry: {
     en: 'Please share a little more in your own words so I can understand you better. ✍️🙂',
@@ -435,6 +435,32 @@ const STRINGS = {
   personalityError: {
     en: 'I couldn’t prepare your personality note just now, but that’s okay — let’s keep going. 💚',
     hi: 'मैं अभी आपका व्यक्तित्व नोट तैयार नहीं कर पाया, पर कोई बात नहीं — चलिए आगे बढ़ते हैं। 💚',
+  },
+
+  // ── Post-summary story (shown with the mm image, before path selection) ───────
+  postSummaryImagine: {
+    en: 'Imagine...\nIf someone understood not just your illness, but also your personality, your way of thinking, and your life patterns...',
+    hi: 'ज़रा सोचिए...\nअगर कोई सिर्फ़ आपकी बीमारी को ही नहीं, बल्कि आपके व्यक्तित्व, आपके सोचने के तरीक़े और आपके जीवन के ढर्रे को भी समझे...',
+  },
+  postSummaryQuestions: {
+    en: 'Some questions are answered by a medical report.\nThe answers to some questions lie in a person’s personality, habits, and life patterns.',
+    hi: 'कुछ सवालों के जवाब एक मेडिकल रिपोर्ट देती है।\nकुछ सवालों के जवाब इंसान के व्यक्तित्व, आदतों और जीवन के ढर्रों में छिपे होते हैं।',
+  },
+  postSummaryTwoPaths: {
+    en:
+      'That’s why at AstroVaidhya, we’ve created two paths:\n\n' +
+      '*Astro.*\n\n' +
+      'An attempt to understand the signs that help us gain a deeper understanding of ourselves.\n\n' +
+      '*Vaidhya.*\n\n' +
+      'A doctor who understands your current health problem based on science and experience and provides treatment.\n\n' +
+      'AstroVaidhya is the confluence of these two ideas.',
+    hi:
+      'इसीलिए AstroVaidhya में हमने दो रास्ते बनाए हैं:\n\n' +
+      '*Astro.*\n\n' +
+      'उन संकेतों को समझने का एक प्रयास, जो हमें ख़ुद को गहराई से समझने में मदद करते हैं।\n\n' +
+      '*Vaidhya.*\n\n' +
+      'एक डॉक्टर जो विज्ञान और अनुभव के आधार पर आपकी मौजूदा स्वास्थ्य समस्या को समझता है और उसका इलाज करता है।\n\n' +
+      'AstroVaidhya इन्हीं दो विचारों का संगम है।',
   },
 
   // ── Astro read (3–4 points, shown after kundli/DOB details) ───────────────────
@@ -654,21 +680,20 @@ function introLines(lang = 'en') {
  */
 function concernOptions(lang = 'en') {
   const rows = [
-    { id: 'stress',    hiT: '😔 तनाव व चिंता',        enT: '😔 Stress & anxiety',    hiH: 'तनाव, चिंता या मन की परेशानी', enH: 'Stress, anxiety or mental unrest',        desc: 'Stress • Anxiety • Overthinking • Low Mood' },
-    { id: 'sleep',     hiT: '🌙 नींद की समस्या',      enT: '🌙 Sleep problems',      hiH: 'नींद की समस्या',              enH: 'Sleep problems',                           desc: 'Insomnia • Late Night • Tired Morning • Poor Sleep' },
-    { id: 'sexual',    hiT: '💑 यौन व निजी समस्या',   enT: '💑 Sexual & intimate',   hiH: 'यौन स्वास्थ्य एवं निजी समस्याएँ', enH: 'Sexual health & intimate concerns',     desc: 'ED • Premature Ejaculation • Low Desire • Women’s Intimacy' },
-    { id: 'addiction', hiT: '🚭 नशा या आदत',          enT: '🚭 Addiction / habit',   hiH: 'नशा या किसी आदत से छुटकारा',   enH: 'Quitting an addiction or habit',           desc: 'Alcohol • Tobacco • Smoking • Porn • Mobile • Gaming' },
-    { id: 'weight',    hiT: '⚖️ वजन व हार्मोन',       enT: '⚖️ Weight & hormones',   hiH: 'वजन, थायरॉइड व हार्मोन संतुलन', enH: 'Weight, thyroid & hormone balance',      desc: 'Weight Loss • PCOS • Thyroid • Obesity • Hormonal Issues' },
-    { id: 'chronic',   hiT: '🩺 पुरानी शारीरिक समस्या', enT: '🩺 Long-term physical', hiH: 'लंबे समय से चल रही शारीरिक समस्या', enH: 'A long-standing physical problem',     desc: 'Skin • Allergy • Acidity • Migraine • Joint Pain • Piles • IBS' },
-    { id: 'women',     hiT: '👩 महिला स्वास्थ्य',      enT: '👩 Women’s health',       hiH: 'महिलाओं का स्वास्थ्य',        enH: 'Women’s health',                           desc: 'Periods • PCOS • Leucorrhoea • Pregnancy Support • Menopause' },
-    { id: 'other',     hiT: '📋 कुछ और',              enT: '📋 Something else',      hiH: 'कुछ और (अपने शब्दों में बताएँ)', enH: 'Something else (in your own words)',    desc: 'None of the above / Other concerns' },
+    { id: 'stress',    hiT: '😔 तनाव व चिंता',        enT: '😔 Stress & anxiety',    hiH: 'तनाव, चिंता या मन की परेशानी', enH: 'Stress, anxiety or mental unrest' },
+    { id: 'sleep',     hiT: '🌙 नींद की समस्या',      enT: '🌙 Sleep problems',      hiH: 'नींद की समस्या',              enH: 'Sleep problems' },
+    { id: 'sexual',    hiT: '💑 यौन व निजी समस्या',   enT: '💑 Sexual & intimate',   hiH: 'यौन स्वास्थ्य एवं निजी समस्याएँ', enH: 'Sexual health & intimate concerns' },
+    { id: 'addiction', hiT: '🚭 नशा या आदत',          enT: '🚭 Addiction / habit',   hiH: 'नशा या किसी आदत से छुटकारा',   enH: 'Quitting an addiction or habit' },
+    { id: 'weight',    hiT: '⚖️ वजन व हार्मोन',       enT: '⚖️ Weight & hormones',   hiH: 'वजन, थायरॉइड व हार्मोन संतुलन', enH: 'Weight, thyroid & hormone balance' },
+    { id: 'chronic',   hiT: '🩺 पुरानी शारीरिक समस्या', enT: '🩺 Long-term physical', hiH: 'लंबे समय से चल रही शारीरिक समस्या', enH: 'A long-standing physical problem' },
+    { id: 'women',     hiT: '👩 महिला स्वास्थ्य',      enT: '👩 Women’s health',       hiH: 'महिलाओं का स्वास्थ्य',        enH: 'Women’s health' },
+    { id: 'other',     hiT: '📋 कुछ और',              enT: '📋 Something else',      hiH: 'कुछ और (अपने शब्दों में बताएँ)', enH: 'Something else (in your own words)' },
   ];
   const l = lang === 'hi' ? 'hi' : 'en';
   return rows.map((r) => ({
     id: `concern:${r.id}`,
     title: l === 'hi' ? r.hiT : r.enT,
-    description: r.desc,
-    value: `${l === 'hi' ? r.hiH : r.enH} (${r.desc})`,
+    value: l === 'hi' ? r.hiH : r.enH,
   }));
 }
 
@@ -691,13 +716,18 @@ function affectOptions(lang = 'en') {
 /** The 4 sense-of-control (severity) options. */
 function severityOptions(lang = 'en') {
   const rows = [
-    { id: 'almost', en: 'Almost complete control', hi: 'लगभग पूरा नियंत्रण' },
-    { id: 'some',   en: 'Some control',            hi: 'थोड़ा नियंत्रण' },
-    { id: 'little', en: 'Very little control',      hi: 'बहुत कम नियंत्रण' },
-    { id: 'none',   en: 'No control at all',        hi: 'बिल्कुल नियंत्रण नहीं' },
+    { id: 'almost', en: 'Almost complete control', hi: 'लगभग पूरा नियंत्रण', enD: '😊 I think I’m able to handle it to a large extent.',   hiD: '😊 मुझे लगता है कि मैं इसे काफ़ी हद तक संभाल सकता हूँ।' },
+    { id: 'some',   en: 'Some control',            hi: 'थोड़ा नियंत्रण',      enD: '🙂 Sometimes I can handle it, sometimes it’s difficult.', hiD: '🙂 कभी संभाल पाता हूँ, कभी मुश्किल होती है।' },
+    { id: 'little', en: 'Very little control',      hi: 'बहुत कम नियंत्रण',    enD: '😟 Most of the time it’s difficult to handle.',          hiD: '😟 ज़्यादातर समय इसे संभालना मुश्किल होता है।' },
+    { id: 'none',   en: 'No control at all',        hi: 'बिल्कुल नियंत्रण नहीं', enD: '😞 Now it feels out of my control.',                    hiD: '😞 अब यह मेरे नियंत्रण से बाहर लगता है।' },
   ];
   const l = lang === 'hi' ? 'hi' : 'en';
-  return rows.map((r) => ({ id: `sev:${r.id}`, title: r[l], value: r[l] }));
+  return rows.map((r) => ({
+    id: `sev:${r.id}`,
+    title: r[l],
+    description: l === 'hi' ? r.hiD : r.enD,
+    value: r[l],
+  }));
 }
 
 // ── Doctor consultation questionnaire option sets ───────────────────────────────
