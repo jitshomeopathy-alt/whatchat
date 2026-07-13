@@ -15,8 +15,8 @@
 const STRINGS = {
   // ── Registration ───────────────────────────────────────────────────────────
   askName: {
-    en: "Wonderful, let's begin this journey together! 🌟\n\nFirst things first — what should I call you? Please share your *full name*. 😊",
-    hi: 'बहुत बढ़िया, चलिए यह सफ़र साथ में शुरू करते हैं! 🌟\n\nसबसे पहले — मैं आपको किस नाम से बुलाऊँ? कृपया अपना *पूरा नाम* बताइए। 😊',
+    en: 'What should I call you? Please share your *full name*. 😊',
+    hi: 'मैं आपको किस नाम से बुलाऊँ? कृपया अपना *पूरा नाम* बताइए। 😊',
   },
   invalidName: {
     en: 'Hmm, that doesn’t look quite right. 🤔 Please type your name (at least 2 letters). 🙂',
@@ -31,8 +31,8 @@ const STRINGS = {
     hi: 'अरे! 😅 कृपया सही उम्र लिखिए — 1 से 150 के बीच की संख्या। 🔢',
   },
   askGender: {
-    en: 'Thank you. 💙 And how do you identify? This helps me care for you better.',
-    hi: 'धन्यवाद। 💙 और आप अपनी पहचान किस रूप में करते हैं? इससे मैं आपकी बेहतर देखभाल कर पाऊँगा।',
+    en: 'Thank you. 💙',
+    hi: 'धन्यवाद। 💙',
   },
   genderRetry: {
     en: 'No worries! 🙂 Please pick the option that fits you best. 👇',
@@ -97,8 +97,12 @@ const STRINGS = {
     hi: '🌿 *Astro Vaidhya में आपका स्वागत है!* 🌿\n\nमैं WhatsApp पर आपका निजी वेलनेस साथी हूँ। मैं शास्त्रीय होम्योपैथी को ज्योतिष और हस्तरेखा के साथ जोड़कर समझता हूँ कि *आप कौन हैं* — और फिर धीरे से, निजी तौर पर, आपके लिए सही उपचार और सहारे की ओर आपका मार्गदर्शन करता हूँ।\n\nहम जीवन के तीन क्षेत्रों का ध्यान रखते हैं: 🧠 मानसिक व भावनात्मक कल्याण, 🌱 व्यसन मुक्ति, और 💗 यौन स्वास्थ्य। सब कुछ निजी रहता है, और ज़रूरत पड़ने पर असली डॉक्टर हमेशा उपलब्ध हैं। 💚',
   },
   purposePrompt: {
-    en: 'To begin — what brings you here today? 🙂',
-    hi: 'शुरू करने से पहले — आज आप यहाँ किस लिए आए हैं? 🙂',
+    en: 'You can start at your convenience.\n\n🌿 *AstroVaidhya*\nwill first understand your condition and then provide further guidance.\n\n👨‍⚕️ *Doctor Consultation*\nChat directly with our team of doctors via personal WhatsApp.',
+    hi: 'आप अपनी सुविधा से शुरू कर सकते हैं।\n\n🌿 *AstroVaidhya*\nपहले आपकी स्थिति को समझेगा और फिर आगे का मार्गदर्शन देगा।\n\n👨‍⚕️ *डॉक्टर कंसल्टेशन*\nहमारी डॉक्टरों की टीम से सीधे निजी WhatsApp पर बात करें।',
+  },
+  purposeExcellent: {
+    en: 'Excellent choice — you have done the right thing. 💚',
+    hi: 'बहुत बढ़िया चुनाव — आपने बिल्कुल सही किया है। 💚',
   },
   purposeConsult: { en: 'Consult a doctor 👨‍⚕️', hi: 'डॉक्टर से सलाह 👨‍⚕️' },
   purposeExplore: { en: 'Explore Astro Vaidhya 🌿', hi: 'Astro Vaidhya देखें 🌿' },
@@ -300,11 +304,19 @@ const STRINGS = {
 
   // ── "Are you ready?" gate (after the intro messages) ─────────────────────────
   readyPrompt: {
-    en: 'Are you ready to begin? 🌱',
-    hi: 'क्या आप शुरू करने के लिए तैयार हैं? 🌱',
+    en: 'Good treatment doesn’t begin with the right medicine...\nbut with the right understanding. 🌱\n\nTo help you reach this understanding, I’ll ask you a few simple questions.\n\nShall we begin?',
+    hi: 'अच्छा इलाज सही दवा से शुरू नहीं होता...\nबल्कि सही समझ से शुरू होता है। 🌱\n\nइस समझ तक पहुँचने में आपकी मदद के लिए, मैं आपसे कुछ आसान सवाल पूछूँगा।\n\nक्या हम शुरू करें?',
   },
   readyYes: { en: 'Yes, I’m ready ✅', hi: 'हाँ, मैं तैयार हूँ ✅' },
   readyNo: { en: 'Not yet', hi: 'अभी नहीं' },
+  readyWelcome: {
+    en: 'Welcome to AstroVaidhya. 🌿\n\nFirst of all, thank you for trusting us and deciding to come here. 💚\n\nNow, we’ll take the rest of the conversation slowly, step by step.',
+    hi: 'AstroVaidhya में आपका स्वागत है। 🌿\n\nसबसे पहले, हम पर भरोसा करने और यहाँ आने का निर्णय लेने के लिए धन्यवाद। 💚\n\nअब, हम बाकी बातचीत धीरे-धीरे, कदम दर कदम आगे बढ़ाएँगे।',
+  },
+  beforeWeMove: {
+    en: 'Before we move on, a small thing. 🌿',
+    hi: 'आगे बढ़ने से पहले, एक छोटी सी बात। 🌿',
+  },
   notReady: {
     en: 'No rush at all. 🌸 Whenever you feel ready, just type *hi* and we’ll begin together. I’m here for you. 💚',
     hi: 'बिल्कुल जल्दी नहीं है। 🌸 जब भी आप तैयार महसूस करें, बस *hi* लिखिए और हम साथ शुरू करेंगे। मैं आपके लिए यहाँ हूँ। 💚',
@@ -312,12 +324,12 @@ const STRINGS = {
 
   // ── Concern intake ───────────────────────────────────────────────────────────
   takeYourTime: {
-    en: 'Take your time. 💚 You don’t need to find the right words — just tell me what feels the most important today.',
-    hi: 'आराम से बताइए। 💚 आपको सही शब्द ढूँढने की ज़रूरत नहीं — बस यह बताइए कि आज आपके लिए सबसे ज़रूरी क्या लगता है।',
+    en: 'Now, let’s understand your biggest concern. 💚\n\nFrom the options below, choose the one that is closest to your problem today.\n\nIf none of the options fits perfectly, don’t worry—you’ll be able to describe it in your own words later.',
+    hi: 'अब आपकी सबसे बड़ी चिंता को समझते हैं। 💚\n\nनीचे दिए गए विकल्पों में से वह चुनें, जो आज आपकी समस्या के सबसे करीब हो।\n\nअगर कोई विकल्प पूरी तरह मेल न खाए, तो चिंता की बात नहीं—आगे आप अपनी बात अपने शब्दों में भी बता सकेंगे।',
   },
   concernPrompt: {
-    en: 'Hello, and thank you for connecting. 💚 Feel free to share whatever is going on, and we can figure it out together.',
-    hi: 'नमस्ते, और जुड़ने के लिए धन्यवाद। 💚 जो कुछ भी चल रहा है, बेझिझक बताइए, और हम इसे साथ मिलकर सुलझा लेंगे।',
+    en: 'What are you troubled by?',
+    hi: 'आप किस बात से परेशान हैं?',
   },
   concernButton: { en: 'Choose 👇', hi: 'चुनें 👇' },
   concernHeader: { en: 'What’s going on?', hi: 'क्या हो रहा है?' },
@@ -335,20 +347,20 @@ const STRINGS = {
     hi: 'कृपया किसी एक विकल्प को चुनिए, या ख़ुद लिखने के लिए *अपने शब्दों में* ✍️ चुनिए। 🙂',
   },
   concernThanks: {
-    en: 'Thank you for sharing that with me. 🙏 It takes courage to put it into words. 💚',
-    hi: 'मुझ पर भरोसा करके यह बताने के लिए धन्यवाद। 🙏 इसे शब्दों में कहना हिम्मत का काम है। 💚',
+    en: 'Now I want to understand you carefully. 💚\n\nSo write your entire story without hesitation.\n\nHow it all started, what has happened so far, what is your biggest concern, and what you expect from us—tell us all in your own words.',
+    hi: 'अब मैं आपको ध्यान से समझना चाहता हूँ। 💚\n\nइसलिए बिना किसी झिझक के अपनी पूरी बात लिखिए।\n\nयह सब कैसे शुरू हुआ, अब तक क्या हुआ, आपकी सबसे बड़ी चिंता क्या है, और आप हमसे क्या उम्मीद रखते हैं—सब कुछ अपने शब्दों में बताइए।',
   },
   realizePrompt: {
-    en: 'When did you first realise this had become a real problem, rather than just a habit? ✍️',
-    hi: 'आपको पहली बार कब महसूस हुआ कि यह सिर्फ़ एक आदत नहीं, बल्कि एक असली समस्या बन गई है? ✍️',
+    en: 'Rest assured, everything you say will remain completely confidential and will only be used to better assist you. ✍️',
+    hi: 'निश्चिंत रहिए, आप जो कुछ भी बताएँगे वह पूरी तरह गोपनीय रहेगा और केवल आपकी बेहतर मदद के लिए ही उपयोग किया जाएगा। ✍️',
   },
   realizeRetry: {
     en: 'Whenever you’re ready, share a little about when you first realised it. ✍️🙂',
     hi: 'जब भी आप तैयार हों, थोड़ा बताइए कि आपको यह पहली बार कब महसूस हुआ। ✍️🙂',
   },
   affectPrompt: {
-    en: 'What has this affected the most?',
-    hi: 'इसने सबसे ज़्यादा किस चीज़ को प्रभावित किया है?',
+    en: 'I’d like to understand one more thing. Where do you feel the greatest impact of this problem on your life?',
+    hi: 'मैं एक और बात समझना चाहता हूँ। इस समस्या का सबसे ज़्यादा असर आप अपने जीवन में कहाँ महसूस करते हैं?',
   },
   affectButton: { en: 'Choose 👇', hi: 'चुनें 👇' },
   affectHeader: { en: 'Most affected', hi: 'सबसे ज़्यादा प्रभावित' },
@@ -615,91 +627,62 @@ const STRINGS = {
 // ── Tappable / sequential option sets (kept here so flows stay declarative) ─────
 
 /**
- * The 7 intro messages sent one-by-one right after language selection.
+ * The intro messages sent one-by-one right after language selection.
  * @param {string} lang
  * @returns {string[]}
  */
 function introLines(lang = 'en') {
   const en = [
     'Hi, I’m Kiko, an AI assistant for AstroVaidhya.',
-    'At AstroVaidhya, we combine Classical Homeopathy, psychological case analysis, and personalized lifestyle guidance to understand the root cause of your health concerns—not just the symptoms.',
-    '💚 Your privacy is our priority.',
-    'Good treatment doesn’t begin with the right medicine...\n' +
-      'It begins with the right understanding.\n' +
-      'To help you reach this understanding, I’ll ask you a few simple questions.\n' +
-      'Shall we begin?',
-    'Welcome to AstroVaidhya.\n' +
-      'First of all, thank you for trusting us and deciding to come here.\n' +
-      'Now, we’ll take the rest of the conversation slowly, step by step.\n' +
-      'Let’s start with your introduction.\n' +
-      'How should we address you?',
-    'At AstroVaidhya we start by understanding each individual, because no two people are exactly alike.',
-    'Before we move on, a small thing. 🌿',
-    'I can help you in two ways.\n\n' +
-      'First, let’s start the conversation right here. I’ll ask a few questions so I can better understand your situation and provide the right guidance.\n\n' +
-      'Second, if you prefer, you can connect directly with our team of doctors right now.\n\n' +
-      'Both options will remain completely confidential.',
+    '🌿 At AstroVaidhya, we combine Classical Homeopathy, psychological case analysis, and personalized lifestyle guidance to understand the root cause of your health concerns—not just the symptoms. 🩺',
+    '🔒 Your privacy is our priority. 💚',
   ];
   const hi = [
     'नमस्ते, मैं Kiko हूँ, AstroVaidhya का एक AI सहायक।',
-    'AstroVaidhya में, हम Classical Homeopathy, मनोवैज्ञानिक केस विश्लेषण और व्यक्तिगत जीवनशैली मार्गदर्शन को मिलाकर आपकी स्वास्थ्य समस्याओं की जड़ को समझते हैं—सिर्फ़ लक्षणों को नहीं।',
-    '💚 आपकी निजता हमारी प्राथमिकता है।',
-    'अच्छा इलाज सही दवा से शुरू नहीं होता...\n' +
-      'यह सही समझ से शुरू होता है।\n' +
-      'इस समझ तक पहुँचने में आपकी मदद के लिए, मैं आपसे कुछ आसान सवाल पूछूँगा।\n' +
-      'क्या हम शुरू करें?',
-    'AstroVaidhya में आपका स्वागत है।\n' +
-      'सबसे पहले, हम पर भरोसा करने और यहाँ आने का निर्णय लेने के लिए धन्यवाद।\n' +
-      'अब, हम बाकी बातचीत धीरे-धीरे, कदम दर कदम आगे बढ़ाएँगे।\n' +
-      'चलिए आपके परिचय से शुरू करते हैं।\n' +
-      'हम आपको किस नाम से बुलाएँ?',
-    'AstroVaidhya में हम हर व्यक्ति को समझने से शुरुआत करते हैं, क्योंकि कोई भी दो लोग बिल्कुल एक जैसे नहीं होते।',
-    'आगे बढ़ने से पहले, एक छोटी सी बात। 🌿',
-    'मैं दो तरीकों से आपकी मदद कर सकता हूँ।\n\n' +
-      'पहला, चलिए बातचीत यहीं से शुरू करते हैं। मैं कुछ सवाल पूछूँगा ताकि मैं आपकी स्थिति को बेहतर ढंग से समझ सकूँ और सही मार्गदर्शन दे सकूँ।\n\n' +
-      'दूसरा, अगर आप चाहें, तो आप अभी सीधे हमारे डॉक्टरों की टीम से जुड़ सकते हैं।\n\n' +
-      'दोनों विकल्प पूरी तरह गोपनीय रहेंगे।',
+    '🌿 AstroVaidhya में, हम Classical Homeopathy, मनोवैज्ञानिक केस विश्लेषण और व्यक्तिगत जीवनशैली मार्गदर्शन को मिलाकर आपकी स्वास्थ्य समस्याओं की जड़ को समझते हैं—सिर्फ़ लक्षणों को नहीं। 🩺',
+    '🔒 आपकी निजता हमारी प्राथमिकता है। 💚',
   ];
   return lang === 'hi' ? hi : en;
 }
 
 /**
- * The 9 concern options. `id` is what comes back on a tap; `value` is the full
+ * The concern options. `id` is what comes back on a tap; `value` is the full
  * phrase stored as the user's answer; `title` is the (<=24 char) list row label;
- * `description` carries the full first-person sentence under the title.
+ * `description` carries the sub-line (examples) shown under the title.
  * @param {string} lang
  * @returns {Array<{id:string,title:string,description:string,value:string}>}
  */
 function concernOptions(lang = 'en') {
   const rows = [
-    { id: 'porn',     en: 'I can’t stop watching porn',  hi: 'मैं पोर्न देखना बंद नहीं कर पाता',  enT: 'Can’t stop porn',        hiT: 'पोर्न नहीं छूटता' },
-    { id: 'anxious',  en: 'I’m always anxious',          hi: 'मैं हमेशा चिंतित रहता हूँ',          enT: 'Always anxious',         hiT: 'हमेशा चिंतित' },
-    { id: 'exhausted',en: 'I’m exhausted all the time',  hi: 'मैं हर समय थका रहता हूँ',            enT: 'Always exhausted',       hiT: 'हमेशा थका हुआ' },
-    { id: 'sleep',    en: 'I can’t sleep',               hi: 'मुझे नींद नहीं आती',                  enT: 'Can’t sleep',            hiT: 'नींद नहीं आती' },
-    { id: 'overthink',en: 'I keep overthinking',         hi: 'मैं बहुत ज़्यादा सोचता रहता हूँ',     enT: 'Keep overthinking',      hiT: 'ज़्यादा सोचना' },
-    { id: 'relation', en: 'My relationship is breaking', hi: 'मेरा रिश्ता टूट रहा है',              enT: 'Relationship breaking',  hiT: 'रिश्ता टूट रहा' },
-    { id: 'smoking',  en: 'I want to quit smoking',      hi: 'मैं धूम्रपान छोड़ना चाहता हूँ',       enT: 'Want to quit smoking',   hiT: 'धूम्रपान छोड़ना' },
-    { id: 'unknown',  en: 'I don’t know what’s wrong',   hi: 'मुझे नहीं पता क्या ग़लत है',          enT: 'Don’t know what’s wrong',hiT: 'पता नहीं क्या' },
-    { id: 'other',    en: 'In my words',                 hi: 'अपने शब्दों में',                     enT: 'In my words ✍️',         hiT: 'अपने शब्दों में ✍️' },
+    { id: 'stress',    hiT: '😔 तनाव व चिंता',        enT: '😔 Stress & anxiety',    hiH: 'तनाव, चिंता या मन की परेशानी', enH: 'Stress, anxiety or mental unrest',        desc: 'Stress • Anxiety • Overthinking • Low Mood' },
+    { id: 'sleep',     hiT: '🌙 नींद की समस्या',      enT: '🌙 Sleep problems',      hiH: 'नींद की समस्या',              enH: 'Sleep problems',                           desc: 'Insomnia • Late Night • Tired Morning • Poor Sleep' },
+    { id: 'sexual',    hiT: '💑 यौन व निजी समस्या',   enT: '💑 Sexual & intimate',   hiH: 'यौन स्वास्थ्य एवं निजी समस्याएँ', enH: 'Sexual health & intimate concerns',     desc: 'ED • Premature Ejaculation • Low Desire • Women’s Intimacy' },
+    { id: 'addiction', hiT: '🚭 नशा या आदत',          enT: '🚭 Addiction / habit',   hiH: 'नशा या किसी आदत से छुटकारा',   enH: 'Quitting an addiction or habit',           desc: 'Alcohol • Tobacco • Smoking • Porn • Mobile • Gaming' },
+    { id: 'weight',    hiT: '⚖️ वजन व हार्मोन',       enT: '⚖️ Weight & hormones',   hiH: 'वजन, थायरॉइड व हार्मोन संतुलन', enH: 'Weight, thyroid & hormone balance',      desc: 'Weight Loss • PCOS • Thyroid • Obesity • Hormonal Issues' },
+    { id: 'chronic',   hiT: '🩺 पुरानी शारीरिक समस्या', enT: '🩺 Long-term physical', hiH: 'लंबे समय से चल रही शारीरिक समस्या', enH: 'A long-standing physical problem',     desc: 'Skin • Allergy • Acidity • Migraine • Joint Pain • Piles • IBS' },
+    { id: 'women',     hiT: '👩 महिला स्वास्थ्य',      enT: '👩 Women’s health',       hiH: 'महिलाओं का स्वास्थ्य',        enH: 'Women’s health',                           desc: 'Periods • PCOS • Leucorrhoea • Pregnancy Support • Menopause' },
+    { id: 'other',     hiT: '📋 कुछ और',              enT: '📋 Something else',      hiH: 'कुछ और (अपने शब्दों में बताएँ)', enH: 'Something else (in your own words)',    desc: 'None of the above / Other concerns' },
   ];
   const l = lang === 'hi' ? 'hi' : 'en';
   return rows.map((r) => ({
     id: `concern:${r.id}`,
     title: l === 'hi' ? r.hiT : r.enT,
-    description: r[l],
-    value: r[l],
+    description: r.desc,
+    value: `${l === 'hi' ? r.hiH : r.enH} (${r.desc})`,
   }));
 }
 
-/** The 6 "what has this affected the most" options. */
+/** The "where do you feel the greatest impact" options. */
 function affectOptions(lang = 'en') {
   const rows = [
-    { id: 'mental',     en: 'My mental health',  hi: 'मेरा मानसिक स्वास्थ्य' },
-    { id: 'relation',   en: 'My relationship',   hi: 'मेरा रिश्ता' },
-    { id: 'work',       en: 'My work or studies',hi: 'मेरा काम या पढ़ाई' },
-    { id: 'confidence', en: 'My confidence',     hi: 'मेरा आत्मविश्वास' },
-    { id: 'sleep',      en: 'My sleep',          hi: 'मेरी नींद' },
-    { id: 'everything', en: 'Everything',        hi: 'सब कुछ' },
+    { id: 'sleep',     en: '😴 Sleep and Rest',            hi: '😴 नींद और आराम' },
+    { id: 'work',      en: '💼 Work, Studies, Performance', hi: '💼 काम, पढ़ाई या प्रदर्शन' },
+    { id: 'family',    en: '👨‍👩‍👧 Family & Relationships',    hi: '👨‍👩‍👧 परिवार और रिश्ते' },
+    { id: 'marital',  en: '❤️ Marital/Personal Life',      hi: '❤️ वैवाहिक/निजी जीवन' },
+    { id: 'mood',      en: '😊 Mood, Confidence, Peace',    hi: '😊 मनोदशा, आत्मविश्वास, शांति' },
+    { id: 'energy',    en: '💪 Energy & Daily Activities',  hi: '💪 ऊर्जा और दैनिक गतिविधियाँ' },
+    { id: 'financial', en: '💰 Financial/Career Impact',    hi: '💰 आर्थिक या करियर पर असर' },
+    { id: 'other',     en: '📌 Other',                      hi: '📌 अन्य' },
   ];
   const l = lang === 'hi' ? 'hi' : 'en';
   return rows.map((r) => ({ id: `affect:${r.id}`, title: r[l], value: r[l] }));

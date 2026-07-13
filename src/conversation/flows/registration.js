@@ -116,6 +116,8 @@ async function handle(whatsappId, message, session) {
     }
 
     await saveSession(whatsappId, { state: 'PURPOSE_SELECT' });
+    await sendText(whatsappId, t('readyWelcome', lang));
+    await sendText(whatsappId, t('beforeWeMove', lang));
     await sendButtons(whatsappId, t('purposePrompt', lang), [
       { id: 'purpose:explore', title: t('purposeExplore', lang) },
       { id: 'purpose:consult', title: t('purposeConsult', lang) },
@@ -138,6 +140,9 @@ async function handle(whatsappId, message, session) {
       ]);
       return;
     }
+
+    // Either path is a good step — acknowledge it before continuing.
+    await sendText(whatsappId, t('purposeExcellent', lang));
 
     // "Consult a doctor" → straight to Dr. Jitendra Pal + payment (no intake).
     if (purpose === 'consult') {
