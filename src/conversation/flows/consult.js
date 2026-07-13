@@ -25,16 +25,23 @@ const User = require('../../models/User');
 const AnalysisHistory = require('../../models/AnalysisHistory');
 
 /**
- * Entry from the "Consult a doctor" purpose choice: Dr. Jitendra Pal joins the
- * chat, then we go straight to the payment gate (no intake collected).
+ * Entry from the "Consult a doctor" purpose choice: show the doctor intro image,
+ * run the fixed clinical questionnaire, and only then reach the payment gate.
  * @param {string} whatsappId
  * @param {string} lang
  * @param {Object|null} user
  */
 async function startDoctorConsult(whatsappId, lang = 'en', user = null) {
-  await saveSession(whatsappId, { language: lang });
-  await sendText(whatsappId, t('doctorJoined', lang));
-  await requestPayment(whatsappId, lang, user);
+  await saveSession(whatsappId, { language: lang, registrationBuffer: { path: 'doctor' } });
+  const drImageUrl =
+    process.env.CLINICAL_INTRO_IMAGE_URL ||
+    'https://ik.imagekit.io/a1tiuplap/whatchat/drc.jpeg?updatedAt=1783936999979';
+  try {
+    await sendImage(whatsappId, drImageUrl);
+  } catch (err) {
+    console.error('[Consult] doctor intro image send failed:', err.message);
+  }
+  await startDoctorIntake(whatsappId, lang);
 }
 
 /**
@@ -565,11 +572,11 @@ async function completePayment(whatsappId) {
     console.error('[Consult] Admin payment email failed:', err.message)
   );
 
-  // Direct "Consult a doctor" path → the fixed clinical questionnaire so Dr. Jit
-  // has full context. The Explore paths (astro/clinical) keep the adaptive,
-  // concern-driven question set.
+  // Direct "Consult a doctor" path → the fixed clinical questionnaire already ran
+  // before payment, so we hand the user straight off to the expert. The Explore
+  // paths (astro/clinical) keep the adaptive, concern-driven question set.
   if (path === 'doctor') {
-    return startDoctorIntake(whatsappId, lang);
+    return finish(whatsappId, lang, user, 'doctor');
   }
 
   // Collect a short medical questionnaire, then hand the user off to the expert.
@@ -855,7 +862,7 @@ async function handleDoctorIntake(whatsappId, message, session) {
     console.error('[Consult] Doctor intake save error:', err.message)
   );
   await sendText(whatsappId, t('diSubmitted', lang));
-  await finish(whatsappId, lang, user, 'doctor');
+  await requestPayment(whatsappId, lang, user);
 }
 
 /**
