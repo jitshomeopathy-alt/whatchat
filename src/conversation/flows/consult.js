@@ -118,10 +118,20 @@ async function handlePathSelect(whatsappId, message, session) {
 
   const buffer = { ...(session.registrationBuffer || {}), path };
 
-  // Clinical → record intake, Dr. Jitendra Pal joins, then payment.
+  // Clinical → acknowledge the choice, explain the Clinical Assessment (with the
+  // dr image), record intake, Dr. Jitendra Pal joins, then payment.
   if (path === 'clinical') {
-    // A quick thank-you before moving ahead.
-    await sendText(whatsappId, t('pathThanks', lang));
+    await sendText(whatsappId, t('clinicalChoice', lang));
+    const drImageUrl =
+      process.env.CLINICAL_INTRO_IMAGE_URL ||
+      'https://ik.imagekit.io/a1tiuplap/whatchat/drc.jpeg?updatedAt=1783936999979';
+    try {
+      await sendImage(whatsappId, drImageUrl);
+    } catch (err) {
+      console.error('[Consult] clinical intro image send failed:', err.message);
+    }
+    await sendText(whatsappId, t('clinicalIntro', lang));
+    await sendText(whatsappId, t('clinicalReceive', lang));
     await saveSession(whatsappId, { registrationBuffer: buffer });
     const user = await User.findOne({ whatsappId });
     await recordIntake(whatsappId, user, buffer);
@@ -639,6 +649,15 @@ async function handleMedical(whatsappId, message, session) {
     console.error('[Consult] Medical history save error:', err.message)
   );
   await sendText(whatsappId, t('medicalDone', lang));
+  const drFinalUrl =
+    process.env.CLINICAL_DONE_IMAGE_URL ||
+    'https://ik.imagekit.io/a1tiuplap/whatchat/drfinal.png';
+  try {
+    await sendImage(whatsappId, drFinalUrl);
+  } catch (err) {
+    console.error('[Consult] clinical done image send failed:', err.message);
+  }
+  await sendText(whatsappId, t('clinicalThanks', lang));
 
   const path = session.registrationBuffer?.path || 'doctor';
   await finish(whatsappId, lang, user, path);
@@ -911,8 +930,10 @@ function handoffNumber(path) {
 
 /** Build a wa.me deep link to the handoff number with a friendly prefilled message. */
 function handoffLink(number, user) {
-  const name = user?.name ? `, this is ${user.name}` : '';
-  const prefill = `Hi${name}. I've completed my payment and would like to continue my consultation. 🙏`;
+  const prefill =
+    'Hello Doctor, 🙏\n' +
+    'I have completed my assessment and payment successfully. I would like to proceed with my consultation and discuss my health concerns with you.\n' +
+    'Thank you.';
   return `https://wa.me/${number}?text=${encodeURIComponent(prefill)}`;
 }
 

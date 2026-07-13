@@ -257,9 +257,9 @@ const STRINGS = {
   // ── Payment (Razorpay) ──────────────────────────────────────────────────────
   paymentPrompt: {
     en: ({ link, amount = '₹399' }) =>
-      `💳 *Unlock your personalised plan*\n\nTo continue and choose how you'd like to proceed, please complete a one-time payment of *${amount}*.\n\n👉 Pay securely here:\n${link}\n\nOnce your payment is done, it’ll continue automatically — or tap *I’ve paid* below. 💚`,
+      `💳 *Unlock your personalised plan*\n\n_"You didn't choose a shortcut. You chose understanding."_\n\nTo continue and choose how you'd like to proceed, please complete a one-time payment of *${amount}*.\n\n👉 Pay securely here:\n${link}\n\nOnce your payment is done, it’ll continue automatically — or tap *I’ve paid* below. 💚`,
     hi: ({ link, amount = '₹399' }) =>
-      `💳 *अपनी विशेष योजना अनलॉक करें*\n\nआगे बढ़ने और अपना विकल्प चुनने के लिए, कृपया *${amount}* का एक बार भुगतान पूरा करें।\n\n👉 यहाँ सुरक्षित भुगतान करें:\n${link}\n\nभुगतान होते ही यह अपने आप आगे बढ़ जाएगा — या नीचे *भुगतान हो गया* पर टैप करें। 💚`,
+      `💳 *अपनी विशेष योजना अनलॉक करें*\n\n_"You didn't choose a shortcut. You chose understanding."_\n\nआगे बढ़ने और अपना विकल्प चुनने के लिए, कृपया *${amount}* का एक बार भुगतान पूरा करें।\n\n👉 यहाँ सुरक्षित भुगतान करें:\n${link}\n\nभुगतान होते ही यह अपने आप आगे बढ़ जाएगा — या नीचे *भुगतान हो गया* पर टैप करें। 💚`,
   },
   paymentPaidButton: { en: 'I’ve paid ✅', hi: 'भुगतान हो गया ✅' },
   paymentHeader: { en: 'Payment', hi: 'भुगतान' },
@@ -571,8 +571,12 @@ const STRINGS = {
     hi: 'आगे बढ़ने के लिए कृपया एक छोटा उत्तर लिखिए। 🙂',
   },
   medicalDone: {
-    en: '✅ Thank you for sharing all of that. 🙏 Your answers are safely with our expert now. 💚',
-    hi: '✅ यह सब बताने के लिए धन्यवाद। 🙏 आपके उत्तर अब हमारे विशेषज्ञ के पास सुरक्षित हैं। 💚',
+    en: '✅ Thank You for completing your Clinical Assessment.\n\nWe have successfully received all your health details and concerns.\n\nOur expert physician will now carefully review your responses and understand your case in depth — because every person’s health journey is unique.\n\nYou will soon receive a personal communication from our team regarding the next steps.\n\nYour information is safe with us, and your health concern will be approached with complete attention and care. 🩺',
+    hi: '✅ Thank You for completing your Clinical Assessment.\n\nWe have successfully received all your health details and concerns.\n\nOur expert physician will now carefully review your responses and understand your case in depth — because every person’s health journey is unique.\n\nYou will soon receive a personal communication from our team regarding the next steps.\n\nYour information is safe with us, and your health concern will be approached with complete attention and care. 🩺',
+  },
+  clinicalThanks: {
+    en: '🙏 Thank you for trusting us with your health journey.',
+    hi: '🙏 Thank you for trusting us with your health journey.',
   },
 
   // ── Path selection (Clinical vs Astro + Clinical) ─────────────────────────────
@@ -594,6 +598,18 @@ const STRINGS = {
   pathRetry: {
     en: 'Please tap *Clinical* 🩺 or *Astro + Clinical* 🔮 to continue. 🙂',
     hi: 'कृपया आगे बढ़ने के लिए *क्लिनिकल* 🩺 या *ज्योतिष + क्लिनिकल* 🔮 चुनिए। 🙂',
+  },
+  clinicalChoice: {
+    en: '🩺 Excellent Choice. You have chosen the Clinical Path',
+    hi: '🩺 बहुत बढ़िया चुनाव। आपने क्लिनिकल पथ चुना है।',
+  },
+  clinicalIntro: {
+    en: '🩺 In the Clinical Assessment, your case will be looked at beyond just symptoms — your health history, lifestyle, emotional patterns, and individual concerns will be carefully evaluated by a physician.\n\n💚 Because every person is different, your health journey deserves a personalised approach, not a one-size-fits-all solution.\n\n✨ You are now moving towards a deeper understanding of your health.',
+    hi: '🩺 In the Clinical Assessment, your case will be looked at beyond just symptoms — your health history, lifestyle, emotional patterns, and individual concerns will be carefully evaluated by a physician.\n\n💚 Because every person is different, your health journey deserves a personalised approach, not a one-size-fits-all solution.\n\n✨ You are now moving towards a deeper understanding of your health.',
+  },
+  clinicalReceive: {
+    en: 'You will receive:\n✅ Detailed case evaluation\n✅ Physician-reviewed analysis\n✅ Personalised health guidance\n✅ A structured approach based on your individual needs\n\n🌟 This is a premium medical consultation designed for people who want clarity, direction, and a deeper understanding of their health.\n\nReady to begin your Clinical Assessment? 🩺',
+    hi: 'You will receive:\n✅ Detailed case evaluation\n✅ Physician-reviewed analysis\n✅ Personalised health guidance\n✅ A structured approach based on your individual needs\n\n🌟 This is a premium medical consultation designed for people who want clarity, direction, and a deeper understanding of their health.\n\nReady to begin your Clinical Assessment? 🩺',
   },
   doctorJoined: {
     en: '👨‍⚕️ *Dr. Jitendra Pal has joined the chat.*\n\nYou’re in caring hands now. 💚',
