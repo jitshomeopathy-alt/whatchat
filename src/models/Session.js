@@ -32,7 +32,9 @@ const sessionSchema = new mongoose.Schema(
         'ASTRO_DOB', // awaiting date of birth
         'ASTRO_BIRTH_TIME', // awaiting birth time
         'ASTRO_BIRTH_PLACE', // awaiting place of birth (city/town — geocoded to lat/long, district, state)
-        'PAYMENT_PENDING', // doctor/expert joined, awaiting ₹399 payment
+        'ASTRO_SATISFACTION', // astro reading shown, awaiting satisfaction rating (25/50/75/100%)
+        'ASTRO_PLAN_SELECT', // premium plans shown, awaiting plan choice before payment
+        'PAYMENT_PENDING', // doctor/expert joined, awaiting payment
         'MEDICAL_Q', // paid; collecting the medical questionnaire before handoff
         'DOCTOR_INTAKE', // paid (direct "Consult a doctor" path); fixed clinical questionnaire before handoff
         'SHIFTED', // paid; conversation handed off to the expert's number — terminal
@@ -45,7 +47,6 @@ const sessionSchema = new mongoose.Schema(
         'REGISTERING_RAASHI',
         'REGISTERING_ADDRESS',
         'REGISTERED',
-        'ASTRO_SATISFACTION',
         'ASTRO_FEEDBACK',
         'CATEGORY_SELECT',
         'CONSULT_OTHER',

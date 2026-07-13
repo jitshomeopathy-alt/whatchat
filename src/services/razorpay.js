@@ -26,17 +26,18 @@ function authHeader() {
  * to the right user/session.
  *
  * @param {Object} opts
- * @param {string} opts.whatsappId - sender's WhatsApp number (digits only)
- * @param {string} [opts.name]     - customer name for the receipt
+ * @param {string} opts.whatsappId  - sender's WhatsApp number (digits only)
+ * @param {string} [opts.name]      - customer name for the receipt
+ * @param {number} [opts.amountPaise] - override amount in paise (defaults to feePaise())
  * @returns {Promise<{ id: string, shortUrl: string }>}
  */
-async function createPaymentLink({ whatsappId, name }) {
+async function createPaymentLink({ whatsappId, name, amountPaise }) {
   if (!isConfigured()) {
     throw new Error('Razorpay is not configured (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET missing)');
   }
 
   const payload = {
-    amount: feePaise(),
+    amount: Number.isInteger(amountPaise) && amountPaise > 0 ? amountPaise : feePaise(),
     currency: 'INR',
     accept_partial: false,
     description: 'Personalised remedy plan',

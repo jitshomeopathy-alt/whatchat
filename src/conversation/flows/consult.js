@@ -11,6 +11,8 @@ const { saveSession, resetSession } = require('../stateManager');
 const { formatDob, isValidDob, toIsoDob } = require('../../utils/date');
 const {
   t,
+  satisfactionOptions,
+  planOptions,
   diAreaOptions,
   diSinceOptions,
   diWorseOptions,
@@ -79,6 +81,10 @@ async function handle(whatsappId, message, session) {
       return handleBirthTime(whatsappId, message, session);
     case 'ASTRO_BIRTH_PLACE':
       return handleBirthPlace(whatsappId, message, session);
+    case 'ASTRO_SATISFACTION':
+      return handleSatisfaction(whatsappId, message, session);
+    case 'ASTRO_PLAN_SELECT':
+      return handlePlanSelect(whatsappId, message, session);
     case 'PAYMENT_PENDING':
       return handlePayment(whatsappId, message, session);
     case 'MEDICAL_Q':
@@ -315,7 +321,95 @@ async function finalizeAstro(whatsappId, lang, buffer) {
   // real calculation engine rather than guessing from an image.
   await sendComputedAstroSummary(whatsappId, lang, buffer);
 
-  await requestPayment(whatsappId, lang, user);
+  // Astro path: gauge satisfaction, then present the premium plans before payment.
+  await askSatisfaction(whatsappId, lang);
+}
+
+// ── Satisfaction check → premium plans → payment (astro path only) ───────────────
+/**
+ * After the astro reading, ask how satisfied the user feels (25/50/75/100%).
+ * The answer is recorded but doesn't gate anything — everyone is then shown the
+ * premium plans.
+ */
+async function askSatisfaction(whatsappId, lang) {
+  await saveSession(whatsappId, { state: 'ASTRO_SATISFACTION' });
+  await sendList(
+    whatsappId,
+    t('satisfactionPrompt', lang),
+    t('satisfactionButton', lang),
+    satisfactionOptions(lang).map((o) => ({ id: o.id, title: o.title })),
+    { header: t('satisfactionHeader', lang), sectionTitle: t('satisfactionSection', lang) }
+  );
+}
+
+async function handleSatisfaction(whatsappId, message, session) {
+  const lang = session.language || 'en';
+  const id = interactiveId(message);
+  const picked = satisfactionOptions(lang).find((o) => o.id === id);
+  if (!picked) {
+    await sendText(whatsappId, t('satisfactionRetry', lang));
+    await sendList(
+      whatsappId,
+      t('satisfactionPrompt', lang),
+      t('satisfactionButton', lang),
+      satisfactionOptions(lang).map((o) => ({ id: o.id, title: o.title })),
+      { header: t('satisfactionHeader', lang), sectionTitle: t('satisfactionSection', lang) }
+    );
+    return;
+  }
+
+  const buffer = { ...(session.registrationBuffer || {}), satisfaction: picked.value };
+  await sendText(whatsappId, t('satisfactionThanks', lang));
+  await presentPlans(whatsappId, lang, buffer);
+}
+
+/**
+ * Show the premium upsell: teaser → price image → the three plans → a
+ * button per plan. Parks the session in ASTRO_PLAN_SELECT.
+ */
+async function presentPlans(whatsappId, lang, buffer) {
+  await saveSession(whatsappId, { state: 'ASTRO_PLAN_SELECT', registrationBuffer: buffer });
+  await sendText(whatsappId, t('premiumTeaser', lang));
+
+  // `?tr=orig-true` forces ImageKit to serve the untouched original PNG so
+  // WhatsApp accepts it (same as the other intro images).
+  const priceImageUrl =
+    process.env.PRICE_IMAGE_URL ||
+    'https://ik.imagekit.io/a1tiuplap/whatchat/price.png?tr=orig-true';
+  try {
+    await sendImage(whatsappId, priceImageUrl);
+  } catch (err) {
+    console.error('[Consult] price image send failed:', err.message);
+  }
+
+  await sendText(whatsappId, t('plansIntro', lang));
+  await sendButtons(
+    whatsappId,
+    t('plansChoosePrompt', lang),
+    planOptions(lang).map((o) => ({ id: o.id, title: o.title })),
+    { header: t('plansHeader', lang) }
+  );
+}
+
+async function handlePlanSelect(whatsappId, message, session) {
+  const lang = session.language || 'en';
+  const id = interactiveId(message);
+  const picked = planOptions(lang).find((o) => o.id === id);
+  if (!picked) {
+    await sendText(whatsappId, t('plansRetry', lang));
+    await sendButtons(
+      whatsappId,
+      t('plansChoosePrompt', lang),
+      planOptions(lang).map((o) => ({ id: o.id, title: o.title })),
+      { header: t('plansHeader', lang) }
+    );
+    return;
+  }
+
+  const buffer = { ...(session.registrationBuffer || {}), plan: picked.value, planAmountPaise: picked.amountPaise };
+  await saveSession(whatsappId, { registrationBuffer: buffer });
+  const user = await User.findOne({ whatsappId });
+  await requestPayment(whatsappId, lang, user, picked.amountPaise);
 }
 
 /**
@@ -364,7 +458,7 @@ async function sendComputedAstroSummary(whatsappId, lang, buffer) {
  * configured or the call fails we fail open — the user reaches the closing
  * message rather than a dead end.
  */
-async function requestPayment(whatsappId, lang, user) {
+async function requestPayment(whatsappId, lang, user, amountPaise) {
   if (!razorpay.isConfigured()) {
     console.warn('[Consult] Razorpay not configured — skipping payment gate.');
     return finish(whatsappId, lang);
@@ -372,7 +466,7 @@ async function requestPayment(whatsappId, lang, user) {
 
   let link;
   try {
-    link = await razorpay.createPaymentLink({ whatsappId, name: user?.name });
+    link = await razorpay.createPaymentLink({ whatsappId, name: user?.name, amountPaise });
   } catch (err) {
     console.error('[Consult] Payment link creation failed:', err.response?.data || err.message);
     return finish(whatsappId, lang);
@@ -384,9 +478,10 @@ async function requestPayment(whatsappId, lang, user) {
     paymentStatus: 'pending',
   });
 
+  const amount = `₹${Math.round((Number.isInteger(amountPaise) && amountPaise > 0 ? amountPaise : razorpay.feePaise()) / 100)}`;
   await sendButtons(
     whatsappId,
-    t('paymentPrompt', lang, { link: link.shortUrl }),
+    t('paymentPrompt', lang, { link: link.shortUrl, amount }),
     [{ id: 'pay:check', title: t('paymentPaidButton', lang) }],
     { header: t('paymentHeader', lang) }
   );

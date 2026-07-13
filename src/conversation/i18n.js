@@ -31,8 +31,8 @@ const STRINGS = {
     hi: 'अरे! 😅 कृपया सही उम्र लिखिए — 1 से 150 के बीच की संख्या। 🔢',
   },
   askGender: {
-    en: 'Thank you. 💙',
-    hi: 'धन्यवाद। 💙',
+    en: 'Thank you. 💙\n\nNow select your gender please 👇',
+    hi: 'धन्यवाद। 💙\n\nअब कृपया अपना लिंग चुनिए 👇',
   },
   genderRetry: {
     en: 'No worries! 🙂 Please pick the option that fits you best. 👇',
@@ -68,19 +68,13 @@ const STRINGS = {
   },
   askDob: {
     en:
-      'Now, we need your birth information to conduct a more personalized study of your personality, mental tendencies, and life patterns.\n\n' +
-      'Please share the following three pieces of information:\n\n' +
-      '📅 Date of Birth (DD/MM/YYYY)\n' +
-      '🕒 Time of Birth (HH:MM) AM/PM\n' +
-      '📍 Place of Birth (City/Village, State)\n\n' +
-      'If you don’t know the exact time, you can also enter an approximate time.',
+      'Now, we need your birth information 🌟 to conduct a more personalized study of your personality, mental tendencies, and life patterns.\n\n' +
+      'Please share your *date of birth* 📅\n' +
+      '_Format: DD/MM/YYYY (e.g. 21/05/1990)_',
     hi:
-      'अब, आपके व्यक्तित्व, मानसिक प्रवृत्तियों और जीवन के ढर्रों का और अधिक व्यक्तिगत अध्ययन करने के लिए हमें आपकी जन्म जानकारी चाहिए।\n\n' +
-      'कृपया नीचे दी गई तीन जानकारियाँ साझा कीजिए:\n\n' +
-      '📅 जन्म तिथि (DD/MM/YYYY)\n' +
-      '🕒 जन्म समय (HH:MM) AM/PM\n' +
-      '📍 जन्म स्थान (शहर/गाँव, राज्य)\n\n' +
-      'अगर आपको सही समय नहीं पता, तो आप अनुमानित समय भी लिख सकते हैं।',
+      'अब, आपके व्यक्तित्व, मानसिक प्रवृत्तियों और जीवन के ढर्रों का और अधिक व्यक्तिगत अध्ययन करने के लिए हमें आपकी जन्म जानकारी चाहिए 🌟\n\n' +
+      'कृपया अपनी *जन्म तिथि* साझा कीजिए 📅\n' +
+      '_प्रारूप: DD/MM/YYYY (जैसे 21/05/1990)_',
   },
   invalidDob: {
     en: 'That date doesn’t look right. 🤔 Please enter your date of birth as *dd-mm-yyyy* (e.g. 21-05-1990). 📅',
@@ -129,8 +123,8 @@ const STRINGS = {
 
   // ── Birth time ───────────────────────────────────────────────────────────────
   askBirthTime: {
-    en: 'And what is your exact *time of birth*? ⏰ This lets me calculate your precise birth chart — please share it in 24-hour format (e.g. 14:30).',
-    hi: 'और आपका सटीक *जन्म समय* क्या है? ⏰ इससे मैं आपकी सही जन्म कुंडली बना पाऊँगा — कृपया 24-घंटे के प्रारूप में बताइए (जैसे 14:30)।',
+    en: 'And what is your *time of birth*? ⏰ This lets me calculate your precise birth chart — please share it in 24-hour format (e.g. 14:30).\n\n_Don’t know the exact time? No worries — you can give an approximate time. 🙂_',
+    hi: 'और आपका *जन्म समय* क्या है? ⏰ इससे मैं आपकी सही जन्म कुंडली बना पाऊँगा — कृपया 24-घंटे के प्रारूप में बताइए (जैसे 14:30)।\n\n_सही समय नहीं पता? कोई बात नहीं — आप अनुमानित समय भी बता सकते हैं। 🙂_',
   },
   invalidBirthTime: {
     en: 'That time doesn’t look right. 🤔 Please share it in 24-hour format like *14:30* — I need this to build your chart accurately. ⏰',
@@ -262,10 +256,10 @@ const STRINGS = {
   },
   // ── Payment (Razorpay) ──────────────────────────────────────────────────────
   paymentPrompt: {
-    en: ({ link }) =>
-      `💳 *Unlock your personalised plan*\n\nTo continue and choose how you'd like to proceed, please complete a one-time payment of *₹399*.\n\n👉 Pay securely here:\n${link}\n\nOnce your payment is done, it’ll continue automatically — or tap *I’ve paid* below. 💚`,
-    hi: ({ link }) =>
-      `💳 *अपनी विशेष योजना अनलॉक करें*\n\nआगे बढ़ने और अपना विकल्प चुनने के लिए, कृपया *₹399* का एक बार भुगतान पूरा करें।\n\n👉 यहाँ सुरक्षित भुगतान करें:\n${link}\n\nभुगतान होते ही यह अपने आप आगे बढ़ जाएगा — या नीचे *भुगतान हो गया* पर टैप करें। 💚`,
+    en: ({ link, amount = '₹399' }) =>
+      `💳 *Unlock your personalised plan*\n\nTo continue and choose how you'd like to proceed, please complete a one-time payment of *${amount}*.\n\n👉 Pay securely here:\n${link}\n\nOnce your payment is done, it’ll continue automatically — or tap *I’ve paid* below. 💚`,
+    hi: ({ link, amount = '₹399' }) =>
+      `💳 *अपनी विशेष योजना अनलॉक करें*\n\nआगे बढ़ने और अपना विकल्प चुनने के लिए, कृपया *${amount}* का एक बार भुगतान पूरा करें।\n\n👉 यहाँ सुरक्षित भुगतान करें:\n${link}\n\nभुगतान होते ही यह अपने आप आगे बढ़ जाएगा — या नीचे *भुगतान हो गया* पर टैप करें। 💚`,
   },
   paymentPaidButton: { en: 'I’ve paid ✅', hi: 'भुगतान हो गया ✅' },
   paymentHeader: { en: 'Payment', hi: 'भुगतान' },
@@ -371,8 +365,8 @@ const STRINGS = {
     hi: 'जब भी आप तैयार हों, थोड़ा बताइए कि आपको यह पहली बार कब महसूस हुआ। ✍️🙂',
   },
   affectPrompt: {
-    en: 'I’d like to understand one more thing. Where do you feel the greatest impact of this problem on your life?',
-    hi: 'मैं एक और बात समझना चाहता हूँ। इस समस्या का सबसे ज़्यादा असर आप अपने जीवन में कहाँ महसूस करते हैं?',
+    en: 'I’d like to understand one more thing. 🌱 Where do you feel the greatest impact of this problem on your life? 💭',
+    hi: 'मैं एक और बात समझना चाहता हूँ। 🌱 इस समस्या का सबसे ज़्यादा असर आप अपने जीवन में कहाँ महसूस करते हैं? 💭',
   },
   affectButton: { en: 'Choose 👇', hi: 'चुनें 👇' },
   affectHeader: { en: 'Most affected', hi: 'सबसे ज़्यादा प्रभावित' },
@@ -382,8 +376,8 @@ const STRINGS = {
     hi: 'कृपया ऊपर दिए विकल्पों में से एक चुनिए ताकि मैं आपको बेहतर समझ सकूँ। 🙂👆',
   },
   severityPrompt: {
-    en: 'I’d like to understand one last thing.\nHow much control do you feel over this problem today? Choose the option that best matches your current situation.',
-    hi: 'मैं एक आख़िरी बात समझना चाहता हूँ।\nआज आप इस समस्या पर कितना नियंत्रण महसूस करते हैं? वह विकल्प चुनिए जो आपकी मौजूदा स्थिति से सबसे मेल खाता हो।',
+    en: 'I’d like to understand one last thing. 🧭\nHow much control do you feel over this problem today? Choose the option that best matches your current situation. 💚',
+    hi: 'मैं एक आख़िरी बात समझना चाहता हूँ। 🧭\nआज आप इस समस्या पर कितना नियंत्रण महसूस करते हैं? वह विकल्प चुनिए जो आपकी मौजूदा स्थिति से सबसे मेल खाता हो। 💚',
   },
   severityButton: { en: 'Choose 👇', hi: 'चुनें 👇' },
   severityHeader: { en: 'Sense of control', hi: 'नियंत्रण की भावना' },
@@ -451,28 +445,28 @@ const STRINGS = {
 
   // ── Post-summary story (shown with the mm image, before path selection) ───────
   postSummaryImagine: {
-    en: 'Imagine...\nIf someone understood not just your illness, but also your personality, your way of thinking, and your life patterns...',
-    hi: 'ज़रा सोचिए...\nअगर कोई सिर्फ़ आपकी बीमारी को ही नहीं, बल्कि आपके व्यक्तित्व, आपके सोचने के तरीक़े और आपके जीवन के ढर्रे को भी समझे...',
+    en: '✨ Imagine...\nIf someone understood not just your illness, but also your personality, your way of thinking, and your life patterns... 🌟💭',
+    hi: '✨ ज़रा सोचिए...\nअगर कोई सिर्फ़ आपकी बीमारी को ही नहीं, बल्कि आपके व्यक्तित्व, आपके सोचने के तरीक़े और आपके जीवन के ढर्रे को भी समझे... 🌟💭',
   },
   postSummaryQuestions: {
-    en: 'Some questions are answered by a medical report.\nThe answers to some questions lie in a person’s personality, habits, and life patterns.',
-    hi: 'कुछ सवालों के जवाब एक मेडिकल रिपोर्ट देती है।\nकुछ सवालों के जवाब इंसान के व्यक्तित्व, आदतों और जीवन के ढर्रों में छिपे होते हैं।',
+    en: '📄 Some questions are answered by a medical report.\n🔮 The answers to some questions lie in a person’s personality, habits, and life patterns.',
+    hi: '📄 कुछ सवालों के जवाब एक मेडिकल रिपोर्ट देती है।\n🔮 कुछ सवालों के जवाब इंसान के व्यक्तित्व, आदतों और जीवन के ढर्रों में छिपे होते हैं।',
   },
   postSummaryTwoPaths: {
     en:
-      'That’s why at AstroVaidhya, we’ve created two paths:\n\n' +
-      '*Astro.*\n\n' +
+      '🌿 That’s why at AstroVaidhya, we’ve created two paths:\n\n' +
+      '🔮 *Astro.*\n\n' +
       'An attempt to understand the signs that help us gain a deeper understanding of ourselves.\n\n' +
-      '*Vaidhya.*\n\n' +
+      '🩺 *Vaidhya.*\n\n' +
       'A doctor who understands your current health problem based on science and experience and provides treatment.\n\n' +
-      'AstroVaidhya is the confluence of these two ideas.',
+      '💚 AstroVaidhya is the confluence of these two ideas.',
     hi:
-      'इसीलिए AstroVaidhya में हमने दो रास्ते बनाए हैं:\n\n' +
-      '*Astro.*\n\n' +
+      '🌿 इसीलिए AstroVaidhya में हमने दो रास्ते बनाए हैं:\n\n' +
+      '🔮 *Astro.*\n\n' +
       'उन संकेतों को समझने का एक प्रयास, जो हमें ख़ुद को गहराई से समझने में मदद करते हैं।\n\n' +
-      '*Vaidhya.*\n\n' +
+      '🩺 *Vaidhya.*\n\n' +
       'एक डॉक्टर जो विज्ञान और अनुभव के आधार पर आपकी मौजूदा स्वास्थ्य समस्या को समझता है और उसका इलाज करता है।\n\n' +
-      'AstroVaidhya इन्हीं दो विचारों का संगम है।',
+      '💚 AstroVaidhya इन्हीं दो विचारों का संगम है।',
   },
 
   // ── Astro read (3–4 points, shown after kundli/DOB details) ───────────────────
@@ -483,6 +477,76 @@ const STRINGS = {
   astroResultError: {
     en: 'I couldn’t prepare your astro reading just now, but that’s okay — let’s continue. 💚',
     hi: 'मैं अभी आपकी ज्योतिष रीडिंग तैयार नहीं कर पाया, पर कोई बात नहीं — चलिए आगे बढ़ते हैं। 💚',
+  },
+
+  // ── Satisfaction check (after the astro reading, before the premium plans) ─────
+  satisfactionPrompt: {
+    en: 'How satisfied are you with this analysis so far? 🌟\n\nPlease pick the option that feels closest.',
+    hi: 'अब तक के इस विश्लेषण से आप कितना संतुष्ट हैं? 🌟\n\nकृपया वह विकल्प चुनिए जो आपको सबसे सही लगे।',
+  },
+  satisfactionButton: { en: 'Choose 👇', hi: 'चुनें 👇' },
+  satisfactionHeader: { en: 'Your satisfaction', hi: 'आपकी संतुष्टि' },
+  satisfactionSection: { en: 'I’m satisfied…', hi: 'मैं संतुष्ट हूँ…' },
+  satisfactionRetry: {
+    en: 'Please tap one of the options above so I know how you feel. 🙂👆',
+    hi: 'कृपया ऊपर दिए विकल्पों में से एक चुनिए ताकि मैं समझ सकूँ। 🙂👆',
+  },
+  satisfactionThanks: {
+    en: 'Thank you for sharing that. 🙏💚',
+    hi: 'बताने के लिए धन्यवाद। 🙏💚',
+  },
+
+  // ── Premium upsell (shown before payment on the astro path) ───────────────────
+  premiumTeaser: {
+    en: '✨ *Want to go deeper?* ✨\n\nUnlock your\n\n🔮 *AstroVaidhya Premium Analysis* 🌟',
+    hi: '✨ *और गहराई में जाना चाहते हैं?* ✨\n\nअनलॉक करें\n\n🔮 *AstroVaidhya प्रीमियम विश्लेषण* 🌟',
+  },
+  plansIntro: {
+    en:
+      '*Plan 1 — Discover Yourself (Entry)*\n' +
+      '🌱 स्वयं को जानें\n\n' +
+      '_"Who am I?"_\n\n' +
+      'Perfect for first-time users.\n' +
+      '💰 *₹199*\n\n' +
+      '━━━━━━━━━━━━━━━\n\n' +
+      '*Plan 2 — Understand Your Life (Most Popular)*\n' +
+      '🌿 स्वयं को समझें\n\n' +
+      '_"Why does my life repeat the same patterns?"_\n\n' +
+      '⭐ Most popular choice.\n' +
+      '💰 *₹499*\n\n' +
+      '━━━━━━━━━━━━━━━\n\n' +
+      '*Plan 3 — Transform Yourself (Flagship)*\n' +
+      '🌳 स्वयं को बदलें\n\n' +
+      '_"Understand. Heal. Transform."_\n\n' +
+      '💎 Our deepest, complete analysis.\n' +
+      '💰 *₹999*',
+    hi:
+      '*Plan 1 — Discover Yourself (Entry)*\n' +
+      '🌱 स्वयं को जानें\n\n' +
+      '_"मैं कौन हूँ?"_\n\n' +
+      'पहली बार आने वालों के लिए बिल्कुल सही।\n' +
+      '💰 *₹199*\n\n' +
+      '━━━━━━━━━━━━━━━\n\n' +
+      '*Plan 2 — Understand Your Life (Most Popular)*\n' +
+      '🌿 स्वयं को समझें\n\n' +
+      '_"मेरी ज़िंदगी में वही ढर्रे बार-बार क्यों दोहराते हैं?"_\n\n' +
+      '⭐ सबसे लोकप्रिय विकल्प।\n' +
+      '💰 *₹499*\n\n' +
+      '━━━━━━━━━━━━━━━\n\n' +
+      '*Plan 3 — Transform Yourself (Flagship)*\n' +
+      '🌳 स्वयं को बदलें\n\n' +
+      '_"समझें। सँवारें। बदलें।"_\n\n' +
+      '💎 हमारा सबसे गहरा, संपूर्ण विश्लेषण।\n' +
+      '💰 *₹999*',
+  },
+  plansChoosePrompt: {
+    en: 'Which plan feels right for you? 💚',
+    hi: 'आपको कौन-सी योजना सही लगती है? 💚',
+  },
+  plansHeader: { en: 'Choose your plan', hi: 'अपनी योजना चुनें' },
+  plansRetry: {
+    en: 'Please tap *Plan 1* 🌱, *Plan 2* 🌿 or *Plan 3* 🌳 to continue. 🙂',
+    hi: 'कृपया आगे बढ़ने के लिए *Plan 1* 🌱, *Plan 2* 🌿 या *Plan 3* 🌳 चुनिए। 🙂',
   },
 
   // ── Post-payment medical questions (asked before the expert handoff) ──────────
@@ -546,16 +610,16 @@ const STRINGS = {
     hi: 'बहुत बढ़िया चुनाव! 💚',
   },
   astroNature1: {
-    en: 'Every person has a different nature.\n\nSome are quick to make decisions, some have a tendency to overthink, and some have a habit of suppressing emotions.\n\nUnderstanding these tendencies is the purpose of Astro analysis.',
-    hi: 'हर इंसान का स्वभाव अलग होता है।\n\nकोई जल्दी फ़ैसले लेता है, किसी में ज़रूरत से ज़्यादा सोचने की प्रवृत्ति होती है, और किसी को भावनाओं को दबाने की आदत होती है।\n\nइन्हीं प्रवृत्तियों को समझना Astro विश्लेषण का उद्देश्य है।',
+    en: '🌸 Every person has a different nature.\n\nSome are quick to make decisions, some have a tendency to overthink, and some have a habit of suppressing emotions. 💭\n\n✨ Understanding these tendencies is the purpose of Astro analysis.',
+    hi: '🌸 हर इंसान का स्वभाव अलग होता है।\n\nकोई जल्दी फ़ैसले लेता है, किसी में ज़रूरत से ज़्यादा सोचने की प्रवृत्ति होती है, और किसी को भावनाओं को दबाने की आदत होती है। 💭\n\n✨ इन्हीं प्रवृत्तियों को समझना Astro विश्लेषण का उद्देश्य है।',
   },
   astroNature2: {
-    en: 'At AstroVaidhya, astrology isn’t just about predicting the future.\nWe’ll try to understand how your natural tendencies, mental patterns, and behavioral habits affect your health and life decisions.',
-    hi: 'AstroVaidhya में ज्योतिष सिर्फ़ भविष्य बताने के बारे में नहीं है।\nहम यह समझने की कोशिश करेंगे कि आपकी स्वाभाविक प्रवृत्तियाँ, मानसिक ढर्रे और व्यवहार की आदतें आपके स्वास्थ्य और जीवन के फ़ैसलों को कैसे प्रभावित करती हैं।',
+    en: '🔮 At AstroVaidhya, astrology isn’t just about predicting the future.\nWe’ll try to understand how your natural tendencies, mental patterns, and behavioral habits affect your health and life decisions. 🌱',
+    hi: '🔮 AstroVaidhya में ज्योतिष सिर्फ़ भविष्य बताने के बारे में नहीं है।\nहम यह समझने की कोशिश करेंगे कि आपकी स्वाभाविक प्रवृत्तियाँ, मानसिक ढर्रे और व्यवहार की आदतें आपके स्वास्थ्य और जीवन के फ़ैसलों को कैसे प्रभावित करती हैं। 🌱',
   },
   astroNature3: {
-    en: 'This analysis combines your homeopathic constitution, your mental tendencies, and Vedic astrological indications to understand which behavioral and personality patterns may be affecting your health and life.\nThis is the purpose of this analysis.',
-    hi: 'यह विश्लेषण आपकी होम्योपैथिक प्रकृति, आपकी मानसिक प्रवृत्तियों और वैदिक ज्योतिषीय संकेतों को मिलाकर यह समझता है कि कौन-से व्यवहार और व्यक्तित्व के ढर्रे आपके स्वास्थ्य और जीवन को प्रभावित कर सकते हैं।\nयही इस विश्लेषण का उद्देश्य है।',
+    en: '🧭 This analysis combines your homeopathic constitution, your mental tendencies, and Vedic astrological indications to understand which behavioral and personality patterns may be affecting your health and life.\n💚 This is the purpose of this analysis.',
+    hi: '🧭 यह विश्लेषण आपकी होम्योपैथिक प्रकृति, आपकी मानसिक प्रवृत्तियों और वैदिक ज्योतिषीय संकेतों को मिलाकर यह समझता है कि कौन-से व्यवहार और व्यक्तित्व के ढर्रे आपके स्वास्थ्य और जीवन को प्रभावित कर सकते हैं।\n💚 यही इस विश्लेषण का उद्देश्य है।',
   },
   kundliSkipOk: {
     en: 'It’s okay. 😊 It’s perfectly normal not to have a horoscope.',
@@ -768,6 +832,32 @@ function severityOptions(lang = 'en') {
   }));
 }
 
+/** The 4 satisfaction options (25% / 50% / 75% / 100%). */
+function satisfactionOptions(lang = 'en') {
+  const rows = [
+    { id: '25',  en: '😐 25% satisfied',   hi: '😐 25% संतुष्ट' },
+    { id: '50',  en: '🙂 50% satisfied',   hi: '🙂 50% संतुष्ट' },
+    { id: '75',  en: '😊 75% satisfied',   hi: '😊 75% संतुष्ट' },
+    { id: '100', en: '🤩 100% satisfied',  hi: '🤩 100% संतुष्ट' },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({ id: `sat:${r.id}`, title: r[l], value: `${r.id}%` }));
+}
+
+/**
+ * The 3 premium plans. `amountPaise` is the (demo) price charged when the plan
+ * is chosen; `value` is the English label stored for the care team.
+ */
+function planOptions(lang = 'en') {
+  const rows = [
+    { id: 'plan1', en: '🌱 Plan 1', hi: '🌱 Plan 1', value: 'Plan 1 — Discover Yourself', amountPaise: 19900 },
+    { id: 'plan2', en: '🌿 Plan 2 ⭐', hi: '🌿 Plan 2 ⭐', value: 'Plan 2 — Understand Your Life', amountPaise: 49900 },
+    { id: 'plan3', en: '🌳 Plan 3', hi: '🌳 Plan 3', value: 'Plan 3 — Transform Yourself', amountPaise: 99900 },
+  ];
+  const l = lang === 'hi' ? 'hi' : 'en';
+  return rows.map((r) => ({ id: `plan:${r.id}`, title: r[l], value: r.value, amountPaise: r.amountPaise }));
+}
+
 // ── Doctor consultation questionnaire option sets ───────────────────────────────
 // The stored `value` is always the English label so the doctor's intake email
 // reads consistently regardless of the language the user chose.
@@ -916,6 +1006,8 @@ module.exports = {
   concernOptions,
   affectOptions,
   severityOptions,
+  satisfactionOptions,
+  planOptions,
   diAreaOptions,
   diSinceOptions,
   diWorseOptions,
