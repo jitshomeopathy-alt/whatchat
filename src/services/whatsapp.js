@@ -59,6 +59,45 @@ async function sendTextRaw(to, text) {
 }
 
 /**
+ * Send an image via Meta Cloud API.
+ * @param {string} to        - Recipient WhatsApp phone number
+ * @param {string} imageUrl  - Publicly reachable HTTPS URL of the image
+ * @param {string} [caption] - Optional caption text
+ */
+async function sendImage(to, imageUrl, caption) {
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const token = process.env.WHATSAPP_TOKEN;
+
+  if (!phoneNumberId || !token) {
+    throw new Error('WHATSAPP_PHONE_NUMBER_ID or WHATSAPP_TOKEN not configured');
+  }
+
+  const url = `${BASE_URL}/${phoneNumberId}/messages`;
+
+  const payload = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to,
+    type: 'image',
+    image: { link: imageUrl, ...(caption ? { caption } : {}) },
+  };
+
+  try {
+    const response = await axios.post(url, payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data;
+  } catch (err) {
+    const detail = err.response?.data || err.message;
+    console.error('[WhatsApp] sendImage error:', JSON.stringify(detail));
+    throw new Error(`Failed to send WhatsApp image: ${JSON.stringify(detail)}`);
+  }
+}
+
+/**
  * Split text into chunks no longer than `max`, preferring paragraph then line
  * then word boundaries so messages stay readable. Always returns >= 1 chunk.
  */
@@ -286,4 +325,4 @@ async function downloadMedia(mediaId) {
   }
 }
 
-module.exports = { sendText, sendButtons, sendList, sendTyping, downloadMedia };
+module.exports = { sendText, sendImage, sendButtons, sendList, sendTyping, downloadMedia };

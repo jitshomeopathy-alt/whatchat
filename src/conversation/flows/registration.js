@@ -1,4 +1,4 @@
-const { sendText, sendButtons, sendList } = require('../../services/whatsapp');
+const { sendText, sendImage, sendButtons, sendList } = require('../../services/whatsapp');
 const { saveSession, resetSession } = require('../stateManager');
 const { personalitySummary } = require('../../services/openai');
 const consultFlow = require('./consult');
@@ -65,9 +65,18 @@ async function handle(whatsappId, message, session) {
       registrationBuffer: { ...(session.registrationBuffer || {}), language },
     });
 
-    // Send the intro messages one-by-one, then the readiness gate.
+    // Send the intro messages one-by-one, then the intro image, then the
+    // readiness gate.
     for (const line of introLines(language)) {
       await sendText(whatsappId, line);
+    }
+    const introImageUrl =
+      process.env.INTRO_IMAGE_URL || 'https://ik.imagekit.io/a1tiuplap/whatchat/ii.png';
+    try {
+      await sendImage(whatsappId, introImageUrl);
+    } catch (err) {
+      // Don't block the flow if the image fails to send.
+      console.error('[Registration] intro image send failed:', err.message);
     }
     await sendButtons(whatsappId, t('readyPrompt', language), [
       { id: 'ready:yes', title: t('readyYes', language) },
