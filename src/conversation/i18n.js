@@ -67,8 +67,20 @@ const STRINGS = {
     hi: 'कृपया एक *फ़ोटो* भेजिए 📸, या बिना फ़ोटो के आगे बढ़ने के लिए *"skip"* लिखिए। 🙂',
   },
   askDob: {
-    en: 'Almost done — and these last details make your reading truly yours! 🔮✨\n\nWhat’s your *date of birth*? Please use *dd-mm-yyyy* (e.g. 21-05-1990). 🎈',
-    hi: 'बस हो ही गया — और ये आख़िरी जानकारियाँ आपकी रीडिंग को सच में आपका बनाती हैं! 🔮✨\n\nआपकी *जन्म तिथि* क्या है? कृपया *dd-mm-yyyy* में लिखिए (जैसे 21-05-1990)। 🎈',
+    en:
+      'Now, we need your birth information to conduct a more personalized study of your personality, mental tendencies, and life patterns.\n\n' +
+      'Please share the following three pieces of information:\n\n' +
+      '📅 Date of Birth (DD/MM/YYYY)\n' +
+      '🕒 Time of Birth (HH:MM) AM/PM\n' +
+      '📍 Place of Birth (City/Village, State)\n\n' +
+      'If you don’t know the exact time, you can also enter an approximate time.',
+    hi:
+      'अब, आपके व्यक्तित्व, मानसिक प्रवृत्तियों और जीवन के ढर्रों का और अधिक व्यक्तिगत अध्ययन करने के लिए हमें आपकी जन्म जानकारी चाहिए।\n\n' +
+      'कृपया नीचे दी गई तीन जानकारियाँ साझा कीजिए:\n\n' +
+      '📅 जन्म तिथि (DD/MM/YYYY)\n' +
+      '🕒 जन्म समय (HH:MM) AM/PM\n' +
+      '📍 जन्म स्थान (शहर/गाँव, राज्य)\n\n' +
+      'अगर आपको सही समय नहीं पता, तो आप अनुमानित समय भी लिख सकते हैं।',
   },
   invalidDob: {
     en: 'That date doesn’t look right. 🤔 Please enter your date of birth as *dd-mm-yyyy* (e.g. 21-05-1990). 📅',
@@ -528,10 +540,36 @@ const STRINGS = {
     hi: '🔮 *ज्योतिष विशेषज्ञ जितेन्द्र पाल चैट में शामिल हो गए हैं।*\n\nअब आप अच्छे हाथों में हैं। 💚',
   },
 
+  // ── Astro path intro (shown when the user picks Astro + Clinical) ─────────────
+  astroChoice: {
+    en: 'Excellent choice! 💚',
+    hi: 'बहुत बढ़िया चुनाव! 💚',
+  },
+  astroNature1: {
+    en: 'Every person has a different nature.\n\nSome are quick to make decisions, some have a tendency to overthink, and some have a habit of suppressing emotions.\n\nUnderstanding these tendencies is the purpose of Astro analysis.',
+    hi: 'हर इंसान का स्वभाव अलग होता है।\n\nकोई जल्दी फ़ैसले लेता है, किसी में ज़रूरत से ज़्यादा सोचने की प्रवृत्ति होती है, और किसी को भावनाओं को दबाने की आदत होती है।\n\nइन्हीं प्रवृत्तियों को समझना Astro विश्लेषण का उद्देश्य है।',
+  },
+  astroNature2: {
+    en: 'At AstroVaidhya, astrology isn’t just about predicting the future.\nWe’ll try to understand how your natural tendencies, mental patterns, and behavioral habits affect your health and life decisions.',
+    hi: 'AstroVaidhya में ज्योतिष सिर्फ़ भविष्य बताने के बारे में नहीं है।\nहम यह समझने की कोशिश करेंगे कि आपकी स्वाभाविक प्रवृत्तियाँ, मानसिक ढर्रे और व्यवहार की आदतें आपके स्वास्थ्य और जीवन के फ़ैसलों को कैसे प्रभावित करती हैं।',
+  },
+  astroNature3: {
+    en: 'This analysis combines your homeopathic constitution, your mental tendencies, and Vedic astrological indications to understand which behavioral and personality patterns may be affecting your health and life.\nThis is the purpose of this analysis.',
+    hi: 'यह विश्लेषण आपकी होम्योपैथिक प्रकृति, आपकी मानसिक प्रवृत्तियों और वैदिक ज्योतिषीय संकेतों को मिलाकर यह समझता है कि कौन-से व्यवहार और व्यक्तित्व के ढर्रे आपके स्वास्थ्य और जीवन को प्रभावित कर सकते हैं।\nयही इस विश्लेषण का उद्देश्य है।',
+  },
+  kundliSkipOk: {
+    en: 'It’s okay. 😊 It’s perfectly normal not to have a horoscope.',
+    hi: 'कोई बात नहीं। 😊 कुंडली का न होना बिल्कुल सामान्य है।',
+  },
+  palmIntroSkip: {
+    en: 'In such a situation, we will try to understand your personality, mental tendencies and some patterns of life through palmistry.',
+    hi: 'ऐसी स्थिति में, हम हस्तरेखा के ज़रिए आपके व्यक्तित्व, मानसिक प्रवृत्तियों और जीवन के कुछ ढर्रों को समझने की कोशिश करेंगे।',
+  },
+
   // ── Astro details (asked only on the Astro + Clinical path) ───────────────────
   askPalm: {
-    en: 'To prepare your astro reading, please send a clear *photo of both your palms* 🖐️ (both hands open, fingers spread, good lighting). This helps me read your palmistry cues alongside your birth chart.',
-    hi: 'आपकी ज्योतिष रीडिंग तैयार करने के लिए, कृपया अपनी *दोनों हथेलियों की एक साफ़ फ़ोटो* भेजिए 🖐️ (दोनों हाथ खुले, उंगलियाँ फैलाकर, अच्छी रोशनी में)। इससे मैं आपकी जन्म कुंडली के साथ हस्तरेखा भी पढ़ सकूँगा।',
+    en: 'Please send a clear *photo of both your palms* 🖐️ (both hands open, fingers spread, good lighting). This helps me read your palmistry cues alongside your birth chart.',
+    hi: 'कृपया अपनी *दोनों हथेलियों की एक साफ़ फ़ोटो* भेजिए 🖐️ (दोनों हाथ खुले, उंगलियाँ फैलाकर, अच्छी रोशनी में)। इससे मैं आपकी जन्म कुंडली के साथ हस्तरेखा भी पढ़ सकूँगा।',
   },
   palmSendPrompt: {
     en: 'Please send a clear *photo of both your palms* 🖐️ — I need this to complete your reading. 🙂',

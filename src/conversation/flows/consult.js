@@ -1,4 +1,4 @@
-const { sendText, sendButtons, sendList, downloadMedia } = require('../../services/whatsapp');
+const { sendText, sendImage, sendButtons, sendList, downloadMedia } = require('../../services/whatsapp');
 const { uploadFromUrl } = require('../../services/imagekit');
 const razorpay = require('../../services/razorpay');
 const email = require('../../services/email');
@@ -112,11 +112,10 @@ async function handlePathSelect(whatsappId, message, session) {
 
   const buffer = { ...(session.registrationBuffer || {}), path };
 
-  // A quick thank-you before moving ahead, whichever path they chose.
-  await sendText(whatsappId, t('pathThanks', lang));
-
   // Clinical → record intake, Dr. Jitendra Pal joins, then payment.
   if (path === 'clinical') {
+    // A quick thank-you before moving ahead.
+    await sendText(whatsappId, t('pathThanks', lang));
     await saveSession(whatsappId, { registrationBuffer: buffer });
     const user = await User.findOne({ whatsappId });
     await recordIntake(whatsappId, user, buffer);
@@ -125,10 +124,21 @@ async function handlePathSelect(whatsappId, message, session) {
     return;
   }
 
-  // Astro + Clinical → the astro expert joins up front, then we ask for the
-  // Kundli first. If they share it, that's all we need; if not, we fall back to
-  // palm photo, DOB and birth time.
-  await sendText(whatsappId, t('astroExpertJoined', lang));
+  // Astro + Clinical → acknowledge the choice, explain what the astro analysis
+  // is about (with the cc image), then ask for the Kundli. If they share it,
+  // that's all we need; if not, we fall back to palm photo, DOB and birth time.
+  await sendText(whatsappId, t('astroChoice', lang));
+  await sendText(whatsappId, t('astroNature1', lang));
+  await sendText(whatsappId, t('astroNature2', lang));
+  const ccImageUrl =
+    process.env.ASTRO_INTRO_IMAGE_URL ||
+    'https://ik.imagekit.io/a1tiuplap/whatchat/cc.png?tr=orig-true';
+  try {
+    await sendImage(whatsappId, ccImageUrl);
+  } catch (err) {
+    console.error('[Consult] cc image send failed:', err.message);
+  }
+  await sendText(whatsappId, t('astroNature3', lang));
   await saveSession(whatsappId, { state: 'ASTRO_KUNDLI', registrationBuffer: buffer });
   await sendText(whatsappId, t('askKundli', lang));
 }
@@ -147,6 +157,9 @@ async function handleKundli(whatsappId, message, session) {
 
   const text = extractText(message)?.toLowerCase().trim();
   if (text === 'skip') {
+    // No horoscope — reassure them, then explain we'll lean on palmistry.
+    await sendText(whatsappId, t('kundliSkipOk', lang));
+    await sendText(whatsappId, t('palmIntroSkip', lang));
     await advanceToPalm(whatsappId, lang, { ...buffer, kundliUrl: null });
     return;
   }
