@@ -1,4 +1,4 @@
-const { sendText } = require('../services/whatsapp');
+const { sendText, sendButtons } = require('../services/whatsapp');
 const { t } = require('./i18n');
 const { loadSession, saveSession, resetSession } = require('./stateManager');
 const registrationFlow = require('./flows/registration');
@@ -45,12 +45,44 @@ async function dispatch(whatsappId, message) {
     return;
   }
 
-  // ── Handed off to the expert's number (terminal) ───────────────────────────
-  // After payment the conversation moves to a dedicated number. Any message here
-  // (hi/hello/anything, now or later) just gets a gentle "chat shifted" reply.
-  // "cancel"/"reset" above still lets them start a fresh consultation.
+  // ── Handed off to the expert's number ──────────────────────────────────────
+  // After payment the clinical consultation moves to a dedicated number. On this
+  // number the user can still continue their Astro Vaidhya journey, so the
+  // handoff notice comes with two selectable next steps. Their existing data is
+  // preserved (registrationBuffer is never wiped) so nothing from the earlier
+  // consultation is lost.
   if (state === 'SHIFTED') {
-    await sendText(whatsappId, t('chatShifted', session.language || 'en'));
+    const lang = session.language || 'en';
+    const choice = (message.interactive?.id || '').toLowerCase().trim();
+
+    // "Explore Astro Vaidhya" → re-enter the explore intake from the name step,
+    // keeping whatever the user has already shared.
+    if (choice === 'shifted:explore') {
+      await saveSession(whatsappId, { state: 'REGISTERING_NAME' });
+      await sendText(whatsappId, t('askName', lang));
+      return;
+    }
+
+    // "Start a new assessment" → begin a fresh journey from language selection.
+    // We keep the prior registrationBuffer so the earlier data isn't lost.
+    if (choice === 'shifted:new') {
+      await saveSession(whatsappId, { state: 'REGISTERING_LANGUAGE' });
+      await sendButtons(
+        whatsappId,
+        `🙏 Welcome to Astro Vaidhya!\n\nPlease choose your language.\nकृपया अपनी भाषा चुनें।`,
+        [
+          { id: 'lang:en', title: 'English' },
+          { id: 'lang:hi', title: 'हिंदी' },
+        ]
+      );
+      return;
+    }
+
+    // Any other message → show the handoff notice with the two next steps.
+    await sendButtons(whatsappId, t('chatShifted', lang), [
+      { id: 'shifted:explore', title: t('shiftedExplore', lang) },
+      { id: 'shifted:new', title: t('shiftedNewAssessment', lang) },
+    ]);
     return;
   }
 

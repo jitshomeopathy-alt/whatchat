@@ -685,11 +685,14 @@ const STRINGS = {
     hi: ({ link }) =>
       `🎉 *सब तैयार है — धन्यवाद!* 💚\n\nअपनी सलाह जारी रखने के लिए, कृपया नीचे टैप करके सीधे हमारे विशेषज्ञ से बात करें:\n👉 ${link}\n\nहम वहाँ आपका पूरा ख़याल रखेंगे। 🌸`,
   },
-  // Terminal auto-reply once the conversation has moved to the handoff number.
+  // Auto-reply once the clinical consultation has moved to the handoff number.
+  // Offers the two next steps for continuing on this number.
   chatShifted: {
-    en: '🙏 Your chat has been shifted to our expert’s number — please continue there. Thank you! 💚',
-    hi: '🙏 आपकी बातचीत हमारे विशेषज्ञ के नंबर पर स्थानांतरित कर दी गई है — कृपया वहीं आगे बढ़ें। धन्यवाद! 💚',
+    en: 'Your clinical consultation has been moved to our expert physician’s number — please continue your personal health discussion there. 💚\n\nMeanwhile, your Astro Vaidhya journey can continue here. What would you like to explore next? 🌿',
+    hi: 'आपकी क्लिनिकल सलाह हमारे विशेषज्ञ चिकित्सक के नंबर पर स्थानांतरित कर दी गई है — कृपया अपनी व्यक्तिगत स्वास्थ्य चर्चा वहीं जारी रखें। 💚\n\nइस बीच, आपकी Astro Vaidhya यात्रा यहीं जारी रह सकती है। आप आगे क्या देखना चाहेंगे? 🌿',
   },
+  shiftedExplore: { en: 'Explore Astro 🌿', hi: 'Astro देखें 🌿' },
+  shiftedNewAssessment: { en: 'New assessment 🔄', hi: 'नया आकलन 🔄' },
 
   // ── Doctor consultation questionnaire (direct "Consult a doctor" path) ────────
   // Asked, one at a time, after payment on the direct doctor-consult path, so
