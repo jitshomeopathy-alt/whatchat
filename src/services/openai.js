@@ -1,11 +1,11 @@
-const OpenAI = require('openai');
+const OpenAI = require("openai");
 
 let _client = null;
 
 function getClient() {
   if (!_client) {
     if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY not configured');
+      throw new Error("OPENAI_API_KEY not configured");
     }
     _client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   }
@@ -36,7 +36,7 @@ You will receive a user profile and optionally a photo. Your role is to:
   const userContent = [];
 
   userContent.push({
-    type: 'text',
+    type: "text",
     text: `Please analyse this user's health profile:
 Name: ${userProfile.name}
 Age: ${userProfile.age}
@@ -48,19 +48,19 @@ Please provide a thorough wellness assessment and recommend which support catego
 
   if (imageUrl) {
     userContent.push({
-      type: 'image_url',
+      type: "image_url",
       image_url: {
         url: imageUrl,
-        detail: 'low',
+        detail: "low",
       },
     });
   }
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o',
+    model: "gpt-4o",
     messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userContent },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userContent },
     ],
     max_tokens: 700,
     temperature: 0.4,
@@ -73,7 +73,7 @@ Please provide a thorough wellness assessment and recommend which support catego
  * Map a language code to its display name for prompt instructions.
  */
 function languageName(code) {
-  return code === 'hi' ? 'Hindi' : 'English';
+  return code === "hi" ? "Hindi" : "English";
 }
 
 /**
@@ -93,7 +93,9 @@ async function astrologyReading(details, imageUrl) {
   if (imageUrl) {
     const withImage = await generateReading(details, imageUrl);
     if (!looksLikeRefusal(withImage)) return withImage;
-    console.warn('[OpenAI] Vision model declined the palm photo — retrying without image.');
+    console.warn(
+      "[OpenAI] Vision model declined the palm photo — retrying without image.",
+    );
   }
   return generateReading(details, null);
 }
@@ -107,20 +109,20 @@ function looksLikeRefusal(text) {
   const t = text.toLowerCase();
   const phrases = [
     "i'm sorry",
-    'i am sorry',
+    "i am sorry",
     "i can't help",
-    'i cannot help',
+    "i cannot help",
     "i can't assist",
-    'i cannot assist',
+    "i cannot assist",
     "i can't identify",
-    'i cannot identify',
+    "i cannot identify",
     "i can't analyze",
-    'i cannot analyze',
+    "i cannot analyze",
     "i'm unable to",
-    'i am unable to',
-    'unable to identify',
-    'unable to analyze',
-    'as an ai',
+    "i am unable to",
+    "unable to identify",
+    "unable to analyze",
+    "as an ai",
   ];
   return phrases.some((p) => t.includes(p));
 }
@@ -135,18 +137,18 @@ async function generateReading(details, imageUrl) {
   const language = languageName(details.language);
 
   const palmLine = imageUrl
-    ? 'A photo of the person\'s palm/hand is attached. Read its general character cues (overall shape, dominant mounts, the look and flow of the major lines) and weave them into the personality synthesis. Treat this as a character/temperament reading only — never as a medical, identity, age, or lifespan claim, and do not narrate the image clinically.'
-    : 'No palm photo was provided — build the reading from the birth and personal details, and present palmistry cues as gentle, plausible tendencies rather than facts.';
+    ? "A photo of the person's palm/hand is attached. Read its general character cues (overall shape, dominant mounts, the look and flow of the major lines) and weave them into the personality synthesis. Treat this as a character/temperament reading only — never as a medical, identity, age, or lifespan claim, and do not narrate the image clinically."
+    : "No palm photo was provided — build the reading from the birth and personal details, and present palmistry cues as gentle, plausible tendencies rather than facts.";
 
   const systemPrompt = `You are an integrated personality guide who synthesises Vedic astrology (Parashari/BPHS, with light KP and Nadi sensibility), Samudrika Shastra (palmistry), and Lal Kitab temperament reading into one warm, grounded character portrait.
 
 Person:
-- Name: ${details.name || ''}
-- Date of Birth: ${details.dob || ''}
-- Time of Birth: ${details.birthTime || 'unknown'}
-- Age: ${details.age ?? ''}
-- Gender: ${details.gender || ''}
-- Residence City: ${details.city || ''}
+- Name: ${details.name || ""}
+- Date of Birth: ${details.dob || ""}
+- Time of Birth: ${details.birthTime || "unknown"}
+- Age: ${details.age ?? ""}
+- Gender: ${details.gender || ""}
+- Residence City: ${details.city || ""}
 - Palm: ${palmLine}
 
 Produce a CONDENSED "Self & Constitution" reading. Write the following sections IN ORDER, each as a bold heading followed by 1–2 tight sentences (never more). Keep the whole reading comfortably readable on a phone.
@@ -174,16 +176,24 @@ Synthesis rules:
 - Do not narrate or "identify" the photo; use it only as character inspiration.
 - Write the entire response in ${language}.`;
 
-  const userContent = [{ type: 'text', text: 'Generate the condensed Self & Constitution reading.' }];
+  const userContent = [
+    {
+      type: "text",
+      text: "Generate the condensed Self & Constitution reading.",
+    },
+  ];
   if (imageUrl) {
-    userContent.push({ type: 'image_url', image_url: { url: imageUrl, detail: 'low' } });
+    userContent.push({
+      type: "image_url",
+      image_url: { url: imageUrl, detail: "low" },
+    });
   }
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o',
+    model: "gpt-4o",
     messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userContent },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userContent },
     ],
     max_tokens: 1100,
     temperature: 0.7,
@@ -207,12 +217,12 @@ async function personalitySummary(details) {
   const systemPrompt = `You are a warm, perceptive personality guide. From a person's intake answers, distil a short, uplifting personality read.
 
 Person's intake:
-- Name: ${details.name || ''}
-- Gender: ${details.gender || ''}
-- What's going on: ${details.concern || ''}
-- When it became real: ${details.realize || ''}
-- Most affected area: ${details.affect || ''}
-- Sense of control: ${details.severity || ''}
+- Name: ${details.name || ""}
+- Gender: ${details.gender || ""}
+- What's going on: ${details.concern || ""}
+- When it became real: ${details.realize || ""}
+- Most affected area: ${details.affect || ""}
+- Sense of control: ${details.severity || ""}
 
 Write EXACTLY 3–4 bullet points about who this person is as a personality (their temperament, inner strengths, how they cope, and one gentle blind spot). Rules:
 - Each bullet: a short *bold* 2–4 word label, then one warm, specific sentence. Never more than one sentence per bullet.
@@ -222,10 +232,10 @@ Write EXACTLY 3–4 bullet points about who this person is as a personality (the
 - Write the entire response in ${language}.`;
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o',
+    model: "gpt-4o",
     messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: 'Write the 3–4 point personality read.' },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: "Write the 3–4 point personality read." },
     ],
     max_tokens: 400,
     temperature: 0.7,
@@ -245,16 +255,16 @@ async function recoverSynthesis(category, answers, questions) {
   const client = getClient();
 
   const categoryLabels = {
-    addiction: 'De-addiction / Substance Recovery',
-    mental: 'Mental / Emotional Wellness',
-    sex: 'Sexual Health & Wellness',
+    addiction: "De-addiction / Substance Recovery",
+    mental: "Mental / Emotional Wellness",
+    sex: "Sexual Health & Wellness",
   };
 
   const categoryLabel = categoryLabels[category] || category;
 
   const qaPairs = questions
-    .map((q, i) => `Q${i + 1}: ${q}\nA${i + 1}: ${answers[i] || '(no answer)'}`)
-    .join('\n\n');
+    .map((q, i) => `Q${i + 1}: ${q}\nA${i + 1}: ${answers[i] || "(no answer)"}`)
+    .join("\n\n");
 
   const systemPrompt = `You are a compassionate health and wellness advisor specialising in ${categoryLabel}.
 Based on the user's responses to a health questionnaire, provide:
@@ -268,10 +278,10 @@ Do NOT diagnose medical conditions. Always recommend consulting a healthcare pro
   const userMessage = `Category: ${categoryLabel}\n\nUser's health questionnaire responses:\n\n${qaPairs}`;
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: "gpt-4o-mini",
     messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMessage },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage },
     ],
     max_tokens: 600,
     temperature: 0.5,
@@ -287,7 +297,9 @@ Do NOT diagnose medical conditions. Always recommend consulting a healthcare pro
  */
 async function detectCategory(analysisText) {
   // First try to parse the "Recommended category: health/mental/sex" line
-  const match = analysisText.match(/Recommended category:\s*(addiction|mental|sex)/i);
+  const match = analysisText.match(
+    /Recommended category:\s*(addiction|mental|sex)/i,
+  );
   if (match) {
     return match[1].toLowerCase();
   }
@@ -296,15 +308,15 @@ async function detectCategory(analysisText) {
   const client = getClient();
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: "gpt-4o-mini",
     messages: [
       {
-        role: 'system',
+        role: "system",
         content:
-          'You classify health analysis text into one of three categories. Reply with ONLY one word: addiction (substance/de-addiction), mental (mental/emotional), or sex (sexual health).',
+          "You classify health analysis text into one of three categories. Reply with ONLY one word: addiction (substance/de-addiction), mental (mental/emotional), or sex (sexual health).",
       },
       {
-        role: 'user',
+        role: "user",
         content: `Classify this health analysis:\n\n${analysisText}`,
       },
     ],
@@ -313,10 +325,10 @@ async function detectCategory(analysisText) {
   });
 
   const word = response.choices[0].message.content.trim().toLowerCase();
-  if (['addiction', 'mental', 'sex'].includes(word)) return word;
+  if (["addiction", "mental", "sex"].includes(word)) return word;
 
   // Default fallback
-  return 'addiction';
+  return "addiction";
 }
 
 /**
@@ -328,9 +340,9 @@ async function embedText(text) {
   const client = getClient();
 
   const response = await client.embeddings.create({
-    model: 'text-embedding-3-small',
+    model: "text-embedding-3-small",
     input: text,
-    encoding_format: 'float',
+    encoding_format: "float",
   });
 
   return response.data[0].embedding;
@@ -351,13 +363,11 @@ CLASSICAL METHOD LAYERS (apply internally, in this order):
 10) Boenninghausen-Boger / polar analysis: weigh opposites, polarities, and the general direction of change.
 
 CONSTITUTIONAL LENS FROM ASTROLOGY/PALMISTRY (interpretive support only, NEVER proof):
-The "Profile reading" context, when present, ends with a labeled "AstroVaidhya Personal Constitution Analysis" block containing 10 numbered sections: Your Core Nature, How Your Mind Works, Hidden Strengths, Biggest Challenges, What Drains Your Energy, What Gives You Energy, Communication Style, Relationship Nature, Life Lesson, Overall Personality Summary. Read these sections directly rather than re-deriving temperament from raw planet names:
-- Your Core Nature + Overall Personality Summary → general constitutional type/temperament word to match against known remedy personalities.
-- How Your Mind Works + Communication Style → mental generals (thinking pace, expressiveness, decisiveness) for Kent's mind/generals layer.
-- Biggest Challenges + What Drains Your Energy → likely causation, aggravation triggers, and susceptibility direction.
-- Hidden Strengths + What Gives Your Energy → ameliorations and coping resources — useful for confirming remedy fit, not for symptom selection.
-- Relationship Nature + Life Lesson → longer-arc constitutional/miasmatic tendencies (e.g. recurring relational or duty-vs-freedom patterns), used cautiously as background, not diagnosis.
-If the profile reading predates this template and has no such labeled sections, fall back to reading it as free-form constitutional narrative. Translate any of this into homeopathic temperament hypotheses ONLY where the actual answers agree. Keep a strict separation between observed data, inferred constitutional tendencies, remedy hypotheses, and confirmation still needed.
+- Saturn dominance → reserve, duty, endurance, dryness, seriousness, delay, fear of loss, rigidity.
+- Mercury dominance → nervousness, sensitivity, variability, mental activity.
+- Venus dominance → affection, aesthetics, warmth, relationship focus.
+- Moon influence → emotional fluctuation, memory, nurturing need.
+Translate these into homeopathic temperament hypotheses ONLY where the actual answers agree. Keep a strict separation between observed data, inferred constitutional tendencies, remedy hypotheses, and confirmation still needed.
 
 HARD RULES:
 - Do not claim certainty. Do not confuse astrological symbolism with clinical proof.
@@ -388,9 +398,9 @@ Write all human-readable text ("message" and each "reason") in the requested out
 Return ONLY the JSON object, with no surrounding text or markdown fences.`;
 
 const reviewCategoryLabels = {
-  addiction: 'De-addiction / Substance Recovery',
-  mental: 'Mental / Emotional Wellness',
-  sex: 'Sexual Health & Wellness',
+  addiction: "De-addiction / Substance Recovery",
+  mental: "Mental / Emotional Wellness",
+  sex: "Sexual Health & Wellness",
 };
 
 /**
@@ -414,15 +424,23 @@ const reviewCategoryLabels = {
  *   message    - user-facing text (may name the recommended remedies)
  *   medicines  - remedy suggestions, also surfaced to the user and stored for admin
  */
-async function reviewAndPrescribe({ category, questions, answers, user, astrologyResult, satisfactionNote, language }) {
+async function reviewAndPrescribe({
+  category,
+  questions,
+  answers,
+  user,
+  astrologyResult,
+  satisfactionNote,
+  language,
+}) {
   const client = getClient();
 
   const label = reviewCategoryLabels[category] || category;
   const outputLanguage = languageName(language);
 
   const qaPairs = questions
-    .map((q, i) => `Q${i + 1}: ${q}\nA${i + 1}: ${answers[i] || '(no answer)'}`)
-    .join('\n\n');
+    .map((q, i) => `Q${i + 1}: ${q}\nA${i + 1}: ${answers[i] || "(no answer)"}`)
+    .join("\n\n");
 
   const userBlocks = [];
   if (user || astrologyResult || satisfactionNote) {
@@ -431,21 +449,26 @@ async function reviewAndPrescribe({ category, questions, answers, user, astrolog
     if (user?.age != null) ctx.push(`Age: ${user.age}`);
     if (user?.gender) ctx.push(`Gender: ${user.gender}`);
     if (astrologyResult) ctx.push(`Profile reading: ${astrologyResult}`);
-    if (satisfactionNote) ctx.push(`User's note on the profile reading (what felt off / what they hoped for): ${satisfactionNote}`);
-    if (ctx.length) userBlocks.push(`Context:\n${ctx.join('\n')}`);
+    if (satisfactionNote)
+      ctx.push(
+        `User's note on the profile reading (what felt off / what they hoped for): ${satisfactionNote}`,
+      );
+    if (ctx.length) userBlocks.push(`Context:\n${ctx.join("\n")}`);
   }
-  userBlocks.push(`Category: ${label}\n\nQuestionnaire responses:\n\n${qaPairs}`);
+  userBlocks.push(
+    `Category: ${label}\n\nQuestionnaire responses:\n\n${qaPairs}`,
+  );
   userBlocks.push(`Write the human-readable text in ${outputLanguage}.`);
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o',
+    model: "gpt-4o",
     messages: [
-      { role: 'system', content: REVIEW_SYSTEM_PROMPT },
-      { role: 'user', content: userBlocks.join('\n\n') },
+      { role: "system", content: REVIEW_SYSTEM_PROMPT },
+      { role: "user", content: userBlocks.join("\n\n") },
     ],
     max_tokens: 1500,
     temperature: 0.5,
-    response_format: { type: 'json_object' },
+    response_format: { type: "json_object" },
   });
 
   return parseReviewResponse(response);
@@ -465,7 +488,13 @@ async function reviewAndPrescribe({ category, questions, answers, user, astrolog
  * @param {string} [params.language] - 'en' | 'hi' (output language)
  * @returns {Promise<{ message: string, medicines: Array<{ name: string, reason: string }> }>}
  */
-async function reviewFreeform({ problem, user, astrologyResult, satisfactionNote, language }) {
+async function reviewFreeform({
+  problem,
+  user,
+  astrologyResult,
+  satisfactionNote,
+  language,
+}) {
   const client = getClient();
   const outputLanguage = languageName(language);
 
@@ -476,21 +505,26 @@ async function reviewFreeform({ problem, user, astrologyResult, satisfactionNote
     if (user?.age != null) ctx.push(`Age: ${user.age}`);
     if (user?.gender) ctx.push(`Gender: ${user.gender}`);
     if (astrologyResult) ctx.push(`Profile reading: ${astrologyResult}`);
-    if (satisfactionNote) ctx.push(`User's note on the profile reading (what felt off / what they hoped for): ${satisfactionNote}`);
-    if (ctx.length) userBlocks.push(`Context:\n${ctx.join('\n')}`);
+    if (satisfactionNote)
+      ctx.push(
+        `User's note on the profile reading (what felt off / what they hoped for): ${satisfactionNote}`,
+      );
+    if (ctx.length) userBlocks.push(`Context:\n${ctx.join("\n")}`);
   }
-  userBlocks.push(`Category: Other / general concern\n\nThe user described their concern in their own words:\n\n"${problem}"`);
+  userBlocks.push(
+    `Category: Other / general concern\n\nThe user described their concern in their own words:\n\n"${problem}"`,
+  );
   userBlocks.push(`Write the human-readable text in ${outputLanguage}.`);
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o',
+    model: "gpt-4o",
     messages: [
-      { role: 'system', content: REVIEW_SYSTEM_PROMPT },
-      { role: 'user', content: userBlocks.join('\n\n') },
+      { role: "system", content: REVIEW_SYSTEM_PROMPT },
+      { role: "user", content: userBlocks.join("\n\n") },
     ],
     max_tokens: 1500,
     temperature: 0.5,
-    response_format: { type: 'json_object' },
+    response_format: { type: "json_object" },
   });
 
   return parseReviewResponse(response);
@@ -508,21 +542,31 @@ function parseReviewResponse(response) {
   try {
     parsed = JSON.parse(raw);
   } catch (err) {
-    console.error('[OpenAI] review JSON parse failed:', err.message);
+    console.error("[OpenAI] review JSON parse failed:", err.message);
     return { message: raw, medicines: [] };
   }
 
-  const message = typeof parsed.message === 'string' ? parsed.message.trim() : '';
+  const message =
+    typeof parsed.message === "string" ? parsed.message.trim() : "";
   const medicines = Array.isArray(parsed.medicines)
     ? parsed.medicines
         .filter((m) => m && (m.name || m.reason))
         .map((m) => ({
-          name: String(m.name || '').trim(),
-          reason: String(m.reason || '').trim(),
+          name: String(m.name || "").trim(),
+          reason: String(m.reason || "").trim(),
         }))
     : [];
 
   return { message, medicines };
 }
 
-module.exports = { analyseUser, astrologyReading, personalitySummary, recoverSynthesis, detectCategory, embedText, reviewAndPrescribe, reviewFreeform };
+module.exports = {
+  analyseUser,
+  astrologyReading,
+  personalitySummary,
+  recoverSynthesis,
+  detectCategory,
+  embedText,
+  reviewAndPrescribe,
+  reviewFreeform,
+};
